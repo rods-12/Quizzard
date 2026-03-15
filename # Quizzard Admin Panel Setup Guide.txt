@@ -1,0 +1,208 @@
+# Quizzard Admin Panel Setup Guide
+
+This project uses:
+
+- **Laravel backend**
+- **Docker Compose**
+- **Nginx**
+- **MySQL**
+- **Tailwind CSS via Vite**
+
+---
+
+## Project Structure
+
+- `backend/` → Laravel application
+- `docker-compose.yml` → Docker services configuration
+
+---
+
+## Requirements
+
+Make sure these are installed on your computer:
+
+- [Docker Desktop](https://www.docker.com/)
+- [Node.js and npm](https://nodejs.org/)
+- Git
+- A web browser
+
+---
+
+## How to Run the System
+
+### 1. Open the project folder
+
+Open terminal or PowerShell in the project root:
+
+```bash
+cd C:\Users\hp\Desktop\Quizzard
+2. Start Docker containers
+docker compose up -d --build
+
+This starts the Laravel app, database, and nginx.
+
+3. Install Laravel dependencies
+
+If not yet installed:
+
+docker compose exec app composer install
+4. Install frontend dependencies
+
+Go to the backend folder:
+
+cd backend
+npm install
+5. Build Tailwind / Vite assets
+
+Still inside backend:
+
+npm run build
+
+Then go back to project root:
+
+cd ..
+6. Clear Laravel cache
+docker compose exec app php artisan optimize:clear
+7. Run database migrations
+docker compose exec app php artisan migrate
+
+If needed, also run seeders:
+
+docker compose exec app php artisan db:seed
+
+If you specifically need the admin seed:
+
+docker compose exec app php artisan db:seed --class=AdminUserSeeder
+8. Create storage link
+
+Needed for uploaded files like profile images:
+
+docker compose exec app php artisan storage:link
+Localhost Links
+Main system
+http://localhost:8000
+Admin login
+http://localhost:8000/admin/login
+Admin dashboard
+http://localhost:8000/admin/dashboard
+Admin activation page
+http://localhost:8000/admin/activation
+Admin profile page
+http://localhost:8000/admin/profile
+Useful Commands
+Start containers
+docker compose up -d
+Rebuild containers
+docker compose up -d --build
+Stop containers
+docker compose down
+Restart containers
+docker compose restart
+Check running containers
+docker compose ps
+View app logs
+docker compose logs app
+View nginx logs
+docker compose logs nginx
+View latest Laravel logs
+docker compose exec app tail -n 100 storage/logs/laravel.log
+Open shell inside app container
+docker compose exec app sh
+Frontend Asset Commands
+
+Go to backend first:
+
+cd backend
+Install packages
+npm install
+Build production assets
+npm run build
+Run Vite dev server
+npm run dev
+
+Then return to root:
+
+cd ..
+Common Fix Commands
+
+If changes are not showing:
+
+docker compose exec app php artisan optimize:clear
+
+If CSS/JS changes are not showing:
+
+cd backend
+npm run build
+cd ..
+
+If uploaded images do not load:
+
+docker compose exec app php artisan storage:link
+
+If containers seem broken:
+
+docker compose down
+docker compose up -d --build
+Admin Notes
+
+Only authenticated admin users can access admin routes.
+
+Admin pages include:
+
+Dashboard
+
+Activation
+
+Profile
+
+Mobile login is restricted unless account status = active.
+
+Troubleshooting
+504 Gateway Time-out
+
+Try:
+
+docker compose restart
+docker compose exec app php artisan optimize:clear
+
+Then check logs:
+
+docker compose logs nginx --tail=50
+docker compose exec app tail -n 100 storage/logs/laravel.log
+CSS is broken or outdated
+cd backend
+npm run build
+cd ..
+docker compose exec app php artisan optimize:clear
+Route or view errors
+docker compose exec app php artisan optimize:clear
+docker compose exec app tail -n 100 storage/logs/laravel.log
+Developer Workflow
+
+Typical workflow after pulling new changes:
+
+docker compose up -d
+cd backend
+npm install
+npm run build
+cd ..
+docker compose exec app composer install
+docker compose exec app php artisan migrate
+docker compose exec app php artisan optimize:clear
+Summary
+
+Main commands usually needed:
+
+docker compose up -d --build
+cd backend
+npm install
+npm run build
+cd ..
+docker compose exec app composer install
+docker compose exec app php artisan migrate
+docker compose exec app php artisan storage:link
+docker compose exec app php artisan optimize:clear
+
+Main admin URL:
+
+http://localhost:8000/admin/login
