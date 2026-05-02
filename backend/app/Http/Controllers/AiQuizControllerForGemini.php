@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
 
-class AiQuizController extends Controller
+class AiQuizControllerForGemini extends Controller
 {
     private string $apiKey;
     private string $apiUrl  = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
