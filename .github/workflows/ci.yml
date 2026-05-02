@@ -2,8 +2,9 @@ name: Quizzard CI
 
 on:
   push:
-    branches: [ main, DOP84-DOP85-DOP86-DOP89 ]
+    branches: [ main ]
   pull_request:
+    branches: [ main ]
 
 jobs:
   laravel-tests:
