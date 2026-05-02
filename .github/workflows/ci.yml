@@ -52,6 +52,15 @@ jobs:
         working-directory: backend
         run: cp .env.testing .env
 
+      - name: Create storage directories
+        working-directory: backend
+        run: |
+          mkdir -p storage/framework/views
+          mkdir -p storage/framework/cache
+          mkdir -p storage/framework/sessions
+          mkdir -p storage/logs
+          chmod -R 775 storage
+
       - name: Generate key
         working-directory: backend
         run: php artisan key:generate
