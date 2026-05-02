@@ -2456,18 +2456,6 @@
         },
         {
             "name": "maatwebsite/excel",
-<<<<<<< HEAD
-            "version": "3.1.67",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/SpartnerNL/Laravel-Excel.git",
-                "reference": "e508e34a502a3acc3329b464dad257378a7edb4d"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/SpartnerNL/Laravel-Excel/zipball/e508e34a502a3acc3329b464dad257378a7edb4d",
-                "reference": "e508e34a502a3acc3329b464dad257378a7edb4d",
-=======
             "version": "3.1.68",
             "source": {
                 "type": "git",
@@ -2478,29 +2466,19 @@
                 "type": "zip",
                 "url": "https://api.github.com/repos/SpartnerNL/Laravel-Excel/zipball/1854739267d81d38eae7d8c623caf523f30f256b",
                 "reference": "1854739267d81d38eae7d8c623caf523f30f256b",
->>>>>>> 63c72d65dcfed646f72f9b11655663e6181c9aec
                 "shasum": ""
             },
             "require": {
                 "composer/semver": "^3.3",
                 "ext-json": "*",
-<<<<<<< HEAD
-                "illuminate/support": "5.8.*||^6.0||^7.0||^8.0||^9.0||^10.0||^11.0||^12.0",
-=======
                 "illuminate/support": "5.8.*||^6.0||^7.0||^8.0||^9.0||^10.0||^11.0||^12.0||^13.0",
->>>>>>> 63c72d65dcfed646f72f9b11655663e6181c9aec
                 "php": "^7.0||^8.0",
                 "phpoffice/phpspreadsheet": "^1.30.0",
                 "psr/simple-cache": "^1.0||^2.0||^3.0"
             },
             "require-dev": {
-<<<<<<< HEAD
-                "laravel/scout": "^7.0||^8.0||^9.0||^10.0",
-                "orchestra/testbench": "^6.0||^7.0||^8.0||^9.0||^10.0",
-=======
                 "laravel/scout": "^7.0||^8.0||^9.0||^10.0||^11.0",
                 "orchestra/testbench": "^6.0||^7.0||^8.0||^9.0||^10.0||^11.0",
->>>>>>> 63c72d65dcfed646f72f9b11655663e6181c9aec
                 "predis/predis": "^1.1"
             },
             "type": "library",
@@ -2543,11 +2521,7 @@
             ],
             "support": {
                 "issues": "https://github.com/SpartnerNL/Laravel-Excel/issues",
-<<<<<<< HEAD
-                "source": "https://github.com/SpartnerNL/Laravel-Excel/tree/3.1.67"
-=======
                 "source": "https://github.com/SpartnerNL/Laravel-Excel/tree/3.1.68"
->>>>>>> 63c72d65dcfed646f72f9b11655663e6181c9aec
             },
             "funding": [
                 {
@@ -2559,11 +2533,7 @@
                     "type": "github"
                 }
             ],
-<<<<<<< HEAD
-            "time": "2025-08-26T09:13:16+00:00"
-=======
             "time": "2026-03-17T20:51:10+00:00"
->>>>>>> 63c72d65dcfed646f72f9b11655663e6181c9aec
         },
         {
             "name": "maennchen/zipstream-php",
@@ -2751,8 +2721,6 @@
             "time": "2022-12-02T22:17:43+00:00"
         },
         {
-<<<<<<< HEAD
-=======
             "name": "masterminds/html5",
             "version": "2.10.0",
             "source": {
@@ -2820,7 +2788,6 @@
             "time": "2025-07-25T09:04:22+00:00"
         },
         {
->>>>>>> 63c72d65dcfed646f72f9b11655663e6181c9aec
             "name": "monolog/monolog",
             "version": "3.10.0",
             "source": {
@@ -3332,8 +3299,6 @@
             "time": "2026-02-16T23:10:27+00:00"
         },
         {
-<<<<<<< HEAD
-=======
             "name": "phpoffice/math",
             "version": "0.3.0",
             "source": {
@@ -3386,7 +3351,6 @@
             "time": "2025-05-29T08:31:49+00:00"
         },
         {
->>>>>>> 63c72d65dcfed646f72f9b11655663e6181c9aec
             "name": "phpoffice/phpspreadsheet",
             "version": "1.30.3",
             "source": {
@@ -3495,8 +3459,6 @@
             "time": "2026-04-10T03:47:16+00:00"
         },
         {
-<<<<<<< HEAD
-=======
             "name": "phpoffice/phpword",
             "version": "1.4.0",
             "source": {
@@ -3605,7 +3567,6 @@
             "time": "2025-06-05T10:32:36+00:00"
         },
         {
->>>>>>> 63c72d65dcfed646f72f9b11655663e6181c9aec
             "name": "phpoption/phpoption",
             "version": "1.9.5",
             "source": {

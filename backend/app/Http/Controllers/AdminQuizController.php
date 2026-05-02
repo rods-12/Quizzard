@@ -359,7 +359,7 @@ if ($request->get('export') === 'excel' && $tab === 'results') {
     });
 
     return Excel::download(
-        new QuizResultsExport($rows),
+        new QuizResultsExport($rows, $quiz->title),
         'quiz-results.xlsx'
     );
 }

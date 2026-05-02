@@ -1,0 +1,102 @@
+name: Quizzard CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  laravel-tests:
+    runs-on: ubuntu-latest
+
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: ${{ secrets.DB_DATABASE }}
+      DB_USERNAME: ${{ secrets.DB_USERNAME }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      APP_ENV: testing
+
+    services:
+      db:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: ${{ secrets.DB_DATABASE }}
+          MYSQL_USER: ${{ secrets.DB_USERNAME }}
+          MYSQL_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.4
+          extensions: mbstring, pdo, mysql, dom, fileinfo, ctype, json, tokenizer, xml, gd, zip
+
+      - name: Install dependencies
+        working-directory: backend
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Copy env
+        working-directory: backend
+        run: cp .env.testing .env
+
+      - name: Create storage directories
+        working-directory: backend
+        run: |
+          mkdir -p storage/framework/views
+          mkdir -p storage/framework/cache
+          mkdir -p storage/framework/sessions
+          mkdir -p storage/logs
+          chmod -R 775 storage
+
+      - name: Generate key
+        working-directory: backend
+        run: php artisan key:generate
+
+      - name: Wait for MySQL
+        run: |
+          for i in {1..10}; do
+            mysqladmin ping -h 127.0.0.1 --silent && break
+            sleep 3
+          done
+
+      - name: Ensure DB exists
+        run: |
+          mysql -h 127.0.0.1 -u ${{ secrets.DB_USERNAME }} -p${{ secrets.DB_PASSWORD }} -e "CREATE DATABASE IF NOT EXISTS ${{ secrets.DB_DATABASE }};"
+
+      - name: Clear config
+        working-directory: backend
+        run: php artisan config:clear
+
+      - name: Run migrations
+        working-directory: backend
+        run: php artisan migrate --force
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Node dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Build assets
+        working-directory: backend
+        run: npm run build
+
+      - name: Run tests
+        working-directory: backend
+        run: php artisan test
