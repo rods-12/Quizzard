@@ -35,6 +35,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/student/classes/{classId}/quizzes', [StudentController::class, 'classQuizzes']);
     Route::get('/student/profile', [StudentController::class, 'getProfile']);
     Route::put('/student/profile', [StudentController::class, 'updateProfile']);
+    Route::get('/student/quizzes', [StudentController::class, 'allQuizzes']);
 
     // Teacher routes
     Route::get('/teacher/dashboard', [TeacherController::class, 'dashboard']);
@@ -82,5 +83,5 @@ Route::middleware('auth:sanctum')->group(function () {
     // AI Quiz Generation
     Route::post('/ai/generate-questions', [AiQuizController::class, 'generate']);
     Route::post('/ai/quizzes/{quizId}/save-questions', [AiQuizController::class, 'saveQuestions']);
-    
+
 });

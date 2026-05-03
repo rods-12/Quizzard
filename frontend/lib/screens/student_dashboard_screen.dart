@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../widgets/profile_widget.dart';
+import 'student_quizzes_tab.dart';
 
 class StudentDashboardScreen extends StatefulWidget {
   const StudentDashboardScreen({super.key});
@@ -70,6 +71,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
+      appBar: _buildAppBar(),
       body: _buildBody(),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
@@ -168,7 +170,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             // Header
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(20, 50, 20, 30),
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
               decoration: const BoxDecoration(
                 color: Color(0xFF6C63FF),
                 borderRadius: BorderRadius.only(
@@ -179,41 +181,24 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Welcome back,',
-                            style: TextStyle(
-                                color: Colors.white70, fontSize: 14),
-                          ),
-                          Text(
-                            student['name'],
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      GestureDetector(
-                        onTap: _logout,
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(Icons.logout,
-                              color: Colors.white, size: 20),
-                        ),
-                      ),
-                    ],
-                  ),
+                  // Column(
+                  //   crossAxisAlignment: CrossAxisAlignment.start,
+                  //   children: [
+                  //     const Text(
+                  //       'Welcome back,',
+                  //       style: TextStyle(
+                  //           color: Colors.white70, fontSize: 14),
+                  //     ),
+                  //     Text(
+                  //       student['name'],
+                  //       style: const TextStyle(
+                  //         color: Colors.white,
+                  //         fontSize: 24,
+                  //         fontWeight: FontWeight.bold,
+                  //       ),
+                  //     ),
+                  //   ],
+                  // ),
                   const SizedBox(height: 20),
                   // Stats row
                   Row(
@@ -310,22 +295,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
 
   // ─── QUIZZES TAB ─────────────────────────────────────────
   Widget _buildQuizzesTab() {
-    final quizzes = _dashboardData!['available_quizzes'] as List;
-    return RefreshIndicator(
-      onRefresh: _loadDashboard,
-      color: const Color(0xFF6C63FF),
-      child: quizzes.isEmpty
-          ? _buildEmptyState(
-              icon: Icons.quiz_outlined,
-              message: 'No quizzes available yet.',
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.all(20),
-              itemCount: quizzes.length,
-              itemBuilder: (context, index) =>
-                  _buildQuizCard(quizzes[index]),
-            ),
-    );
+    return const StudentQuizzesTab();
   }
 
   // ─── SCORES TAB ──────────────────────────────────────────
@@ -601,6 +571,107 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     if (percentage >= 60) return Colors.orange;
     return Colors.red;
   }
+
+
+  String _getTabTitle() {
+    switch (_currentIndex) {
+      case 0:
+        return 'Dashboard';
+      case 1:
+        return 'My Quizzes';
+      case 2:
+        return 'My Classes';
+      case 3:
+        return 'Profile';
+      default:
+        return '';
+    }
+  }
+
+  String _getInitials(String name) {
+    final parts = name.split(' ').where((s) => s.isNotEmpty).toList();
+    if (parts.isEmpty) return '?';
+    if (parts.length == 1) return parts[0][0].toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+
+  PreferredSizeWidget _buildAppBar() {
+    final student = _dashboardData?['student'];
+    final isHome = _currentIndex == 0;
+    final bgColor = const Color(0xFF6C63FF);
+    final fgColor = Colors.white;
+
+    return AppBar(
+      automaticallyImplyLeading: false,
+      backgroundColor: bgColor,
+      elevation: isHome ? 0 : 1,
+      title: _isLoading || student == null
+          ? Text(
+              _getTabTitle(),
+              style: TextStyle(
+                color: fgColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+              ),
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  _getTabTitle(),
+                  style: TextStyle(
+                    color: fgColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Text(
+                  'Hi, ${student['first_name'] ?? student['name']}!',
+                  style: TextStyle(
+                    color: fgColor,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+      actions: [
+        if (isHome)
+          IconButton(
+            icon: const Icon(Icons.logout_outlined),
+            color: Colors.white,
+            onPressed: _logout,
+            tooltip: 'Log Out',
+          )
+        else if (!_isLoading && student != null)
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: CircleAvatar(
+              radius: 18,
+              backgroundImage: student['profile_picture'] != null
+                  ? NetworkImage(student['profile_picture'])
+                  : null,
+              backgroundColor: const Color(0xFF6C63FF).withOpacity(0.1),
+              child: student['profile_picture'] == null
+                  ? Text(
+                      _getInitials(student['name']),
+                      style: const TextStyle(
+                        color: Color(0xFF6C63FF),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    )
+                  : null,
+            ),
+          ),
+      ],
+    );
+  }
+
+
+
+
 }
 
 
