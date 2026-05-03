@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../services/auth_service.dart';
 
 class StudentClassQuizzesScreen extends StatefulWidget {
@@ -18,10 +19,10 @@ class StudentClassQuizzesScreen extends StatefulWidget {
 
 class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
     with SingleTickerProviderStateMixin {
+  late TabController _tabController;
   bool _isLoading = true;
   String? _errorMessage;
   List<dynamic> _quizzes = [];
-  late TabController _tabController;
 
   @override
   void initState() {
@@ -94,29 +95,29 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
         backgroundColor: const Color(0xFF6C63FF),
         foregroundColor: Colors.white,
         bottom: _isLoading || _errorMessage != null
-          ? null
-          : TabBar(
-              controller: _tabController,
-              isScrollable: true, 
-              labelColor: Colors.white,
-              unselectedLabelColor: Colors.white70,
-              indicatorColor: Colors.white,
-              indicatorWeight: 3,
-              labelStyle: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 13,
+            ? null
+            : TabBar(
+                controller: _tabController,
+                isScrollable: true,
+                labelColor: Colors.white,
+                unselectedLabelColor: Colors.white70,
+                indicatorColor: Colors.white,
+                indicatorWeight: 3,
+                labelStyle: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+                unselectedLabelStyle: const TextStyle(
+                  fontWeight: FontWeight.normal,
+                  fontSize: 12,
+                ),
+                tabs: [
+                  _buildTab('All', _quizzes.length),
+                  _buildTab('Assigned', _assignedQuizzes.length),
+                  _buildTab('Done', _doneQuizzes.length),
+                  _buildTab('Missing', _missingQuizzes.length),
+                ],
               ),
-              unselectedLabelStyle: const TextStyle(
-                fontWeight: FontWeight.normal,
-                fontSize: 12,
-              ),
-              tabs: [
-                _buildTab('All', _quizzes.length),
-                _buildTab('Assigned', _assignedQuizzes.length),
-                _buildTab('Done', _doneQuizzes.length),
-                _buildTab('Missing', _missingQuizzes.length),
-              ],
-            ),
       ),
       body: _buildBody(),
     );
@@ -130,7 +131,7 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
           Text(label),
           const SizedBox(width: 4),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 2),
+            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.25),
               borderRadius: BorderRadius.circular(8),
@@ -251,13 +252,12 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
     );
   }
 
-  // ─── QUIZ CARD ───────────────────────────────────────────
-
-    Widget _buildQuizCard(Map<String, dynamic> quiz) {
+  Widget _buildQuizCard(Map<String, dynamic> quiz) {
     final alreadyTaken = quiz['already_taken'] == true;
     final dueDate = quiz['due_date'] != null
         ? DateTime.tryParse(quiz['due_date'])
         : null;
+    final isPastDue = dueDate != null && dueDate.isBefore(DateTime.now()) && !alreadyTaken;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -277,7 +277,8 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
                     color: const Color(0xFF6C63FF).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(Icons.quiz, color: statusColor, size: 28),
+                  child: const Icon(Icons.quiz,
+                      color: Color(0xFF6C63FF), size: 28),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -304,92 +305,101 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
                     ],
                   ),
                 ),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: statusColor.withOpacity(0.3)),
-                  ),
-                  child: Text(
-                    statusLabel,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: statusColor,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
               ],
             ),
             const SizedBox(height: 12),
 
             // Stats row
-            Row(
+            Wrap(
+              spacing: 12,
+              runSpacing: 6,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                Icon(Icons.help_outline,
-                    size: 16, color: Colors.grey.shade500),
-                const SizedBox(width: 4),
-                Text(
-                  '${quiz['questions_count']} questions',
-                  style: TextStyle(
-                      fontSize: 13, color: Colors.grey.shade600),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.help_outline,
+                        size: 16, color: Colors.grey.shade500),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${quiz['questions_count']} questions',
+                      style: TextStyle(
+                          fontSize: 13, color: Colors.grey.shade600),
+                    ),
+                  ],
                 ),
-                if (dueDate != null) ...[
-                  const SizedBox(width: 12),
-                  Icon(
-                    Icons.calendar_today,
-                    size: 14,
-                    color: _getDueDateColor(dueDate, alreadyTaken),
+                if (dueDate != null)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.calendar_today,
+                        size: 14,
+                        color: _getDueDateColor(dueDate, alreadyTaken),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        _formatDueDate(dueDate),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: _getDueDateColor(dueDate, alreadyTaken),
+                        ),
+                      ),
+                    ],
+                  )
+                else
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.calendar_today_outlined,
+                        size: 14,
+                        color: Colors.grey.shade400,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'No deadline',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.grey.shade400,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 4),
-                  Text(
-                    _formatDueDate(dueDate),
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: _getDueDateColor(dueDate, alreadyTaken),
-                    ),
-                  ),
-                ] else ...[
-                  const SizedBox(width: 12),
-                  Icon(
-                    Icons.calendar_today_outlined,
-                    size: 14,
-                    color: Colors.grey.shade400,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    'No deadline',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.grey.shade400,
-                    ),
-                  ),
-                ],
-                const Spacer(),
                 Container(
                   padding: const EdgeInsets.symmetric(
                       horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: alreadyTaken
                         ? Colors.green.withOpacity(0.1)
-                        : const Color(0xFF6C63FF).withOpacity(0.1),
+                        : isPastDue
+                            ? Colors.red.withOpacity(0.1)
+                            : const Color(0xFF6C63FF).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: alreadyTaken
                           ? Colors.green.withOpacity(0.3)
-                          : const Color(0xFF6C63FF).withOpacity(0.3),
+                          : isPastDue
+                              ? Colors.red.withOpacity(0.3)
+                              : const Color(0xFF6C63FF).withOpacity(0.3),
                     ),
                   ),
                   child: Text(
-                    alreadyTaken ? '✓ Done' : 'Not taken',
+                    alreadyTaken
+                        ? '✓ Done'
+                        : isPastDue
+                            ? 'Past Due'
+                            : 'Not taken',
                     style: TextStyle(
-                      fontSize: 13,
-                      color: dueDateColor,
-                      fontWeight: FontWeight.w500,
+                      fontSize: 12,
+                      color: alreadyTaken
+                          ? Colors.green
+                          : isPastDue
+                              ? Colors.red
+                              : const Color(0xFF6C63FF),
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
@@ -435,7 +445,7 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
               width: double.infinity,
               height: 44,
               child: ElevatedButton(
-                onPressed: (alreadyTaken || isMissing)
+                onPressed: (alreadyTaken || isPastDue)
                     ? null
                     : () async {
                         await Navigator.pushNamed(
@@ -450,19 +460,23 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
                       },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: alreadyTaken
-                      ? Colors.green.shade100
-                      : isMissing
-                          ? Colors.red.shade50
+                      ? Colors.grey.shade300
+                      : isPastDue
+                          ? Colors.red.shade100
                           : const Color(0xFF6C63FF),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
                 ),
                 child: Text(
-                  alreadyTaken ? 'Already Completed' : 'Take Quiz',
+                  alreadyTaken
+                      ? 'Already Completed'
+                      : isPastDue
+                          ? 'Past Due'
+                          : 'Take Quiz',
                   style: TextStyle(
                     color: alreadyTaken
-                        ? Colors.green.shade700
-                        : isMissing
+                        ? Colors.grey.shade600
+                        : isPastDue
                             ? Colors.red.shade700
                             : Colors.white,
                     fontWeight: FontWeight.bold,
@@ -485,12 +499,7 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
   }
 
   String _formatDueDate(DateTime dueDate) {
-    final now = DateTime.now();
-    final diff = dueDate.difference(now).inDays;
-    if (diff < 0) return 'Overdue';
-    if (diff == 0) return 'Due today';
-    if (diff == 1) return 'Due tomorrow';
-    return 'Due in $diff days';
+    return DateFormat('MMM d, yyyy · h:mm a').format(dueDate);
   }
 
   Color _getScoreColor(int? score, int? total) {

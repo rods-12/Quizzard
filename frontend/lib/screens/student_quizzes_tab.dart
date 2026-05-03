@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../services/auth_service.dart';
 
 class StudentQuizzesTab extends StatefulWidget {
@@ -210,6 +211,7 @@ class _StudentQuizzesTabState extends State<StudentQuizzesTab>
     final dueDate = quiz['due_date'] != null
         ? DateTime.tryParse(quiz['due_date'])
         : null;
+    final isPastDue = dueDate != null && dueDate.isBefore(DateTime.now()) && !alreadyTaken;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -261,54 +263,103 @@ class _StudentQuizzesTabState extends State<StudentQuizzesTab>
               ],
             ),
             const SizedBox(height: 12),
-            Row(
+            Wrap(
+              spacing: 12,
+              runSpacing: 6,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                Icon(
-                  Icons.help_outline,
-                  size: 14,
-                  color: Colors.grey.shade500,
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.help_outline,
+                      size: 14,
+                      color: Colors.grey.shade500,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${quiz['questions_count']} questions',
+                      style: TextStyle(
+                        color: Colors.grey.shade500,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 4),
-                Text(
-                  '${quiz['questions_count']} questions',
-                  style: TextStyle(
-                    color: Colors.grey.shade500,
-                    fontSize: 12,
+                if (dueDate != null)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.calendar_today,
+                        size: 14,
+                        color: _getDueDateColor(dueDate, alreadyTaken),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        _formatDueDate(dueDate),
+                        style: TextStyle(
+                          color: _getDueDateColor(dueDate, alreadyTaken),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  )
+                else
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.calendar_today_outlined,
+                        size: 14,
+                        color: Colors.grey.shade400,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'No deadline',
+                        style: TextStyle(
+                          color: Colors.grey.shade400,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                if (dueDate != null) ...[
-                  const SizedBox(width: 12),
-                  Icon(
-                    Icons.calendar_today,
-                    size: 14,
-                    color: _getDueDateColor(dueDate, alreadyTaken),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    _formatDueDate(dueDate),
-                    style: TextStyle(
-                      color: _getDueDateColor(dueDate, alreadyTaken),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: alreadyTaken
+                        ? Colors.green.withOpacity(0.1)
+                        : isPastDue
+                            ? Colors.red.withOpacity(0.1)
+                            : const Color(0xFF6C63FF).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: alreadyTaken
+                          ? Colors.green.withOpacity(0.3)
+                          : isPastDue
+                              ? Colors.red.withOpacity(0.3)
+                              : const Color(0xFF6C63FF).withOpacity(0.3),
                     ),
                   ),
-                ] else ...[
-                  const SizedBox(width: 12),
-                  Icon(
-                    Icons.calendar_today_outlined,
-                    size: 14,
-                    color: Colors.grey.shade400,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    'No deadline',
+                  child: Text(
+                    alreadyTaken
+                        ? '✓ Done'
+                        : isPastDue
+                            ? 'Past Due'
+                            : 'Not taken',
                     style: TextStyle(
-                      color: Colors.grey.shade400,
                       fontSize: 12,
-                      fontWeight: FontWeight.w500,
+                      color: alreadyTaken
+                          ? Colors.green
+                          : isPastDue
+                              ? Colors.red
+                              : const Color(0xFF6C63FF),
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                ],
+                ),
               ],
             ),
             if (alreadyTaken) ...[
@@ -334,7 +385,7 @@ class _StudentQuizzesTabState extends State<StudentQuizzesTab>
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: alreadyTaken
+                onPressed: (alreadyTaken || isPastDue)
                     ? null
                     : () => Navigator.pushNamed(
                           context,
@@ -345,13 +396,27 @@ class _StudentQuizzesTabState extends State<StudentQuizzesTab>
                           },
                         ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: alreadyTaken ? Colors.grey.shade300 : const Color(0xFF6C63FF),
-                  foregroundColor: alreadyTaken ? Colors.grey.shade600 : Colors.white,
+                  backgroundColor: alreadyTaken
+                      ? Colors.grey.shade300
+                      : isPastDue
+                          ? Colors.red.shade100
+                          : const Color(0xFF6C63FF),
+                  foregroundColor: alreadyTaken
+                      ? Colors.grey.shade600
+                      : isPastDue
+                          ? Colors.red.shade700
+                          : Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: Text(alreadyTaken ? 'Completed' : 'Take Quiz'),
+                child: Text(
+                  alreadyTaken
+                      ? 'Completed'
+                      : isPastDue
+                          ? 'Past Due'
+                          : 'Take Quiz',
+                ),
               ),
             ),
           ],
@@ -369,13 +434,7 @@ class _StudentQuizzesTabState extends State<StudentQuizzesTab>
   }
 
   String _formatDueDate(DateTime dueDate) {
-    final now = DateTime.now();
-    final difference = dueDate.difference(now).inDays;
-
-    if (difference < 0) return 'Overdue';
-    if (difference == 0) return 'Due today';
-    if (difference == 1) return 'Due tomorrow';
-    return 'Due in $difference days';
+    return DateFormat('MMM d, yyyy · h:mm a').format(dueDate);
   }
 
   Color _getScoreColor(int? score, int? total) {
