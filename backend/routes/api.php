@@ -49,6 +49,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/classes/{classId}', [ClassController::class, 'destroy']);
     Route::post('/classes/{classId}/assign-quiz', [ClassController::class, 'assignQuiz']);
     Route::delete('/classes/{classId}/quizzes/{quizId}', [ClassController::class, 'unassignQuiz']);
+    Route::patch('/classes/{classId}/quizzes/{quizId}/due-date', [ClassController::class, 'updateDueDate']);
 
     // Quiz CRUD
     Route::get('/quizzes',                           [QuizController::class, 'index']);
@@ -82,5 +83,5 @@ Route::middleware('auth:sanctum')->group(function () {
     // AI Quiz Generation
     Route::post('/ai/generate-questions', [AiQuizController::class, 'generate']);
     Route::post('/ai/quizzes/{quizId}/save-questions', [AiQuizController::class, 'saveQuestions']);
-    
+
 });

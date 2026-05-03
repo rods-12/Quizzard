@@ -47,7 +47,7 @@ class ClassRoom extends Model
     public function quizzes()
     {
         return $this->belongsToMany(Quiz::class, 'class_quizzes', 'class_id', 'quiz_id')
-            ->withPivot('assigned_at')
+            ->withPivot('assigned_at', 'due_date')
             ->withTimestamps();
     }
 }
