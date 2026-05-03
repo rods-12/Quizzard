@@ -268,3 +268,59 @@ class StudentController extends Controller
         ]);
     }
 }
+
+
+        // Get all quizzes across all enrolled classes
+    public function allQuizzes(Request $request)
+    {
+        $student = $request->user();
+
+        // Get all classes the student is enrolled in, with their published quizzes
+        $classes = \App\Models\ClassRoom::whereHas('students', function ($q) use ($student) {
+            $q->where('student_id', $student->id);
+        })
+        ->with(['quizzes' => function ($query) {
+            $query->where('is_published', true)
+                  ->withCount('questions')
+                  ->withPivot('due_date', 'assigned_at');
+        }, 'teacher:id,name,first_name,middle_initial,surname'])
+        ->get();
+
+        // Get all completed attempts for this student in one query
+        $quizIds = $classes->pluck('quizzes.*.id')->flatten()->unique()->filter();
+        $completedAttempts = \App\Models\QuizAttempt::where('student_id', $student->id)
+            ->where('status', 'completed')
+            ->whereIn('quiz_id', $quizIds)
+            ->get()
+            ->keyBy('quiz_id');
+
+        $quizzes = [];
+
+        foreach ($classes as $class) {
+            foreach ($class->quizzes as $quiz) {
+                $attempt = $completedAttempts->get($quiz->id);
+                $alreadyTaken = $attempt !== null;
+
+                $quizzes[] = [
+                    'id'              => $quiz->id,
+                    'title'           => $quiz->title,
+                    'description'     => $quiz->description,
+                    'questions_count' => $quiz->questions_count,
+                    'due_date'        => $quiz->pivot->due_date,
+                    'already_taken'   => $alreadyTaken,
+                    'score'           => $alreadyTaken ? $attempt->score : null,
+                    'total_points'    => $alreadyTaken ? $attempt->total_points : null,
+                    'class_id'        => $class->id,
+                    'class_name'      => $class->name,
+                    'teacher_name'    => $class->teacher->name ?? 'Unknown',
+                ];
+            }
+        }
+
+        return response()->json([
+            'quizzes' => $quizzes,
+        ]);
+    }
+
+
+}
