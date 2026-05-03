@@ -7,6 +7,7 @@ use App\Models\Quiz;
 use App\Models\QuizAttempt;
 use App\Models\StudentAnswer;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class ClassController extends Controller
 {
@@ -57,18 +58,18 @@ class ClassController extends Controller
             ->where('teacher_id', $request->user()->id)
             ->with(['students' => function ($q) {
                 $q->select('users.id', 'users.name', 'users.email')
-                  ->orderBy('users.name');
+                ->orderBy('users.name');
             }])
             ->with(['quizzes' => function ($q) {
                 $q->select('quizzes.id', 'quizzes.title', 'quizzes.is_published')
                 ->withCount('questions')
-                ->withCount('attempts');
+                ->withCount('attempts')
+                ->withPivot('due_date', 'assigned_at');
             }])
             ->firstOrFail();
 
         return response()->json(['class' => $class]);
     }
-
     // Update a class
     public function update(Request $request, $classId)
     {
@@ -145,26 +146,63 @@ class ClassController extends Controller
             ->where('teacher_id', $request->user()->id)
             ->firstOrFail();
 
-        $request->validate([
-            'quiz_id' => 'required|integer|exists:quizzes,id',
+        $validator = Validator::make($request->all(), [
+            'quiz_id'  => 'required|integer|exists:quizzes,id',
+            'due_date' => 'nullable|date|after:now',
         ]);
 
-        // Make sure quiz belongs to teacher
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
         $quiz = Quiz::where('id', $request->quiz_id)
             ->where('teacher_id', $request->user()->id)
             ->firstOrFail();
 
-        // Check if already assigned
         if ($class->quizzes()->where('quiz_id', $quiz->id)->exists()) {
             return response()->json([
                 'message' => 'Quiz is already assigned to this class.',
             ], 409);
         }
 
-        $class->quizzes()->attach($quiz->id, ['assigned_at' => now()]);
+        $class->quizzes()->attach($quiz->id, [
+            'assigned_at' => now(),
+            'due_date'    => $request->due_date,
+        ]);
 
         return response()->json([
             'message' => 'Quiz assigned to class successfully.',
+        ]);
+    }
+
+    public function updateDueDate(Request $request, $classId, $quizId)
+    {
+        $class = ClassRoom::where('id', $classId)
+            ->where('teacher_id', $request->user()->id)
+            ->firstOrFail();
+
+        $validator = Validator::make($request->all(), [
+            'due_date' => 'nullable|date',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $assigned = $class->quizzes()->where('quiz_id', $quizId)->exists();
+
+        if (!$assigned) {
+            return response()->json([
+                'message' => 'Quiz is not assigned to this class.',
+            ], 404);
+        }
+
+        $class->quizzes()->updateExistingPivot($quizId, [
+            'due_date' => $request->due_date,
+        ]);
+
+        return response()->json([
+            'message' => 'Due date updated successfully.',
         ]);
     }
 

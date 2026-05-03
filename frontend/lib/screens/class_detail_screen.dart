@@ -67,22 +67,18 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
   }
 
   Future<void> _assignQuiz() async {
-    // Get teacher's quizzes
     final result = await AuthService.authGet('/quizzes');
     if (!result['success']) return;
-
     final data = result['data'];
     final allQuizzes = (data is List ? data : (data['quizzes'] ?? data['data'] ?? [])) as List;
     final assignedIds = (_classData!['quizzes'] as List)
         .map((q) => q['id'])
         .toSet();
-
     final availableQuizzes = allQuizzes
         .where((q) => !assignedIds.contains(q['id']))
         .toList();
 
     if (!mounted) return;
-
     if (availableQuizzes.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -96,8 +92,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
     final selectedQuiz = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Assign Quiz'),
         content: SizedBox(
           width: double.maxFinite,
@@ -109,19 +104,13 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
               return ListTile(
                 title: Text(quiz['title']),
                 subtitle: Text(
-                  quiz['is_published'] == true
-                      ? 'Published'
-                      : 'Draft',
+                  quiz['is_published'] == true ? 'Published' : 'Draft',
                   style: TextStyle(
-                    color: quiz['is_published'] == true
-                        ? Colors.green
-                        : Colors.grey,
+                    color: quiz['is_published'] == true ? Colors.green : Colors.grey,
                   ),
                 ),
-                leading: const Icon(Icons.quiz,
-                    color: Color(0xFF4CAF50)),
-                onTap: () => Navigator.pop(
-                    context, Map<String, dynamic>.from(quiz)),
+                leading: const Icon(Icons.quiz, color: Color(0xFF4CAF50)),
+                onTap: () => Navigator.pop(context, Map<String, dynamic>.from(quiz)),
               );
             },
           ),
@@ -136,12 +125,92 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
     );
 
     if (selectedQuiz == null) return;
+    if (!mounted) return;
+
+    // Ask for optional due date
+    DateTime? selectedDueDate;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: const Text('Set Due Date (Optional)'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('You can set a deadline for this quiz or skip it.'),
+                const SizedBox(height: 16),
+                if (selectedDueDate != null)
+                  Text(
+                    'Due: ${selectedDueDate!.toLocal().toString().substring(0, 16)}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF4CAF50),
+                    ),
+                  ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.calendar_today),
+                  label: Text(selectedDueDate == null ? 'Pick Due Date' : 'Change Due Date'),
+                  onPressed: () async {
+                    final date = await showDatePicker(
+                      context: context,
+                      initialDate: DateTime.now().add(const Duration(days: 1)),
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                    );
+                    if (date == null) return;
+                    final time = await showTimePicker(
+                      context: context,
+                      initialTime: TimeOfDay(hour: 23, minute: 59),
+                    );
+                    if (time == null) return;
+                    setState(() {
+                      selectedDueDate = DateTime(
+                        date.year, date.month, date.day,
+                        time.hour, time.minute,
+                      );
+                    });
+                  },
+                ),
+                if (selectedDueDate != null)
+                  TextButton(
+                    onPressed: () => setState(() => selectedDueDate = null),
+                    child: const Text('Clear', style: TextStyle(color: Colors.red)),
+                  ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Skip'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Assign'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (confirmed != true) return;
+
+    final body = <String, dynamic>{'quiz_id': selectedQuiz['id']};
+    if (selectedDueDate != null) {
+      body['due_date'] = selectedDueDate!.toUtc().toString().substring(0, 19);
+    }
 
     final assignResult = await AuthService.authPost(
       '/classes/${widget.classId}/assign-quiz',
-      {'quiz_id': selectedQuiz['id']},
+      body,
     );
-    
 
     if (assignResult['success']) {
       _loadClassDetail();
@@ -478,10 +547,12 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
   }
 
   Widget _buildQuizCard(Map<String, dynamic> quiz) {
+    final dueDate = quiz['pivot']?['due_date'];
+    final parsedDue = dueDate != null ? DateTime.tryParse(dueDate) : null;
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       elevation: 2,
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
@@ -510,8 +581,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                       color: const Color(0xFF4CAF50).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.quiz,
-                        color: Color(0xFF4CAF50)),
+                    child: const Icon(Icons.quiz, color: Color(0xFF4CAF50)),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -536,13 +606,10 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                                 color: quiz['is_published'] == true
                                     ? Colors.green.withOpacity(0.1)
                                     : Colors.grey.withOpacity(0.1),
-                                borderRadius:
-                                    BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
-                                quiz['is_published'] == true
-                                    ? 'Published'
-                                    : 'Draft',
+                                quiz['is_published'] == true ? 'Published' : 'Draft',
                                 style: TextStyle(
                                   fontSize: 11,
                                   color: quiz['is_published'] == true
@@ -562,11 +629,55 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                             ),
                           ],
                         ),
+                        if (parsedDue != null) ...[
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.access_time,
+                                size: 13,
+                                color: parsedDue.isBefore(DateTime.now())
+                                    ? Colors.red
+                                    : Colors.orange.shade700,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Due: ${parsedDue.toLocal().toString().substring(0, 16)}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: parsedDue.isBefore(DateTime.now())
+                                      ? Colors.red
+                                      : Colors.orange.shade700,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ] else ...[
+                          const SizedBox(height: 4),
+                          Row(
+                            children: const [
+                              Icon(
+                                Icons.info_outline,
+                                size: 13,
+                                color: Colors.grey,
+                              ),
+                              SizedBox(width: 4),
+                              Text(
+                                'No deadline set',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ],
                     ),
                   ),
-                  const Icon(Icons.chevron_right,
-                      color: Colors.grey),
+                  const Icon(Icons.chevron_right, color: Colors.grey),
                 ],
               ),
               const Divider(height: 20),

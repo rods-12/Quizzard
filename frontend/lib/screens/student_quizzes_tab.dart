@@ -2,22 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../services/auth_service.dart';
 
-class StudentClassQuizzesScreen extends StatefulWidget {
-  final int classId;
-  final String className;
-
-  const StudentClassQuizzesScreen({
-    super.key,
-    required this.classId,
-    required this.className,
-  });
+class StudentQuizzesTab extends StatefulWidget {
+  const StudentQuizzesTab({super.key});
 
   @override
-  State<StudentClassQuizzesScreen> createState() =>
-      _StudentClassQuizzesScreenState();
+  State<StudentQuizzesTab> createState() => _StudentQuizzesTabState();
 }
 
-class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
+class _StudentQuizzesTabState extends State<StudentQuizzesTab>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   bool _isLoading = true;
@@ -43,9 +35,7 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
       _errorMessage = null;
     });
 
-    final result = await AuthService.authGet(
-      '/student/classes/${widget.classId}/quizzes',
-    );
+    final result = await AuthService.authGet('/student/quizzes');
 
     setState(() {
       _isLoading = false;
@@ -85,41 +75,52 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      appBar: AppBar(
-        title: Text(
-          widget.className,
-          style: const TextStyle(fontSize: 16),
+    return Column(
+      children: [
+        Container(
+          color: Colors.white,
+          child: TabBar(
+            controller: _tabController,
+            isScrollable: true,
+            labelColor: const Color(0xFF6C63FF),
+            unselectedLabelColor: Colors.grey,
+            indicatorColor: const Color(0xFF6C63FF),
+            labelStyle: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+            ),
+            unselectedLabelStyle: const TextStyle(
+              fontWeight: FontWeight.normal,
+              fontSize: 12,
+            ),
+            tabs: [
+              _buildTab('All', _quizzes.length),
+              _buildTab('Assigned', _assignedQuizzes.length),
+              _buildTab('Done', _doneQuizzes.length),
+              _buildTab('Missing', _missingQuizzes.length),
+            ],
+          ),
         ),
-        backgroundColor: const Color(0xFF6C63FF),
-        foregroundColor: Colors.white,
-        bottom: _isLoading || _errorMessage != null
-            ? null
-            : TabBar(
-                controller: _tabController,
-                isScrollable: true,
-                labelColor: Colors.white,
-                unselectedLabelColor: Colors.white70,
-                indicatorColor: Colors.white,
-                indicatorWeight: 3,
-                labelStyle: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                ),
-                unselectedLabelStyle: const TextStyle(
-                  fontWeight: FontWeight.normal,
-                  fontSize: 12,
-                ),
-                tabs: [
-                  _buildTab('All', _quizzes.length),
-                  _buildTab('Assigned', _assignedQuizzes.length),
-                  _buildTab('Done', _doneQuizzes.length),
-                  _buildTab('Missing', _missingQuizzes.length),
-                ],
-              ),
-      ),
-      body: _buildBody(),
+        Expanded(
+          child: _isLoading
+              ? const Center(
+                  child: CircularProgressIndicator(
+                    color: Color(0xFF6C63FF),
+                  ),
+                )
+              : _errorMessage != null
+                  ? _buildErrorState()
+                  : TabBarView(
+                      controller: _tabController,
+                      children: [
+                        _buildQuizList(_quizzes),
+                        _buildQuizList(_assignedQuizzes),
+                        _buildQuizList(_doneQuizzes),
+                        _buildQuizList(_missingQuizzes),
+                      ],
+                    ),
+        ),
+      ],
     );
   }
 
@@ -133,7 +134,7 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.25),
+              color: const Color(0xFF6C63FF).withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
@@ -149,91 +150,24 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
     );
   }
 
-  Widget _buildBody() {
-    if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: Color(0xFF6C63FF)),
-      );
-    }
-
-    return RefreshIndicator(
-      onRefresh: _loadQuizzes,
-      color: const Color(0xFF6C63FF),
-      child: _errorMessage != null
-          ? _buildErrorState()
-          : _quizzes.isEmpty
-              ? _buildEmptyState()
-              : TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _buildQuizList(_quizzes),
-                    _buildQuizList(_assignedQuizzes),
-                    _buildQuizList(_doneQuizzes),
-                    _buildQuizList(_missingQuizzes),
-                  ],
-                ),
-    );
-  }
-
   Widget _buildErrorState() {
-    return LayoutBuilder(
-      builder: (context, constraints) => SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(minHeight: constraints.maxHeight),
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error_outline, size: 60, color: Colors.red),
-                  const SizedBox(height: 16),
-                  Text(
-                    _errorMessage!,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.red),
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: _loadQuizzes,
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
-            ),
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.error_outline, size: 60, color: Colors.red),
+          const SizedBox(height: 16),
+          Text(
+            _errorMessage!,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.red),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return LayoutBuilder(
-      builder: (context, constraints) => SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(minHeight: constraints.maxHeight),
-          child: const Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.quiz_outlined, size: 80, color: Colors.grey),
-                SizedBox(height: 16),
-                Text(
-                  'No quizzes available yet.',
-                  style: TextStyle(fontSize: 18, color: Colors.grey),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  'Your teacher hasn\'t assigned any quizzes yet.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey),
-                ),
-              ],
-            ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: _loadQuizzes,
+            child: const Text('Retry'),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -243,17 +177,37 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
       return _buildEmptyState();
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: quizzes.length,
-      itemBuilder: (context, index) {
-        return _buildQuizCard(quizzes[index]);
-      },
+    return RefreshIndicator(
+      onRefresh: _loadQuizzes,
+      color: const Color(0xFF6C63FF),
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: quizzes.length,
+        itemBuilder: (context, index) {
+          return _buildQuizCard(quizzes[index]);
+        },
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.quiz_outlined, size: 80, color: Colors.grey.shade300),
+          const SizedBox(height: 16),
+          Text(
+            'No quizzes here.',
+            style: TextStyle(color: Colors.grey.shade500, fontSize: 16),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildQuizCard(Map<String, dynamic> quiz) {
-    final alreadyTaken = quiz['already_taken'] == true;
+    final alreadyTaken = quiz['already_taken'] as bool;
     final dueDate = quiz['due_date'] != null
         ? DateTime.tryParse(quiz['due_date'])
         : null;
@@ -262,7 +216,7 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 3,
+      elevation: 2,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -271,14 +225,17 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
             Row(
               children: [
                 Container(
-                  width: 48,
-                  height: 48,
+                  width: 50,
+                  height: 50,
                   decoration: BoxDecoration(
                     color: const Color(0xFF6C63FF).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.quiz,
-                      color: Color(0xFF6C63FF), size: 28),
+                  child: const Icon(
+                    Icons.quiz,
+                    color: Color(0xFF6C63FF),
+                    size: 28,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -288,28 +245,24 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
                       Text(
                         quiz['title'],
                         style: const TextStyle(
-                          fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF333333),
+                          fontSize: 15,
                         ),
                       ),
-                      if (quiz['description'] != null &&
-                          quiz['description'].toString().isNotEmpty)
-                        Text(
-                          quiz['description'],
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                              fontSize: 13, color: Colors.grey.shade600),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${quiz['class_name']} • ${quiz['teacher_name']}',
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 12,
                         ),
+                      ),
                     ],
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 12),
-
-            // Stats row
             Wrap(
               spacing: 12,
               runSpacing: 6,
@@ -318,13 +271,18 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.help_outline,
-                        size: 16, color: Colors.grey.shade500),
+                    Icon(
+                      Icons.help_outline,
+                      size: 14,
+                      color: Colors.grey.shade500,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       '${quiz['questions_count']} questions',
                       style: TextStyle(
-                          fontSize: 13, color: Colors.grey.shade600),
+                        color: Colors.grey.shade500,
+                        fontSize: 12,
+                      ),
                     ),
                   ],
                 ),
@@ -341,9 +299,9 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
                       Text(
                         _formatDueDate(dueDate),
                         style: TextStyle(
+                          color: _getDueDateColor(dueDate, alreadyTaken),
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
-                          color: _getDueDateColor(dueDate, alreadyTaken),
                         ),
                       ),
                     ],
@@ -361,16 +319,15 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
                       Text(
                         'No deadline',
                         style: TextStyle(
+                          color: Colors.grey.shade400,
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
-                          color: Colors.grey.shade400,
                         ),
                       ),
                     ],
                   ),
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: alreadyTaken
                         ? Colors.green.withOpacity(0.1)
@@ -405,82 +362,60 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
                 ),
               ],
             ),
-
-            // Score badge for completed quizzes
             if (alreadyTaken) ...[
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: _getScoreColor(quiz['score'], quiz['total_points'])
                       .withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.emoji_events,
-                      size: 16,
-                      color: _getScoreColor(quiz['score'], quiz['total_points']),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Score: ${quiz['score']} / ${quiz['total_points']}',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: _getScoreColor(
-                            quiz['score'], quiz['total_points']),
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  'Score: ${quiz['score']}/${quiz['total_points']}',
+                  style: TextStyle(
+                    color: _getScoreColor(quiz['score'], quiz['total_points']),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],
-
             const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
-              height: 44,
               child: ElevatedButton(
                 onPressed: (alreadyTaken || isPastDue)
                     ? null
-                    : () async {
-                        await Navigator.pushNamed(
+                    : () => Navigator.pushNamed(
                           context,
                           '/quiz-taking',
                           arguments: {
                             'quiz_id': quiz['id'],
                             'quiz_title': quiz['title'],
                           },
-                        );
-                        _loadQuizzes();
-                      },
+                        ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: alreadyTaken
                       ? Colors.grey.shade300
                       : isPastDue
                           ? Colors.red.shade100
                           : const Color(0xFF6C63FF),
+                  foregroundColor: alreadyTaken
+                      ? Colors.grey.shade600
+                      : isPastDue
+                          ? Colors.red.shade700
+                          : Colors.white,
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 child: Text(
                   alreadyTaken
-                      ? 'Already Completed'
+                      ? 'Completed'
                       : isPastDue
                           ? 'Past Due'
                           : 'Take Quiz',
-                  style: TextStyle(
-                    color: alreadyTaken
-                        ? Colors.grey.shade600
-                        : isPastDue
-                            ? Colors.red.shade700
-                            : Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
                 ),
               ),
             ),
