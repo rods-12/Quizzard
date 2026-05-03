@@ -18,7 +18,6 @@ class StudentClassQuizzesScreen extends StatefulWidget {
 
 class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
     with SingleTickerProviderStateMixin {
-  late TabController _tabController;
   bool _isLoading = true;
   String? _errorMessage;
   List<dynamic> _quizzes = [];
