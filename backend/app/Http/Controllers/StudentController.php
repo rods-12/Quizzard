@@ -267,7 +267,7 @@ class StudentController extends Controller
             }),
         ]);
     }
-}
+
 
 
         // Get all quizzes across all enrolled classes
