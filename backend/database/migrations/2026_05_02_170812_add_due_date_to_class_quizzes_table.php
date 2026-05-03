@@ -6,23 +6,17 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::table('class_quizzes', function (Blueprint $table) {
-            //
+            $table->dateTime('due_date')->nullable()->after('quiz_id');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::table('class_quizzes', function (Blueprint $table) {
-            //
+            $table->dropColumn('due_date');
         });
     }
 };
