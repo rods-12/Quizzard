@@ -261,7 +261,7 @@ class StudentController extends Controller
         ]);
     }
 
-        // Get all quizzes across all enrolled classes
+    // Get all quizzes across all enrolled classes
     public function allQuizzes(Request $request)
     {
         $student = $request->user();
