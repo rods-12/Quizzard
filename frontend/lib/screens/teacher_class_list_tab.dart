@@ -1,40 +1,16 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 
-// ─── THEME CONSTANTS ─────────────────────────────────────────────────────────
-class _AppTheme {
-  static const Color primary = Color(0xFF4CAF50);
-  static const Color primaryDark = Color(0xFF388E3C);
-  static const Color primaryLight = Color(0xFFE8F5E9);
-  static const Color bg = Color(0xFFF4F6FB);
-  static const Color surface = Colors.white;
-  static const Color textDark = Color(0xFF1A1D2E);
-  static const Color textMid = Color(0xFF6B7080);
-  static const Color textLight = Color(0xFFADB5BD);
-  static const Color danger = Color(0xFFEF4444);
-  static const Color accent = Color(0xFF6C63FF);
+class TeacherClassListTab extends StatefulWidget {
+  final VoidCallback onRefresh;
 
-  static BoxDecoration get cardDecoration => BoxDecoration(
-        color: surface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      );
-}
-
-class ClassListScreen extends StatefulWidget {
-  const ClassListScreen({super.key});
+  const TeacherClassListTab({super.key, required this.onRefresh});
 
   @override
-  State<ClassListScreen> createState() => _ClassListScreenState();
+  State<TeacherClassListTab> createState() => _TeacherClassListTabState();
 }
 
-class _ClassListScreenState extends State<ClassListScreen> {
+class _TeacherClassListTabState extends State<TeacherClassListTab> {
   bool _isLoading = true;
   String? _errorMessage;
   List<dynamic> _classes = [];
@@ -84,7 +60,7 @@ class _ClassListScreenState extends State<ClassListScreen> {
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: _AppTheme.primary, width: 2),
+                  borderSide: const BorderSide(color: Color(0xFF4CAF50), width: 2),
                 ),
               ),
             ),
@@ -99,7 +75,7 @@ class _ClassListScreenState extends State<ClassListScreen> {
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: _AppTheme.primary, width: 2),
+                  borderSide: const BorderSide(color: Color(0xFF4CAF50), width: 2),
                 ),
               ),
             ),
@@ -113,7 +89,7 @@ class _ClassListScreenState extends State<ClassListScreen> {
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: _AppTheme.primary,
+              backgroundColor: const Color(0xFF4CAF50),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
             child: const Text('Create', style: TextStyle(color: Colors.white)),
@@ -140,11 +116,12 @@ class _ClassListScreenState extends State<ClassListScreen> {
 
     if (result['success']) {
       _loadClasses();
+      widget.onRefresh();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Class created successfully!'),
-          backgroundColor: _AppTheme.primary,
+          backgroundColor: Color(0xFF4CAF50),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
           margin: EdgeInsets.all(16),
@@ -155,7 +132,7 @@ class _ClassListScreenState extends State<ClassListScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(result['message']),
-          backgroundColor: _AppTheme.danger,
+          backgroundColor: Colors.red,
         ),
       );
     }
@@ -181,7 +158,7 @@ class _ClassListScreenState extends State<ClassListScreen> {
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: _AppTheme.primary, width: 2),
+                  borderSide: const BorderSide(color: Color(0xFF4CAF50), width: 2),
                 ),
               ),
             ),
@@ -195,7 +172,7 @@ class _ClassListScreenState extends State<ClassListScreen> {
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: _AppTheme.primary, width: 2),
+                  borderSide: const BorderSide(color: Color(0xFF4CAF50), width: 2),
                 ),
               ),
             ),
@@ -209,7 +186,7 @@ class _ClassListScreenState extends State<ClassListScreen> {
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: _AppTheme.primary,
+              backgroundColor: const Color(0xFF4CAF50),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
             child: const Text('Save', style: TextStyle(color: Colors.white)),
@@ -230,11 +207,12 @@ class _ClassListScreenState extends State<ClassListScreen> {
 
     if (result['success']) {
       _loadClasses();
+      widget.onRefresh();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Class updated successfully!'),
-          backgroundColor: _AppTheme.primary,
+          backgroundColor: Color(0xFF4CAF50),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
           margin: EdgeInsets.all(16),
@@ -258,7 +236,7 @@ class _ClassListScreenState extends State<ClassListScreen> {
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: _AppTheme.danger,
+              backgroundColor: Colors.red,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
             child: const Text('Delete', style: TextStyle(color: Colors.white)),
@@ -273,11 +251,12 @@ class _ClassListScreenState extends State<ClassListScreen> {
 
     if (result['success']) {
       _loadClasses();
+      widget.onRefresh();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Class deleted successfully!'),
-          backgroundColor: _AppTheme.primary,
+          backgroundColor: Color(0xFF4CAF50),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
           margin: EdgeInsets.all(16),
@@ -289,15 +268,15 @@ class _ClassListScreenState extends State<ClassListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _AppTheme.bg,
-      body: _buildBody(),
+      backgroundColor: const Color(0xFFF4F6FB),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _createClass,
-        backgroundColor: _AppTheme.primary,
+        backgroundColor: const Color(0xFF4CAF50),
         icon: const Icon(Icons.add_rounded, color: Colors.white),
         label: const Text('New Class', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         elevation: 4,
       ),
+      body: _buildBody(),
     );
   }
 
@@ -308,13 +287,13 @@ class _ClassListScreenState extends State<ClassListScreen> {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.fromLTRB(24, 56, 24, 32),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [_AppTheme.primary.withOpacity(0.85), _AppTheme.primaryDark.withOpacity(0.85)],
+                colors: [Color(0xFF4CAF50), Color(0xFF388E3C)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: const BorderRadius.only(
+              borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(32),
                 bottomRight: Radius.circular(32),
               ),
@@ -331,9 +310,9 @@ class _ClassListScreenState extends State<ClassListScreen> {
             ),
           ),
           const Spacer(),
-          const CircularProgressIndicator(color: _AppTheme.primary, strokeWidth: 3),
+          const CircularProgressIndicator(color: Color(0xFF4CAF50), strokeWidth: 3),
           const SizedBox(height: 16),
-          const Text('Loading classes...', style: TextStyle(color: _AppTheme.textMid, fontSize: 14)),
+          const Text('Loading classes...', style: TextStyle(color: Colors.grey, fontSize: 14)),
           const Spacer(),
         ],
       );
@@ -349,17 +328,17 @@ class _ClassListScreenState extends State<ClassListScreen> {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: _AppTheme.danger.withOpacity(0.1),
+                  color: Colors.red.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.error_outline_rounded, size: 48, color: _AppTheme.danger),
+                child: Icon(Icons.error_outline_rounded, size: 48, color: Colors.red),
               ),
               const SizedBox(height: 16),
-              Text(_errorMessage!, textAlign: TextAlign.center, style: const TextStyle(color: _AppTheme.textMid)),
+              Text(_errorMessage!, textAlign: TextAlign.center, style: const TextStyle(color: Colors.grey)),
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _loadClasses,
-                style: ElevatedButton.styleFrom(backgroundColor: _AppTheme.primary),
+                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4CAF50)),
                 child: const Text('Retry', style: TextStyle(color: Colors.white)),
               ),
             ],
@@ -370,7 +349,7 @@ class _ClassListScreenState extends State<ClassListScreen> {
 
     return RefreshIndicator(
       onRefresh: _loadClasses,
-      color: _AppTheme.primary,
+      color: const Color(0xFF4CAF50),
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
@@ -380,7 +359,7 @@ class _ClassListScreenState extends State<ClassListScreen> {
               padding: const EdgeInsets.fromLTRB(24, 56, 24, 24),
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [_AppTheme.primary, _AppTheme.primaryDark],
+                  colors: [Color(0xFF4CAF50), Color(0xFF388E3C)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -392,31 +371,17 @@ class _ClassListScreenState extends State<ClassListScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () => Navigator.pop(context),
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 18),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      const Text(
-                        'My Classes',
-                        style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold, letterSpacing: -0.5),
-                      ),
-                    ],
+                  const Text(
+                    'My Classes',
+                    style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold, letterSpacing: -0.5),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     '${_classes.length} class${_classes.length == 1 ? '' : 'es'} created',
                     style: const TextStyle(color: Colors.white70, fontSize: 13),
                   ),
+                  const SizedBox(height: 20),
+                  // Search could go here in future
                 ],
               ),
             ),
@@ -434,15 +399,15 @@ class _ClassListScreenState extends State<ClassListScreen> {
                           Container(
                             padding: const EdgeInsets.all(24),
                             decoration: BoxDecoration(
-                              color: _AppTheme.primaryLight,
+                              color: const Color(0xFF4CAF50).withOpacity(0.1),
                               shape: BoxShape.circle,
                             ),
-                            child: Icon(Icons.class_outlined, size: 48, color: _AppTheme.primary.withOpacity(0.5)),
+                            child: Icon(Icons.class_outlined, size: 48, color: const Color(0xFF4CAF50).withOpacity(0.5)),
                           ),
                           const SizedBox(height: 16),
-                          const Text('No classes yet.', style: TextStyle(color: _AppTheme.textMid, fontSize: 16, fontWeight: FontWeight.w500)),
+                          const Text('No classes yet.', style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.w500)),
                           const SizedBox(height: 4),
-                          const Text('Tap "New Class" to create your first class!', textAlign: TextAlign.center, style: TextStyle(color: _AppTheme.textLight, fontSize: 13)),
+                          const Text('Tap "New Class" to create your first class!', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey, fontSize: 13)),
                         ],
                       ),
                     ),
@@ -480,7 +445,17 @@ class _ClassListScreenState extends State<ClassListScreen> {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
-      decoration: _AppTheme.cardDecoration,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: () async {
@@ -530,14 +505,14 @@ class _ClassListScreenState extends State<ClassListScreen> {
                       children: [
                         Text(
                           cls['name'],
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: _AppTheme.textDark),
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF1A1D2E)),
                         ),
                         if (cls['description'] != null && (cls['description'] as String).isNotEmpty)
                           Text(
                             cls['description'],
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 12, color: _AppTheme.textMid),
+                            style: const TextStyle(fontSize: 12, color: Color(0xFF6B7080)),
                           ),
                       ],
                     ),
@@ -581,9 +556,9 @@ class _ClassListScreenState extends State<ClassListScreen> {
 
                   Row(
                     children: [
-                      Icon(Icons.school_rounded, size: 15, color: _AppTheme.textLight),
+                      Icon(Icons.school_rounded, size: 15, color: Colors.grey),
                       const SizedBox(width: 6),
-                      Text(cls['teacher_name'] ?? 'You', style: const TextStyle(fontSize: 13, color: _AppTheme.textMid)),
+                      Text(cls['teacher_name'] ?? 'You', style: const TextStyle(fontSize: 13, color: Color(0xFF6B7080))),
                       const Spacer(),
                       _buildMeta(Icons.people_rounded, '${cls['students_count']}'),
                       const SizedBox(width: 14),
@@ -601,14 +576,14 @@ class _ClassListScreenState extends State<ClassListScreen> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            border: Border.all(color: _AppTheme.accent.withOpacity(0.3)),
+                            border: Border.all(color: const Color(0xFF6C63FF).withOpacity(0.3)),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Row(
                             children: const [
-                              Icon(Icons.edit_rounded, size: 13, color: _AppTheme.accent),
+                              Icon(Icons.edit_rounded, size: 13, color: Color(0xFF6C63FF)),
                               SizedBox(width: 4),
-                              Text('Edit', style: TextStyle(color: _AppTheme.accent, fontSize: 12, fontWeight: FontWeight.w600)),
+                              Text('Edit', style: TextStyle(color: Color(0xFF6C63FF), fontSize: 12, fontWeight: FontWeight.w600)),
                             ],
                           ),
                         ),
@@ -619,14 +594,14 @@ class _ClassListScreenState extends State<ClassListScreen> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            border: Border.all(color: _AppTheme.danger.withOpacity(0.3)),
+                            border: Border.all(color: Colors.red.withOpacity(0.3)),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Row(
                             children: const [
-                              Icon(Icons.delete_rounded, size: 13, color: _AppTheme.danger),
+                              Icon(Icons.delete_rounded, size: 13, color: Colors.red),
                               SizedBox(width: 4),
-                              Text('Delete', style: TextStyle(color: _AppTheme.danger, fontSize: 12, fontWeight: FontWeight.w600)),
+                              Text('Delete', style: TextStyle(color: Colors.red, fontSize: 12, fontWeight: FontWeight.w600)),
                             ],
                           ),
                         ),
@@ -645,9 +620,9 @@ class _ClassListScreenState extends State<ClassListScreen> {
   Widget _buildMeta(IconData icon, String label) {
     return Row(
       children: [
-        Icon(icon, size: 13, color: _AppTheme.textLight),
+        Icon(icon, size: 13, color: Colors.grey),
         const SizedBox(width: 4),
-        Text(label, style: const TextStyle(fontSize: 12, color: _AppTheme.textMid)),
+        Text(label, style: const TextStyle(fontSize: 12, color: Color(0xFF6B7080))),
       ],
     );
   }

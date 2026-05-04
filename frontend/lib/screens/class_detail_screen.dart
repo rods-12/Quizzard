@@ -66,6 +66,130 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
     );
   }
 
+  /// Shared helper: pick date + time for a deadline
+  Future<DateTime?> _pickDueDate(BuildContext context, {DateTime? initialDate}) async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: initialDate ?? DateTime.now().add(const Duration(days: 1)),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (date == null) return null;
+
+    final time = await showTimePicker(
+      context: context,
+      initialTime: initialDate != null
+          ? TimeOfDay(hour: initialDate.hour, minute: initialDate.minute)
+          : const TimeOfDay(hour: 23, minute: 59),
+    );
+    if (time == null) return null;
+
+    return DateTime(date.year, date.month, date.day, time.hour, time.minute);
+  }
+
+  Future<void> _editDueDate(Map<String, dynamic> quiz) async {
+    final currentDue = quiz['pivot']?['due_date'];
+    DateTime? initialDate;
+    if (currentDue != null) {
+      initialDate = DateTime.tryParse(currentDue);
+    }
+
+    DateTime? selectedDueDate = initialDate;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: const Text('Edit Due Date'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Update the deadline for this quiz.'),
+                const SizedBox(height: 16),
+                if (selectedDueDate != null)
+                  Text(
+                    'Due: ${selectedDueDate!.toLocal().toString().substring(0, 16)}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF4CAF50),
+                    ),
+                  )
+                else
+                  const Text(
+                    'No deadline currently set',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.calendar_today),
+                  label: Text(selectedDueDate == null ? 'Pick Due Date' : 'Change Due Date'),
+                  onPressed: () async {
+                    final picked = await _pickDueDate(context, initialDate: selectedDueDate);
+                    if (picked != null) {
+                      setState(() {
+                        selectedDueDate = picked;
+                      });
+                    }
+                  },
+                ),
+                if (selectedDueDate != null)
+                  TextButton(
+                    onPressed: () => setState(() => selectedDueDate = null),
+                    child: const Text('Clear Deadline', style: TextStyle(color: Colors.red)),
+                  ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Save'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (confirmed != true) return;
+
+    final body = <String, dynamic>{};
+    if (selectedDueDate != null) {
+      body['due_date'] = selectedDueDate!.toIso8601String();
+    } else {
+      body['due_date'] = null; // clear deadline
+    }
+
+    final result = await AuthService.authPatch(
+      '/classes/${widget.classId}/quizzes/${quiz['id']}/due-date',
+      body,
+    );
+
+    if (result['success']) {
+      _loadClassDetail();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Due date updated successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message'] ?? 'Failed to update due date'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   Future<void> _assignQuiz() async {
     final result = await AuthService.authGet('/quizzes');
     if (!result['success']) return;
@@ -154,24 +278,12 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                   icon: const Icon(Icons.calendar_today),
                   label: Text(selectedDueDate == null ? 'Pick Due Date' : 'Change Due Date'),
                   onPressed: () async {
-                    final date = await showDatePicker(
-                      context: context,
-                      initialDate: DateTime.now().add(const Duration(days: 1)),
-                      firstDate: DateTime.now(),
-                      lastDate: DateTime.now().add(const Duration(days: 365)),
-                    );
-                    if (date == null) return;
-                    final time = await showTimePicker(
-                      context: context,
-                      initialTime: TimeOfDay(hour: 23, minute: 59),
-                    );
-                    if (time == null) return;
-                    setState(() {
-                      selectedDueDate = DateTime(
-                        date.year, date.month, date.day,
-                        time.hour, time.minute,
-                      );
-                    });
+                    final picked = await _pickDueDate(context);
+                    if (picked != null) {
+                      setState(() {
+                        selectedDueDate = picked;
+                      });
+                    }
                   },
                 ),
                 if (selectedDueDate != null)
@@ -204,7 +316,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
 
     final body = <String, dynamic>{'quiz_id': selectedQuiz['id']};
     if (selectedDueDate != null) {
-      body['due_date'] = selectedDueDate!.toUtc().toString().substring(0, 19);
+      body['due_date'] = selectedDueDate!.toIso8601String();
     }
 
     final assignResult = await AuthService.authPost(
@@ -681,35 +793,57 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                 ],
               ),
               const Divider(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  if ((quiz['attempts_count'] ?? 0) == 0)
-                    TextButton.icon(
-                      onPressed: () => _unassignQuiz(quiz),
-                      icon: const Icon(Icons.remove_circle,
-                          size: 16, color: Colors.red),
-                      label: const Text('Remove',
-                          style: TextStyle(color: Colors.red)),
-                    )
-                  else
-                    Row(
-                      children: [
-                        Icon(Icons.lock_outline,
-                            size: 14, color: Colors.orange.shade700),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Has attempts — cannot remove',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.orange.shade700,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                ],
-              ),
+Row(
+  mainAxisAlignment: MainAxisAlignment.end,
+  children: [
+    PopupMenuButton<String>(
+      icon: const Icon(Icons.more_vert, color: Colors.grey),
+      onSelected: (value) {
+        if (value == 'edit_due') _editDueDate(quiz);
+        if (value == 'remove') _unassignQuiz(quiz);
+      },
+      itemBuilder: (context) => [
+        const PopupMenuItem(
+          value: 'edit_due',
+          child: Row(
+            children: [
+              Icon(Icons.edit_calendar, size: 18, color: Color(0xFF4CAF50)),
+              SizedBox(width: 8),
+              Text('Edit Due Date'),
+            ],
+          ),
+        ),
+        if ((quiz['attempts_count'] ?? 0) == 0)
+          const PopupMenuItem(
+            value: 'remove',
+            child: Row(
+              children: [
+                Icon(Icons.remove_circle, size: 18, color: Colors.red),
+                SizedBox(width: 8),
+                Text('Remove', style: TextStyle(color: Colors.red)),
+              ],
+            ),
+          ),
+      ],
+    ),
+    if ((quiz['attempts_count'] ?? 0) > 0)
+      Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.lock_outline, size: 14, color: Colors.orange.shade700),
+          const SizedBox(width: 4),
+          Text(
+            'Has attempts',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.orange.shade700,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+  ],
+),
             ],
           ),
         ),
