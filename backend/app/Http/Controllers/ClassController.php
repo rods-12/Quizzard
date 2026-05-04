@@ -193,15 +193,23 @@ class ClassController extends Controller
 
         if (!$assigned) {
             return response()->json([
+                'success' => false,
                 'message' => 'Quiz is not assigned to this class.',
             ], 404);
         }
 
+        // Parse ISO 8601 and convert to UTC for consistent storage
+        $dueDate = $request->due_date;
+        if ($dueDate !== null) {
+            $dueDate = \Carbon\Carbon::parse($dueDate)->utc()->format('Y-m-d H:i:s');
+        }
+
         $class->quizzes()->updateExistingPivot($quizId, [
-            'due_date' => $request->due_date,
+            'due_date' => $dueDate,
         ]);
 
         return response()->json([
+            'success' => true,  // <-- Added this
             'message' => 'Due date updated successfully.',
         ]);
     }

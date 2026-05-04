@@ -2,6 +2,33 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../services/auth_service.dart';
 
+// ─── THEME CONSTANTS (mirrored from dashboard) ────────────────────────────────
+class _AppTheme {
+  static const Color primary = Color(0xFF6C63FF);
+  static const Color primaryDark = Color(0xFF4B44CC);
+  static const Color primaryLight = Color(0xFFEEEDFF);
+  static const Color bg = Color(0xFFF4F6FB);
+  static const Color surface = Colors.white;
+  static const Color textDark = Color(0xFF1A1D2E);
+  static const Color textMid = Color(0xFF6B7080);
+  static const Color textLight = Color(0xFFADB5BD);
+  static const Color success = Color(0xFF22C55E);
+  static const Color warning = Color(0xFFF59E0B);
+  static const Color danger = Color(0xFFEF4444);
+
+  static BoxDecoration get cardDecoration => BoxDecoration(
+        color: surface,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      );
+}
+
 class StudentClassQuizzesScreen extends StatefulWidget {
   final int classId;
   final String className;
@@ -86,169 +113,292 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      appBar: AppBar(
-        title: Text(
-          widget.className,
-          style: const TextStyle(fontSize: 16),
-        ),
-        backgroundColor: const Color(0xFF6C63FF),
-        foregroundColor: Colors.white,
-        bottom: _isLoading || _errorMessage != null
-            ? null
-            : TabBar(
-                controller: _tabController,
-                isScrollable: true,
-                labelColor: Colors.white,
-                unselectedLabelColor: Colors.white70,
-                indicatorColor: Colors.white,
-                indicatorWeight: 3,
-                labelStyle: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                ),
-                unselectedLabelStyle: const TextStyle(
-                  fontWeight: FontWeight.normal,
-                  fontSize: 12,
-                ),
-                tabs: [
-                  _buildTab('All', _quizzes.length),
-                  _buildTab('Assigned', _assignedQuizzes.length),
-                  _buildTab('Done', _doneQuizzes.length),
-                  _buildTab('Missing', _missingQuizzes.length),
-                ],
-              ),
-      ),
+      backgroundColor: _AppTheme.bg,
       body: _buildBody(),
-    );
-  }
-
-  Widget _buildTab(String label, int count) {
-    return Tab(
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(label),
-          const SizedBox(width: 4),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.25),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              '$count',
-              style: const TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
   Widget _buildBody() {
     if (_isLoading) {
       return const Center(
-        child: CircularProgressIndicator(color: Color(0xFF6C63FF)),
+        child: CircularProgressIndicator(color: _AppTheme.primary),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: _AppTheme.danger.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.error_outline_rounded, size: 48, color: _AppTheme.danger),
+              ),
+              const SizedBox(height: 16),
+              Text(_errorMessage!, textAlign: TextAlign.center, style: const TextStyle(color: _AppTheme.textMid)),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _loadQuizzes,
+                style: ElevatedButton.styleFrom(backgroundColor: _AppTheme.primary),
+                child: const Text('Retry', style: TextStyle(color: Colors.white)),
+              ),
+            ],
+          ),
+        ),
       );
     }
 
     return RefreshIndicator(
       onRefresh: _loadQuizzes,
-      color: const Color(0xFF6C63FF),
-      child: _errorMessage != null
-          ? _buildErrorState()
-          : _quizzes.isEmpty
-              ? _buildEmptyState()
-              : TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _buildQuizList(_quizzes),
-                    _buildQuizList(_assignedQuizzes),
-                    _buildQuizList(_doneQuizzes),
-                    _buildQuizList(_missingQuizzes),
-                  ],
-                ),
-    );
-  }
-
-  Widget _buildErrorState() {
-    return LayoutBuilder(
-      builder: (context, constraints) => SingleChildScrollView(
+      color: _AppTheme.primary,
+      child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(minHeight: constraints.maxHeight),
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
+        slivers: [
+          // ── Header ──
+          SliverToBoxAdapter(
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(20, 50, 20, 24),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [_AppTheme.primary, _AppTheme.primaryDark],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(32),
+                  bottomRight: Radius.circular(32),
+                ),
+              ),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.error_outline, size: 60, color: Colors.red),
-                  const SizedBox(height: 16),
-                  Text(
-                    _errorMessage!,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.red),
+                  // Back button + title
+                  Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 18),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          widget.className,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: -0.3,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: _loadQuizzes,
-                    child: const Text('Retry'),
+
+                  // Stats row
+                  Row(
+                    children: [
+                      _buildHeaderStat('${_quizzes.length}', 'Total'),
+                      const SizedBox(width: 10),
+                      _buildHeaderStat('${_doneQuizzes.length}', 'Done'),
+                      const SizedBox(width: 10),
+                      _buildHeaderStat('${_assignedQuizzes.length}', 'Assigned'),
+                      const SizedBox(width: 10),
+                      _buildHeaderStat('${_missingQuizzes.length}', 'Missing'),
+                    ],
                   ),
                 ],
               ),
             ),
           ),
-        ),
+
+          // ── Filter chips (TabBar style) ──
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _buildFilterChip('all', 'All', _quizzes.length),
+                    const SizedBox(width: 8),
+                    _buildFilterChip('assigned', 'Assigned', _assignedQuizzes.length),
+                    const SizedBox(width: 8),
+                    _buildFilterChip('done', 'Done', _doneQuizzes.length),
+                    const SizedBox(width: 8),
+                    _buildFilterChip('missing', 'Missing', _missingQuizzes.length),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // ── List or empty ──
+          _quizzes.isEmpty
+              ? SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(40),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(24),
+                            decoration: BoxDecoration(color: _AppTheme.primaryLight, shape: BoxShape.circle),
+                            child: Icon(Icons.quiz_outlined, size: 48, color: _AppTheme.primary.withOpacity(0.5)),
+                          ),
+                          const SizedBox(height: 16),
+                          const Text('No quizzes yet.', style: TextStyle(color: _AppTheme.textMid, fontSize: 16, fontWeight: FontWeight.w500)),
+                          const SizedBox(height: 4),
+                          const Text("Your teacher hasn't assigned any quizzes yet.", textAlign: TextAlign.center, style: TextStyle(color: _AppTheme.textLight, fontSize: 13)),
+                        ],
+                      ),
+                    ),
+                  ),
+                )
+              : _buildFilteredList(),
+        ],
       ),
     );
   }
 
-  Widget _buildEmptyState() {
-    return LayoutBuilder(
-      builder: (context, constraints) => SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(minHeight: constraints.maxHeight),
-          child: const Center(
+  Widget _buildFilteredList() {
+    final filter = _tabController.index;
+    List<dynamic> quizzes;
+    switch (filter) {
+      case 1:
+        quizzes = _assignedQuizzes;
+        break;
+      case 2:
+        quizzes = _doneQuizzes;
+        break;
+      case 3:
+        quizzes = _missingQuizzes;
+        break;
+      default:
+        quizzes = _quizzes;
+    }
+
+    if (quizzes.isEmpty) {
+      return SliverFillRemaining(
+        hasScrollBody: false,
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(40),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.quiz_outlined, size: 80, color: Colors.grey),
-                SizedBox(height: 16),
-                Text(
-                  'No quizzes available yet.',
-                  style: TextStyle(fontSize: 18, color: Colors.grey),
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(color: _AppTheme.primaryLight, shape: BoxShape.circle),
+                  child: Icon(Icons.search_off_rounded, size: 48, color: _AppTheme.primary.withOpacity(0.5)),
                 ),
-                SizedBox(height: 8),
-                Text(
-                  'Your teacher hasn\'t assigned any quizzes yet.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey),
-                ),
+                const SizedBox(height: 16),
+                const Text('No quizzes found.', style: TextStyle(color: _AppTheme.textMid, fontSize: 16, fontWeight: FontWeight.w500)),
               ],
             ),
           ),
         ),
+      );
+    }
+
+    return SliverPadding(
+      padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) => _buildQuizCard(Map<String, dynamic>.from(quizzes[index])),
+          childCount: quizzes.length,
+        ),
       ),
     );
   }
 
-  Widget _buildQuizList(List<dynamic> quizzes) {
-    if (quizzes.isEmpty) {
-      return _buildEmptyState();
-    }
+  Widget _buildHeaderStat(String value, String label) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.18),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.white.withOpacity(0.25)),
+        ),
+        child: Column(
+          children: [
+            Text(value, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+            Text(label, style: const TextStyle(color: Colors.white70, fontSize: 11)),
+          ],
+        ),
+      ),
+    );
+  }
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: quizzes.length,
-      itemBuilder: (context, index) {
-        return _buildQuizCard(quizzes[index]);
+  Widget _buildFilterChip(String value, String label, int count) {
+    final indexMap = {'all': 0, 'assigned': 1, 'done': 2, 'missing': 3};
+    final index = indexMap[value] ?? 0;
+    final isSelected = _tabController.index == index;
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _tabController.index = index;
+        });
       },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        decoration: BoxDecoration(
+          color: isSelected ? _AppTheme.primary : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: isSelected ? _AppTheme.primary : Colors.grey.shade300),
+          boxShadow: isSelected
+              ? [BoxShadow(color: _AppTheme.primary.withOpacity(0.25), blurRadius: 8, offset: const Offset(0, 2))]
+              : [],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? Colors.white : _AppTheme.textMid,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                fontSize: 12,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+              decoration: BoxDecoration(
+                color: isSelected ? Colors.white.withOpacity(0.25) : _AppTheme.primaryLight,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                '$count',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: isSelected ? Colors.white : _AppTheme.primary,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -259,243 +409,242 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
         : null;
     final isPastDue = dueDate != null && dueDate.isBefore(DateTime.now()) && !alreadyTaken;
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 3,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF6C63FF).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      decoration: _AppTheme.cardDecoration,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: (alreadyTaken || isPastDue)
+            ? null
+            : () async {
+                await Navigator.pushNamed(
+                  context,
+                  '/quiz-taking',
+                  arguments: {
+                    'quiz_id': quiz['id'],
+                    'quiz_title': quiz['title'],
+                  },
+                );
+                _loadQuizzes();
+              },
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: alreadyTaken
+                          ? _AppTheme.success.withOpacity(0.1)
+                          : isPastDue
+                              ? _AppTheme.danger.withOpacity(0.1)
+                              : _AppTheme.primaryLight,
+                      borderRadius: BorderRadius.circular(13),
+                    ),
+                    child: Icon(
+                      alreadyTaken
+                          ? Icons.check_circle_rounded
+                          : isPastDue
+                              ? Icons.warning_rounded
+                              : Icons.quiz_rounded,
+                      color: alreadyTaken
+                          ? _AppTheme.success
+                          : isPastDue
+                              ? _AppTheme.danger
+                              : _AppTheme.primary,
+                      size: 26,
+                    ),
                   ),
-                  child: const Icon(Icons.quiz,
-                      color: Color(0xFF6C63FF), size: 28),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          quiz['title'],
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: _AppTheme.textDark),
+                        ),
+                        if (quiz['description'] != null && (quiz['description'] as String).isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            quiz['description'],
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 12, color: _AppTheme.textMid),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // Status badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: alreadyTaken
+                          ? _AppTheme.success.withOpacity(0.1)
+                          : isPastDue
+                              ? _AppTheme.danger.withOpacity(0.1)
+                              : _AppTheme.primaryLight,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: alreadyTaken
+                            ? _AppTheme.success.withOpacity(0.3)
+                            : isPastDue
+                                ? _AppTheme.danger.withOpacity(0.3)
+                                : _AppTheme.primary.withOpacity(0.3),
+                      ),
+                    ),
+                    child: Text(
+                      alreadyTaken
+                          ? '✓ Done'
+                          : isPastDue
+                              ? 'Past Due'
+                              : 'Pending',
+                      style: TextStyle(
+                        color: alreadyTaken
+                            ? _AppTheme.success
+                            : isPastDue
+                                ? _AppTheme.danger
+                                : _AppTheme.primary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 14),
+              Divider(color: Colors.grey.shade100, height: 1),
+              const SizedBox(height: 12),
+
+              // Meta row
+              Row(
+                children: [
+                  _buildMeta(Icons.help_outline_rounded, '${quiz['questions_count']} questions'),
+                  const Spacer(),
+                  if (dueDate != null)
+                    _buildMeta(
+                      Icons.calendar_today_rounded,
+                      _formatDueDate(dueDate),
+                      color: _getDueDateColor(dueDate, alreadyTaken),
+                    )
+                  else
+                    _buildMeta(Icons.calendar_today_outlined, 'No deadline', color: _AppTheme.textLight),
+                ],
+              ),
+
+              // Score badge for completed quizzes
+              if (alreadyTaken) ...[
+                const SizedBox(height: 10),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: _getScoreColor(quiz['score'], quiz['total_points'])
+                        .withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
+                      Icon(
+                        Icons.emoji_events,
+                        size: 16,
+                        color: _getScoreColor(quiz['score'], quiz['total_points']),
+                      ),
+                      const SizedBox(width: 6),
                       Text(
-                        quiz['title'],
-                        style: const TextStyle(
-                          fontSize: 16,
+                        'Score: ${quiz['score']} / ${quiz['total_points']}',
+                        style: TextStyle(
+                          fontSize: 13,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF333333),
+                          color: _getScoreColor(
+                              quiz['score'], quiz['total_points']),
                         ),
                       ),
-                      if (quiz['description'] != null &&
-                          quiz['description'].toString().isNotEmpty)
-                        Text(
-                          quiz['description'],
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                              fontSize: 13, color: Colors.grey.shade600),
-                        ),
                     ],
                   ),
                 ),
               ],
-            ),
-            const SizedBox(height: 12),
 
-            // Stats row
-            Wrap(
-              spacing: 12,
-              runSpacing: 6,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.help_outline,
-                        size: 16, color: Colors.grey.shade500),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${quiz['questions_count']} questions',
-                      style: TextStyle(
-                          fontSize: 13, color: Colors.grey.shade600),
-                    ),
-                  ],
-                ),
-                if (dueDate != null)
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.calendar_today,
-                        size: 14,
-                        color: _getDueDateColor(dueDate, alreadyTaken),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        _formatDueDate(dueDate),
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: _getDueDateColor(dueDate, alreadyTaken),
-                        ),
-                      ),
-                    ],
-                  )
-                else
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.calendar_today_outlined,
-                        size: 14,
-                        color: Colors.grey.shade400,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        'No deadline',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.grey.shade400,
-                        ),
-                      ),
-                    ],
-                  ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: alreadyTaken
-                        ? Colors.green.withOpacity(0.1)
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                height: 44,
+                child: ElevatedButton(
+                  onPressed: (alreadyTaken || isPastDue)
+                      ? null
+                      : () async {
+                          await Navigator.pushNamed(
+                            context,
+                            '/quiz-taking',
+                            arguments: {
+                              'quiz_id': quiz['id'],
+                              'quiz_title': quiz['title'],
+                            },
+                          );
+                          _loadQuizzes();
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: alreadyTaken
+                        ? Colors.grey.shade300
                         : isPastDue
-                            ? Colors.red.withOpacity(0.1)
-                            : const Color(0xFF6C63FF).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: alreadyTaken
-                          ? Colors.green.withOpacity(0.3)
-                          : isPastDue
-                              ? Colors.red.withOpacity(0.3)
-                              : const Color(0xFF6C63FF).withOpacity(0.3),
-                    ),
+                            ? _AppTheme.danger.withOpacity(0.15)
+                            : _AppTheme.primary,
+                    disabledBackgroundColor: alreadyTaken
+                        ? Colors.grey.shade200
+                        : _AppTheme.danger.withOpacity(0.1),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
                   ),
                   child: Text(
                     alreadyTaken
-                        ? '✓ Done'
+                        ? 'Already Completed'
                         : isPastDue
                             ? 'Past Due'
-                            : 'Not taken',
+                            : 'Take Quiz',
                     style: TextStyle(
-                      fontSize: 12,
                       color: alreadyTaken
-                          ? Colors.green
+                          ? _AppTheme.textLight
                           : isPastDue
-                              ? Colors.red
-                              : const Color(0xFF6C63FF),
+                              ? _AppTheme.danger
+                              : Colors.white,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-              ],
-            ),
-
-            // Score badge for completed quizzes
-            if (alreadyTaken) ...[
-              const SizedBox(height: 10),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                decoration: BoxDecoration(
-                  color: _getScoreColor(quiz['score'], quiz['total_points'])
-                      .withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.emoji_events,
-                      size: 16,
-                      color: _getScoreColor(quiz['score'], quiz['total_points']),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Score: ${quiz['score']} / ${quiz['total_points']}',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: _getScoreColor(
-                            quiz['score'], quiz['total_points']),
-                      ),
-                    ),
-                  ],
-                ),
               ),
             ],
-
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              height: 44,
-              child: ElevatedButton(
-                onPressed: (alreadyTaken || isPastDue)
-                    ? null
-                    : () async {
-                        await Navigator.pushNamed(
-                          context,
-                          '/quiz-taking',
-                          arguments: {
-                            'quiz_id': quiz['id'],
-                            'quiz_title': quiz['title'],
-                          },
-                        );
-                        _loadQuizzes();
-                      },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: alreadyTaken
-                      ? Colors.grey.shade300
-                      : isPastDue
-                          ? Colors.red.shade100
-                          : const Color(0xFF6C63FF),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                ),
-                child: Text(
-                  alreadyTaken
-                      ? 'Already Completed'
-                      : isPastDue
-                          ? 'Past Due'
-                          : 'Take Quiz',
-                  style: TextStyle(
-                    color: alreadyTaken
-                        ? Colors.grey.shade600
-                        : isPastDue
-                            ? Colors.red.shade700
-                            : Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
 
+  Widget _buildMeta(IconData icon, String label, {Color? color}) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: color ?? _AppTheme.textLight),
+        const SizedBox(width: 5),
+        Text(label, style: TextStyle(fontSize: 12, color: color ?? _AppTheme.textMid)),
+      ],
+    );
+  }
+
   Color _getDueDateColor(DateTime dueDate, bool alreadyTaken) {
-    if (alreadyTaken) return Colors.grey;
+    if (alreadyTaken) return _AppTheme.textLight;
     final now = DateTime.now();
-    if (dueDate.isBefore(now)) return Colors.red;
-    if (dueDate.difference(now).inDays <= 2) return Colors.orange;
-    return Colors.green;
+    if (dueDate.isBefore(now)) return _AppTheme.danger;
+    if (dueDate.difference(now).inDays <= 2) return _AppTheme.warning;
+    return _AppTheme.success;
   }
 
   String _formatDueDate(DateTime dueDate) {
@@ -503,10 +652,10 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
   }
 
   Color _getScoreColor(int? score, int? total) {
-    if (total == null || total == 0) return Colors.grey;
+    if (total == null || total == 0) return _AppTheme.textLight;
     final pct = ((score ?? 0) / total) * 100;
-    if (pct >= 80) return Colors.green;
-    if (pct >= 60) return Colors.orange;
-    return Colors.red;
+    if (pct >= 80) return _AppTheme.success;
+    if (pct >= 60) return _AppTheme.warning;
+    return _AppTheme.danger;
   }
 }
