@@ -15,7 +15,6 @@ import 'services/auth_service.dart';
 import 'screens/edit_question_screen.dart';
 import 'screens/quiz_results_screen.dart';
 import 'screens/student_attempt_detail_screen.dart';
-import 'screens/class_list_screen.dart';
 import 'screens/class_detail_screen.dart';
 import 'screens/student_class_quizzes_screen.dart';
 import 'screens/quiz_analytics_screen.dart';
@@ -119,7 +118,6 @@ class QuizzardApp extends StatelessWidget {
             studentName: args['student_name'],
           );
         },
-        '/class-list': (context) => const ClassListScreen(),
         '/class-detail': (context) {
           final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
           return ClassDetailScreen(
