@@ -1,6 +1,8 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../widgets/profile_widget.dart';
+import 'teacher_class_list_tab.dart';
 
 class TeacherDashboardScreen extends StatefulWidget {
   const TeacherDashboardScreen({super.key});
@@ -10,11 +12,10 @@ class TeacherDashboardScreen extends StatefulWidget {
 }
 
 class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
-
-  
   // ─── Theme ────────────────────────────────────────────────
   static const Color _purple = Color(0xFF6C63FF);
   static const Color _green = Color(0xFF4CAF50);
+  static const Color _bg = Color(0xFFF4F6FB);
 
   // ─── State ────────────────────────────────────────────────
   int _selectedIndex = 0;
@@ -33,7 +34,6 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
   }
 
   // ─── API ──────────────────────────────────────────────────
-
   Future<void> _loadDashboard() async {
     setState(() => _isLoading = true);
     try {
@@ -165,7 +165,6 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
   }
 
   // ─── Helpers ──────────────────────────────────────────────
-
   void _showSnackbar(String message, {bool isError = false}) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -214,203 +213,155 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
   }
 
   // ─── Build ────────────────────────────────────────────────
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      appBar: AppBar(
-        backgroundColor: _green,
-        elevation: 0,
-        title: const Text(
-          'Teacher Dashboard',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.white),
-            onPressed: _loadDashboard,
-            tooltip: 'Refresh',
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.white),
-            onPressed: _logout,
-            tooltip: 'Logout',
-          ),
-        ],
-      ),
-      floatingActionButton: _selectedIndex == 0
-          ? FloatingActionButton.extended(
-              onPressed: () async {
-                final result = await Navigator.pushNamed(context, '/create-quiz');
-                if (result == true) _loadDashboard();
-              },
-              backgroundColor: _purple,
-              icon: const Icon(Icons.add, color: Colors.white),
-              label: const Text(
-                'New Quiz',
-                style: TextStyle(color: Colors.white),
-              ),
-            )
-          : null,
-          body: Stack(
-            children: [
-              _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : IndexedStack(
-                      index: _selectedIndex,
-                      children: [
-                        _buildQuizzesTab(),
-                        _buildClassesTab(),
-                        _buildProfileTab(),
-                      ],
-                    ),
+      backgroundColor: _bg,
+      body: Stack(
+        children: [
+          _isLoading
+              ? const Center(child: CircularProgressIndicator(color: _green))
+              : IndexedStack(
+                  index: _selectedIndex,
+                  children: [
+                    _buildQuizzesTab(),
+                    TeacherClassListTab(onRefresh: _loadDashboard),
+                    _buildProfileTab(),
+                  ],
+                ),
 
-              // 🔴 FULL SCREEN LOADING OVERLAY
-              if (_isExporting)
-                AnimatedOpacity(
-                  duration: const Duration(milliseconds: 300),
-                  opacity: _isExporting ? 1 : 0,
-                  child: Container(
-                    color: Colors.black.withOpacity(0.6),
-                    child: Center(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          gradient: const LinearGradient(
-                            colors: [
-                              Color(0xFF6C63FF), // purple
-                              Color(0xFF4CAF50), // green
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
+          // Export overlay
+          if (_isExporting)
+            Positioned.fill(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+                child: Container(
+                  color: Colors.black.withOpacity(0.6),
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        gradient: const LinearGradient(
+                          colors: [_purple, _green],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.3),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.3),
-                              blurRadius: 20,
-                              offset: const Offset(0, 10),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const SizedBox(
+                            width: 50,
+                            height: 50,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 4,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                             ),
-                          ],
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // 🔄 Animated Loader
-                            const SizedBox(
-                              width: 50,
-                              height: 50,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 4,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                              ),
+                          ),
+                          const SizedBox(height: 18),
+                          const Text(
+                            'Generating Report',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
                             ),
-
-                            const SizedBox(height: 18),
-
-                            // 🧠 Title
-                            const Text(
-                              'Generating Report',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
+                          ),
+                          const SizedBox(height: 6),
+                          const Text(
+                            'Please wait while we prepare your Excel file...',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 13,
                             ),
-
-                            const SizedBox(height: 6),
-
-                            // 📝 Subtitle
-                            const Text(
-                              'Please wait while we prepare your Excel file...',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ),
-                ],
+              ),
             ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        selectedItemColor: _green,
-        unselectedItemColor: Colors.grey,
-        onTap: (i) => setState(() => _selectedIndex = i),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.quiz), label: 'My Quizzes'),
-          BottomNavigationBarItem(icon: Icon(Icons.class_), label: 'Classes'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
+      ),
+      bottomNavigationBar: _buildBottomNav(),
+    );
+  }
+
+  Widget _buildBottomNav() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 20,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: SizedBox(
+          height: 64,
+          child: Row(
+            children: [
+              _buildNavItem(0, Icons.quiz_rounded, Icons.quiz_outlined, 'Quizzes'),
+              _buildNavItem(1, Icons.class_rounded, Icons.class_outlined, 'Classes'),
+              _buildNavItem(2, Icons.person_rounded, Icons.person_outlined, 'Profile'),
+            ],
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildClassesTab() {
-    return Column(
-      children: [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(20),
-          color: _green,
-          child: const Text(
-            'My Classes',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+  Widget _buildNavItem(int index, IconData activeIcon, IconData inactiveIcon, String label) {
+    final isSelected = _selectedIndex == index;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _selectedIndex = index),
+        behavior: HitTestBehavior.opaque,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              decoration: BoxDecoration(
+                color: isSelected ? _green.withOpacity(0.1) : Colors.transparent,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                isSelected ? activeIcon : inactiveIcon,
+                color: isSelected ? _green : Colors.grey,
+                size: 22,
+              ),
             ),
-          ),
-        ),
-        Expanded(
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.class_, size: 80, color: Colors.grey.shade400),
-                const SizedBox(height: 16),
-                Text(
-                  'Manage your classes',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton.icon(
-                  onPressed: () => Navigator.pushNamed(context, '/class-list'),
-                  icon: const Icon(Icons.class_, color: Colors.white),
-                  label: const Text(
-                    'View My Classes',
-                    style: TextStyle(color: Colors.white, fontSize: 16),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _green,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 14,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ],
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
+                color: isSelected ? _green : Colors.grey,
+              ),
             ),
-          ),
+          ],
         ),
-      ],
+      ),
     );
   }
 
   // ─── Quizzes Tab ──────────────────────────────────────────
-
   Widget _buildQuizzesTab() {
     return RefreshIndicator(
       onRefresh: _loadDashboard,
@@ -452,19 +403,35 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
 
     return Container(
       color: _green,
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+      padding: const EdgeInsets.fromLTRB(16, 50, 16, 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Welcome, $_teacherName 👋',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Welcome, $_teacherName 👋',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              GestureDetector(
+                onTap: _logout,
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.logout_rounded, color: Colors.white, size: 18),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Row(
             children: [
               _statChip(Icons.quiz_outlined, '$totalQuizzes', 'Total Quizzes'),
@@ -540,7 +507,6 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Title + badge ──────────────────────────────
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -573,13 +539,11 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
               ),
               const Divider(height: 20),
 
-              // ── Action row ────────────────────────────────
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    // Edit button — hidden if quiz has attempts
                     if (quiz['has_attempts'] != true) ...[
                       TextButton.icon(
                         onPressed: () async {
@@ -594,35 +558,17 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                           );
                           if (result == true) _loadDashboard();
                         },
-                        icon: const Icon(
-                          Icons.edit,
-                          size: 16,
-                          color: Color(0xFF6C63FF),
-                        ),
-                        label: const Text(
-                          'Edit',
-                          style: TextStyle(color: Color(0xFF6C63FF)),
-                        ),
+                        icon: const Icon(Icons.edit, size: 16, color: _purple),
+                        label: const Text('Edit', style: TextStyle(color: _purple)),
                       ),
                       const SizedBox(width: 4),
-
-                      // Delete button
                       TextButton.icon(
                         onPressed: () => _deleteQuiz(quiz),
-                        icon: const Icon(
-                          Icons.delete,
-                          size: 16,
-                          color: Colors.red,
-                        ),
-                        label: const Text(
-                          'Delete',
-                          style: TextStyle(color: Colors.red),
-                        ),
+                        icon: const Icon(Icons.delete, size: 16, color: Colors.red),
+                        label: const Text('Delete', style: TextStyle(color: Colors.red)),
                       ),
                       const SizedBox(width: 6),
                     ],
-
-                    // Results button
                     TextButton.icon(
                       onPressed: () => Navigator.pushNamed(
                         context,
@@ -633,32 +579,17 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                         },
                       ),
                       style: TextButton.styleFrom(
-                        backgroundColor:
-                            const Color(0xFF4CAF50).withOpacity(0.10),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
+                        backgroundColor: _green.withOpacity(0.10),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       ),
-                      icon: const Icon(
-                        Icons.bar_chart,
-                        size: 16,
-                        color: Color(0xFF4CAF50),
-                      ),
+                      icon: const Icon(Icons.bar_chart, size: 16, color: _green),
                       label: const Text(
                         'Results',
-                        style: TextStyle(
-                          color: Color(0xFF4CAF50),
-                          fontWeight: FontWeight.w600,
-                        ),
+                        style: TextStyle(color: _green, fontWeight: FontWeight.w600),
                       ),
                     ),
                     const SizedBox(width: 6),
-
-                    // Analytics button
                     TextButton.icon(
                       onPressed: () => Navigator.pushNamed(
                         context,
@@ -669,123 +600,74 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                         },
                       ),
                       style: TextButton.styleFrom(
-                        backgroundColor:
-                            const Color(0xFF6C63FF).withOpacity(0.10),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
+                        backgroundColor: _purple.withOpacity(0.10),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       ),
-                      icon: const Icon(
-                        Icons.analytics_outlined,
-                        size: 16,
-                        color: Color(0xFF6C63FF),
-                      ),
+                      icon: const Icon(Icons.analytics_outlined, size: 16, color: _purple),
                       label: const Text(
                         'Analytics',
-                        style: TextStyle(
-                          color: Color(0xFF6C63FF),
-                          fontWeight: FontWeight.w600,
-                        ),
+                        style: TextStyle(color: _purple, fontWeight: FontWeight.w600),
                       ),
                     ),
                     const SizedBox(width: 6),
-
                     TextButton.icon(
                       onPressed: _isExporting
                           ? null
                           : () async {
                               setState(() => _isExporting = true);
-
                               try {
                                 final res = await AuthService.downloadFile(
                                   '/teacher/quizzes/$quizId/export-full',
                                   'quiz_${quizId}_report.xlsx',
                                 );
-
                                 if (!mounted) return;
-
                                 if (res['success']) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Report downloaded')),
-                                  );
+                                  _showSnackbar('Report downloaded');
                                 } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(res['message'] ?? 'Download failed')),
-                                  );
+                                  _showSnackbar(res['message'] ?? 'Download failed', isError: true);
                                 }
                               } catch (e) {
                                 if (!mounted) return;
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Error: $e')),
-                                );
+                                _showSnackbar('Error: $e', isError: true);
                               } finally {
-                                if (mounted) {
-                                  setState(() => _isExporting = false);
-                                }
+                                if (mounted) setState(() => _isExporting = false);
                               }
                             },
                       style: TextButton.styleFrom(
                         backgroundColor: Colors.orange.withOpacity(0.10),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       ),
-                      icon: const Icon(
-                        Icons.download,
-                        size: 16,
-                        color: Colors.orange,
-                      ),
+                      icon: const Icon(Icons.download, size: 16, color: Colors.orange),
                       label: const Text(
                         'Export',
-                        style: TextStyle(
-                          color: Colors.orange,
-                          fontWeight: FontWeight.w600,
-                        ),
+                        style: TextStyle(color: Colors.orange, fontWeight: FontWeight.w600),
                       ),
                     ),
                     const SizedBox(width: 6),
-
-                                        
-
-                    // Publish toggle
                     isToggling
-                      ? const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : OutlinedButton.icon(
-                          onPressed: () => _togglePublish(quiz),
-                          icon: Icon(
-                            isPublished
-                                ? Icons.unpublished_outlined
-                                : Icons.publish,
-                            size: 18,
-                            color: isPublished ? Colors.orange : _green,
-                          ),
-                          label: Text(
-                            isPublished ? 'Unpublish' : 'Publish',
-                            style: TextStyle(
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : OutlinedButton.icon(
+                            onPressed: () => _togglePublish(quiz),
+                            icon: Icon(
+                              isPublished ? Icons.unpublished_outlined : Icons.publish,
+                              size: 18,
                               color: isPublished ? Colors.orange : _green,
                             ),
-                          ),
-                          style: OutlinedButton.styleFrom(
-                            side: BorderSide(
-                              color: isPublished ? Colors.orange : _green,
+                            label: Text(
+                              isPublished ? 'Unpublish' : 'Publish',
+                              style: TextStyle(color: isPublished ? Colors.orange : _green),
                             ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                            style: OutlinedButton.styleFrom(
+                              side: BorderSide(color: isPublished ? Colors.orange : _green),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                             ),
                           ),
-                        ),
                   ],
                 ),
               ),
@@ -800,9 +682,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: isPublished
-            ? _green.withOpacity(0.15)
-            : Colors.grey.withOpacity(0.15),
+        color: isPublished ? _green.withOpacity(0.15) : Colors.grey.withOpacity(0.15),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isPublished ? _green : Colors.grey,
@@ -832,7 +712,6 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
   }
 
   // ─── Profile Tab ──────────────────────────────────────────
-
   Widget _buildProfileTab() {
     return ProfileWidget(onLogout: _logout);
   }
