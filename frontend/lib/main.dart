@@ -15,12 +15,12 @@ import 'services/auth_service.dart';
 import 'screens/edit_question_screen.dart';
 import 'screens/quiz_results_screen.dart';
 import 'screens/student_attempt_detail_screen.dart';
-import 'screens/class_list_screen.dart';
 import 'screens/class_detail_screen.dart';
 import 'screens/student_class_quizzes_screen.dart';
 import 'screens/quiz_analytics_screen.dart';
 import 'screens/student_info_screen.dart';
 import 'screens/ai_quiz_generate_screen.dart';
+import 'screens/class_quiz_results_screen.dart';
 
 
 
@@ -119,7 +119,6 @@ class QuizzardApp extends StatelessWidget {
             studentName: args['student_name'],
           );
         },
-        '/class-list': (context) => const ClassListScreen(),
         '/class-detail': (context) {
           final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
           return ClassDetailScreen(
@@ -135,7 +134,16 @@ class QuizzardApp extends StatelessWidget {
           );
         },
         '/student-info': (context) => const StudentInfoScreen(),
-        
+        '/class-quiz-results': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+          return ClassQuizResultsScreen(
+            classId: args['class_id'],
+            className: args['class_name'] ?? '',
+            quizId: args['quiz_id'],
+            quizTitle: args['quiz_title'],
+          );
+        },
+
       },
     );
   }
