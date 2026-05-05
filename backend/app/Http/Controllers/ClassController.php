@@ -65,10 +65,19 @@ class ClassController extends Controller
             ->with(['quizzes' => function ($q) {
                 $q->select('quizzes.id', 'quizzes.title', 'quizzes.is_published')
                 ->withCount('questions')
-                ->withCount('attempts')
                 ->withPivot('due_date', 'assigned_at');
             }])
             ->firstOrFail();
+
+        // Get student IDs in this class for class-scoped attempt counting
+        $studentIds = $class->students()->pluck('users.id')->toArray();
+
+        // Attach class_attempts_count to each quiz
+        foreach ($class->quizzes as $quiz) {
+            $quiz->class_attempts_count = QuizAttempt::where('quiz_id', $quiz->id)
+                ->whereIn('student_id', $studentIds)
+                ->count();
+        }
 
         return response()->json(['class' => $class]);
     }

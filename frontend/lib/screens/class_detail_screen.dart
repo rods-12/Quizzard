@@ -1404,7 +1404,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                           ],
                         ),
                       ),
-                      if ((quiz['attempts_count'] ?? 0) == 0)
+                      if ((quiz['class_attempts_count'] ?? 0) == 0)
                         const PopupMenuItem(
                           value: 'remove',
                           child: Row(
@@ -1419,7 +1419,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                         ),
                     ],
                   ),
-                  if ((quiz['attempts_count'] ?? 0) > 0)
+                  if ((quiz['class_attempts_count'] ?? 0) > 0)
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
