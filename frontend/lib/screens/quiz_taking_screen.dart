@@ -321,33 +321,47 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
               ),
               const SizedBox(height: 8),
               // Question dots
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(totalQuestions, (index) {
-                  final q =
-                      Map<String, dynamic>.from(_questions[index]);
-                  final isAnswered = _isAnswered(q['id']);
-                  final isCurrent = index == _currentIndex;
-                  return GestureDetector(
-                    onTap: () =>
-                        setState(() => _currentIndex = index),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      margin: const EdgeInsets.symmetric(
-                          horizontal: 3),
-                      width: isCurrent ? 24 : 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        color: isCurrent
-                            ? const Color(0xFF6C63FF)
-                            : isAnswered
-                                ? Colors.green
-                                : Colors.grey.shade300,
-                        borderRadius: BorderRadius.circular(5),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: List.generate(totalQuestions, (index) {
+                    final q = Map<String, dynamic>.from(_questions[index]);
+                    final isAnswered = _isAnswered(q['id']);
+                    final isCurrent = index == _currentIndex;
+
+                    return GestureDetector(
+                      onTap: () => setState(() => _currentIndex = index),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        width: isCurrent ? 36 : 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: isCurrent
+                              ? const Color(0xFF6C63FF)
+                              : isAnswered
+                                  ? Colors.green
+                                  : Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Center(
+                          child: Text(
+                            '${index + 1}',
+                            style: TextStyle(
+                              color: isCurrent || isAnswered
+                                  ? Colors.white
+                                  : Colors.grey.shade700,
+                              fontWeight: isCurrent
+                                  ? FontWeight.bold
+                                  : FontWeight.w500,
+                              fontSize: isCurrent ? 14 : 12,
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                  );
-                }),
+                    );
+                  }),
+                ),
               ),
             ],
           ),

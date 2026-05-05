@@ -554,21 +554,23 @@ class _QuizResultsScreenState extends State<QuizResultsScreen> {
                                       ),
                                     ),
                                     const SizedBox(height: 6),
-                                    Wrap(
-                                      spacing: 8,
-                                      runSpacing: 6,
-                                      children: [
-                                        _buildStatusChip(
-                                          label: isPassed ? 'Pass' : 'Fail',
-                                          color: isPassed ? Colors.green : Colors.red,
-                                          icon: isPassed ? Icons.check_circle : Icons.cancel,
-                                        ),
-                                        _buildStatusChip(
-                                          label: 'Completed ${_formatDate(result['completed_at']?.toString())}',
-                                          color: Colors.blueGrey,
-                                          icon: Icons.calendar_today,
-                                        ),
-                                      ],
+                                    SingleChildScrollView(
+                                      scrollDirection: Axis.horizontal,
+                                      child: Row(
+                                        children: [
+                                          _buildStatusChip(
+                                            label: isPassed ? 'Pass' : 'Fail',
+                                            color: isPassed ? Colors.green : Colors.red,
+                                            icon: isPassed ? Icons.check_circle : Icons.cancel,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          _buildStatusChip(
+                                            label: 'Completed ${_formatDate(result['completed_at']?.toString())}',
+                                            color: Colors.blueGrey,
+                                            icon: Icons.calendar_today,
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -666,12 +668,16 @@ class _QuizResultsScreenState extends State<QuizResultsScreen> {
         children: [
           Icon(icon, size: 13, color: color),
           const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
+          Flexible(  // ← Changed from bare Text to Flexible
+            child: Text(
+              label,
+              style: TextStyle(
+                color: color,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
+              overflow: TextOverflow.ellipsis,  // ← Truncate with ...
+              maxLines: 1,
             ),
           ),
         ],
