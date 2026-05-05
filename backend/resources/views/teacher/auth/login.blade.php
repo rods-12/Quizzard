@@ -38,10 +38,28 @@
                 >
             </div>
 
-            <button class="w-full bg-green-600 text-white rounded px-4 py-2 hover:bg-green-700">
+            <button
+                id="login-btn"
+                class="w-full bg-green-600 text-white rounded px-4 py-2 hover:bg-green-700 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
                 Login
             </button>
         </form>
     </div>
+
+
+    <script>
+        document.querySelector('form').addEventListener('submit', function () {
+            const btn = document.getElementById('login-btn');
+            btn.disabled = true;
+            btn.innerHTML = `
+                <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                </svg>
+                Logging in...
+            `;
+        });
+    </script>
 </body>
 </html>
