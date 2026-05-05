@@ -1377,8 +1377,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                   PopupMenuButton<String>(
                     icon: const Icon(Icons.more_vert, color: Colors.grey),
                     onSelected: (value) {
-                      if (value == 'view_results')
-                        _viewClassQuizResults(quiz);
+                      if (value == 'view_results')_viewClassQuizResults(quiz);
                       if (value == 'edit_due') _editDueDate(quiz);
                       if (value == 'remove') _unassignQuiz(quiz);
                     },
@@ -1405,7 +1404,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                           ],
                         ),
                       ),
-                      if ((quiz['attempts_count'] ?? 0) == 0)
+                      if ((quiz['class_attempts_count'] ?? 0) == 0)
                         const PopupMenuItem(
                           value: 'remove',
                           child: Row(
@@ -1420,7 +1419,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                         ),
                     ],
                   ),
-                  if ((quiz['attempts_count'] ?? 0) > 0)
+                  if ((quiz['class_attempts_count'] ?? 0) > 0)
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [

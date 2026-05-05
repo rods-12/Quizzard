@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../widgets/profile_widget.dart';
 import 'teacher_class_list_tab.dart';
+import 'teacher_quizzes_tab.dart';
 
 // ─── THEME ────────────────────────────────────────────────────────────────────
 class _T {
@@ -52,11 +53,11 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
   int _selectedIndex = 0;
   bool _isLoading = true;
   bool _isExporting = false;
+  bool _isActionLoading = false;
   String _teacherName = '';
   String _teacherEmail = '';
-  List<Map<String, dynamic>> _quizzes = [];
+  List<Map<String, dynamic>> _classes = [];
   Map<String, dynamic> _stats = {};
-  final Set<int> _togglingIds = {};
 
   @override
   void initState() {
@@ -75,7 +76,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
         setState(() {
           _teacherName = data['teacher']['name'] ?? '';
           _teacherEmail = data['teacher']['email'] ?? '';
-          _quizzes = List<Map<String, dynamic>>.from(data['quizzes'] ?? []);
+          _classes = List<Map<String, dynamic>>.from(data['classes'] ?? []);
           _stats = Map<String, dynamic>.from(data['stats'] ?? {});
         });
       } else {
@@ -85,64 +86,6 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
       _showSnackbar('Network error: $e', isError: true);
     } finally {
       setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _togglePublish(Map<String, dynamic> quiz) async {
-    final int quizId = quiz['id'];
-    final bool isPublished = quiz['is_published'] == true || quiz['is_published'] == 1;
-    final String quizTitle = quiz['title'] ?? 'this quiz';
-
-    final confirmed = await _showPublishConfirmation(quizTitle, isPublished);
-    if (!confirmed) return;
-
-    setState(() => _togglingIds.add(quizId));
-    try {
-      final response = await AuthService.authPatch('/quizzes/$quizId/publish-toggle', {});
-      if (response['success'] == true) {
-        final updatedQuiz = response['data'];
-        setState(() {
-          final idx = _quizzes.indexWhere((q) => q['id'] == quizId);
-          if (idx != -1) {
-            _quizzes[idx] = {..._quizzes[idx], 'is_published': updatedQuiz['is_published']};
-          }
-        });
-        _showSnackbar(response['message'] ?? 'Status updated.');
-      } else {
-        _showSnackbar(response['message'] ?? 'Failed to toggle.', isError: true);
-      }
-    } catch (e) {
-      _showSnackbar('Network error: $e', isError: true);
-    } finally {
-      setState(() => _togglingIds.remove(quizId));
-    }
-  }
-
-  Future<void> _deleteQuiz(Map<String, dynamic> quiz) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Delete Quiz', style: TextStyle(fontWeight: FontWeight.bold)),
-        content: Text('Are you sure you want to delete "${quiz['title']}"? This cannot be undone.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: _T.danger, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-
-    final result = await AuthService.authDelete('/quizzes/${quiz['id']}');
-    if (result['success']) {
-      setState(() => _quizzes.removeWhere((q) => q['id'] == quiz['id']));
-      _showSnackbar('Quiz deleted.');
-    } else {
-      _showSnackbar(result['message'], isError: true);
     }
   }
 
@@ -170,45 +113,215 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     Navigator.pushReplacementNamed(context, '/login');
   }
 
+  // ─── Class Actions (mirrors TeacherClassListTab) ──────────────────────────
+
+  Future<void> _createClass() async {
+    final nameController = TextEditingController();
+    final descController = TextEditingController();
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Create New Class', style: TextStyle(fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              maxLength: 100,
+              decoration: InputDecoration(
+                labelText: 'Class Name',
+                hintText: 'e.g. Math 101',
+                prefixIcon: const Icon(Icons.class_rounded, color: _T.primary),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: _T.primary, width: 2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: descController,
+              maxLines: 3,
+              maxLength: 200,
+              decoration: InputDecoration(
+                labelText: 'Description (optional)',
+                hintText: 'e.g. Introduction to Mathematics',
+                prefixIcon: const Icon(Icons.description_rounded, color: _T.primary),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: _T.primary, width: 2),
+                ),
+                alignLabelWithHint: true,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _T.primary,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text('Create', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+    if (nameController.text.trim().isEmpty) {
+      _showSnackbar('Class name is required!', isWarning: true);
+      return;
+    }
+
+    setState(() => _isActionLoading = true);
+    final result = await AuthService.authPost('/classes', {
+      'name': nameController.text.trim(),
+      'description': descController.text.trim(),
+    });
+    if (mounted) setState(() => _isActionLoading = false);
+
+    if (result['success']) {
+      _loadDashboard();
+      _showSnackbar('Class created successfully!');
+    } else {
+      _showSnackbar(result['message'], isError: true);
+    }
+  }
+
+  Future<void> _editClass(Map<String, dynamic> cls) async {
+    final nameController = TextEditingController(text: cls['name']);
+    final descController = TextEditingController(text: cls['description'] ?? '');
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Edit Class', style: TextStyle(fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              maxLength: 100,
+              decoration: InputDecoration(
+                labelText: 'Class Name',
+                prefixIcon: const Icon(Icons.class_rounded, color: _T.primary),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: _T.primary, width: 2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: descController,
+              maxLines: 3,
+              maxLength: 200,
+              decoration: InputDecoration(
+                labelText: 'Description (optional)',
+                prefixIcon: const Icon(Icons.description_rounded, color: _T.primary),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: _T.primary, width: 2),
+                ),
+                alignLabelWithHint: true,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _T.primary,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text('Save', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    setState(() => _isActionLoading = true);
+    final result = await AuthService.authPut(
+      '/classes/${cls['id']}',
+      {
+        'name': nameController.text.trim(),
+        'description': descController.text.trim(),
+      },
+    );
+    if (mounted) setState(() => _isActionLoading = false);
+
+    if (result['success']) {
+      _loadDashboard();
+      _showSnackbar('Class updated successfully!');
+    } else {
+      _showSnackbar(result['message'], isError: true);
+    }
+  }
+
+  Future<void> _deleteClass(Map<String, dynamic> cls) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Delete Class', style: TextStyle(fontWeight: FontWeight.bold)),
+        content: Text('Are you sure you want to delete "${cls['name']}"? All student enrollments and quiz assignments will be lost.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: _T.danger, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    setState(() => _isActionLoading = true);
+    final result = await AuthService.authDelete('/classes/${cls['id']}');
+    if (mounted) setState(() => _isActionLoading = false);
+
+    if (result['success']) {
+      setState(() => _classes.removeWhere((c) => c['id'] == cls['id']));
+      _showSnackbar('Class deleted.');
+    } else {
+      _showSnackbar(result['message'] ?? 'Failed to delete class.', isError: true);
+    }
+  }
+
   // ─── Helpers ──────────────────────────────────────────────────────────────
 
-  void _showSnackbar(String message, {bool isError = false}) {
+  void _showSnackbar(String message, {bool isError = false, bool isWarning = false}) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? _T.danger : _T.success,
+        backgroundColor: isError ? _T.danger : isWarning ? _T.warning : _T.success,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.all(16),
       ),
     );
-  }
-
-  Future<bool> _showPublishConfirmation(String quizTitle, bool isCurrentlyPublished) async {
-    final actionLabel = isCurrentlyPublished ? 'Unpublish' : 'Publish';
-    final color = isCurrentlyPublished ? _T.orange : _T.success;
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('$actionLabel Quiz?', style: const TextStyle(fontWeight: FontWeight.bold)),
-        content: Text(
-          isCurrentlyPublished
-              ? 'Students will no longer be able to access "$quizTitle".'
-              : 'Students will be able to see and take "$quizTitle".',
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancel')),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: color, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(actionLabel, style: const TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-    return result ?? false;
   }
 
   // ─── BUILD ────────────────────────────────────────────────────────────────
@@ -224,28 +337,78 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
               : IndexedStack(
                   index: _selectedIndex,
                   children: [
-                    _buildQuizzesTab(),
+                    _buildHomeTab(),
+                    TeacherQuizzesTab(
+                      teacherName: _teacherName,
+                      onRefresh: _loadDashboard,
+                      onExportStart: () => setState(() => _isExporting = true),
+                      onExportEnd: () => setState(() => _isExporting = false),
+                    ),
                     TeacherClassListTab(onRefresh: _loadDashboard),
                     ProfileWidget(onLogout: _logout),
                   ],
                 ),
           if (_isExporting) _buildBlurOverlay('Generating Report...'),
+          if (_isActionLoading)
+            Positioned.fill(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+                child: Container(
+                  color: Colors.black.withOpacity(0.25),
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 22),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.92),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 24, offset: const Offset(0, 8))],
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CircularProgressIndicator(color: _T.primary, strokeWidth: 3),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Please wait...',
+                            style: TextStyle(color: _T.textDark, fontWeight: FontWeight.w600, fontSize: 14),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
-      floatingActionButton: _selectedIndex == 0 && !_isLoading
-          ? FloatingActionButton.extended(
-              onPressed: () async {
-                final result = await Navigator.pushNamed(context, '/create-quiz');
-                if (result == true) _loadDashboard();
-              },
-              backgroundColor: _T.accent,
-              elevation: 4,
-              icon: const Icon(Icons.add_rounded, color: Colors.white),
-              label: const Text('New Quiz', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-            )
-          : null,
+      floatingActionButton: _buildFloatingActionButton(),
       bottomNavigationBar: _buildBottomNav(),
     );
+  }
+
+  Widget? _buildFloatingActionButton() {
+    if (_selectedIndex == 1 && !_isLoading) {
+      return FloatingActionButton.extended(
+        onPressed: () async {
+          final result = await Navigator.pushNamed(context, '/create-quiz');
+          if (result == true) _loadDashboard();
+        },
+        backgroundColor: _T.accent,
+        elevation: 4,
+        icon: const Icon(Icons.add_rounded, color: Colors.white),
+        label: const Text('New Quiz', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+      );
+    }
+    if (_selectedIndex == 0 && !_isLoading) {
+      return FloatingActionButton.extended(
+        onPressed: _createClass,
+        backgroundColor: _T.primary,
+        elevation: 4,
+        icon: const Icon(Icons.add_rounded, color: Colors.white),
+        label: const Text('New Class', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+      );
+    }
+    return null;
   }
 
   Widget _buildBlurOverlay(String message) {
@@ -288,9 +451,10 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
           height: 64,
           child: Row(
             children: [
-              _buildNavItem(0, Icons.quiz_rounded, Icons.quiz_outlined, 'Quizzes'),
-              _buildNavItem(1, Icons.class_rounded, Icons.class_outlined, 'Classes'),
-              _buildNavItem(2, Icons.person_rounded, Icons.person_outlined, 'Profile'),
+              _buildNavItem(0, Icons.home_rounded, Icons.home_outlined, 'Home'),
+              _buildNavItem(1, Icons.quiz_rounded, Icons.quiz_outlined, 'Quizzes'),
+              _buildNavItem(2, Icons.class_rounded, Icons.class_outlined, 'Classes'),
+              _buildNavItem(3, Icons.person_rounded, Icons.person_outlined, 'Profile'),
             ],
           ),
         ),
@@ -382,115 +546,19 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     );
   }
 
-  // ─── QUIZZES TAB ──────────────────────────────────────────────────────────
+  // ─── HOME TAB (Classes Dashboard) ─────────────────────────────────────────
 
-  Widget _buildQuizzesTab() {
-    return _QuizzesTab(
-      quizzes: _quizzes,
-      stats: _stats,
-      teacherName: _teacherName,
-      togglingIds: _togglingIds,
-      isExporting: _isExporting,
-      onRefresh: _loadDashboard,
-      onTogglePublish: _togglePublish,
-      onDeleteQuiz: _deleteQuiz,
-      onLogout: _logout,
-      onExportStart: () => setState(() => _isExporting = true),
-      onExportEnd: () => setState(() => _isExporting = false),
-    );
-  }
-}
-
-// ─── QUIZZES TAB WIDGET ───────────────────────────────────────────────────────
-class _QuizzesTab extends StatefulWidget {
-  final List<Map<String, dynamic>> quizzes;
-  final Map<String, dynamic> stats;
-  final String teacherName;
-  final Set<int> togglingIds;
-  final bool isExporting;
-  final VoidCallback onRefresh;
-  final Future<void> Function(Map<String, dynamic>) onTogglePublish;
-  final Future<void> Function(Map<String, dynamic>) onDeleteQuiz;
-  final VoidCallback onLogout;
-  final VoidCallback onExportStart;
-  final VoidCallback onExportEnd;
-
-  const _QuizzesTab({
-    required this.quizzes,
-    required this.stats,
-    required this.teacherName,
-    required this.togglingIds,
-    required this.isExporting,
-    required this.onRefresh,
-    required this.onTogglePublish,
-    required this.onDeleteQuiz,
-    required this.onLogout,
-    required this.onExportStart,
-    required this.onExportEnd,
-  });
-
-  @override
-  State<_QuizzesTab> createState() => _QuizzesTabState();
-}
-
-class _QuizzesTabState extends State<_QuizzesTab> {
-  final TextEditingController _searchController = TextEditingController();
-  String _filter = 'all';
-  List<Map<String, dynamic>> _filtered = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _filtered = widget.quizzes;
-    _searchController.addListener(_applyFilter);
-  }
-
-  @override
-  void didUpdateWidget(_QuizzesTab oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.quizzes != widget.quizzes) _applyFilter();
-  }
-
-  @override
-  void dispose() {
-    _searchController.removeListener(_applyFilter);
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  void _applyFilter() {
-    final query = _searchController.text.trim().toLowerCase();
-    setState(() {
-      _filtered = widget.quizzes.where((q) {
-        final title = (q['title'] ?? '').toString().toLowerCase();
-        final desc = (q['description'] ?? '').toString().toLowerCase();
-        final matchesQuery = query.isEmpty || title.contains(query) || desc.contains(query);
-        final isPublished = q['is_published'] == true || q['is_published'] == 1;
-        final matchesFilter = _filter == 'all' ? true : _filter == 'published' ? isPublished : !isPublished;
-        return matchesQuery && matchesFilter;
-      }).toList();
-    });
-  }
-
-  void _setFilter(String val) {
-    setState(() => _filter = val);
-    _applyFilter();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final totalQuizzes = widget.stats['total_quizzes'] ?? widget.quizzes.length;
-    final publishedCount = widget.stats['published_quizzes'] ??
-        widget.quizzes.where((q) => q['is_published'] == true || q['is_published'] == 1).length;
-    final totalStudents = widget.stats['total_students'] ?? 0;
-    final draftCount = (totalQuizzes as int) - (publishedCount as int);
+  Widget _buildHomeTab() {
+    final totalClasses = _stats['total_classes'] ?? _classes.length;
+    final totalStudents = _stats['total_students'] ?? 0;
+    final totalQuizzes = _stats['total_quizzes'] ?? 0;
 
     final hour = DateTime.now().hour;
     final greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
-    final firstName = widget.teacherName.split(' ').first;
+    final firstName = _teacherName.split(' ').first;
 
     return RefreshIndicator(
-      onRefresh: () async => widget.onRefresh(),
+      onRefresh: () async => _loadDashboard(),
       color: _T.primary,
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -526,7 +594,7 @@ class _QuizzesTabState extends State<_QuizzesTab> {
                         ),
                       ),
                       GestureDetector(
-                        onTap: widget.onLogout,
+                        onTap: _logout,
                         child: Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(color: Colors.white.withOpacity(0.15), borderRadius: BorderRadius.circular(12)),
@@ -539,33 +607,34 @@ class _QuizzesTabState extends State<_QuizzesTab> {
                   // Stat cards
                   Row(
                     children: [
-                      _buildStatCard(Icons.quiz_rounded, '$totalQuizzes', 'Total'),
-                      const SizedBox(width: 10),
-                      _buildStatCard(Icons.visibility_rounded, '$publishedCount', 'Published'),
+                      _buildStatCard(Icons.class_rounded, '$totalClasses', 'Classes'),
                       const SizedBox(width: 10),
                       _buildStatCard(Icons.people_rounded, '$totalStudents', 'Students'),
+                      const SizedBox(width: 10),
+                      _buildStatCard(Icons.quiz_rounded, '$totalQuizzes', 'Quizzes'),
                     ],
                   ),
-                  const SizedBox(height: 20),
-                  // Search
-                  TextField(
-                    controller: _searchController,
-                    style: const TextStyle(fontSize: 14, color: _T.textDark),
-                    decoration: InputDecoration(
-                      hintText: 'Search quizzes...',
-                      hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
-                      prefixIcon: const Icon(Icons.search_rounded, color: _T.primary, size: 20),
-                      suffixIcon: _searchController.text.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.clear_rounded, size: 18),
-                              color: _T.textMid,
-                              onPressed: () => _searchController.clear(),
-                            )
-                          : null,
-                      filled: true,
-                      fillColor: Colors.white,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+                ],
+              ),
+            ),
+          ),
+
+          // ── Section title ──
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Your Classes',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _T.textDark),
+                  ),
+                  GestureDetector(
+                    onTap: () => setState(() => _selectedIndex = 2),
+                    child: Text(
+                      'See all',
+                      style: TextStyle(fontSize: 13, color: _T.primary, fontWeight: FontWeight.w600),
                     ),
                   ),
                 ],
@@ -573,35 +642,8 @@ class _QuizzesTabState extends State<_QuizzesTab> {
             ),
           ),
 
-          // ── Filter chips ──
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
-              child: Row(
-                children: [
-                  _buildFilterChip('all', 'All ($totalQuizzes)'),
-                  const SizedBox(width: 8),
-                  _buildFilterChip('published', 'Published ($publishedCount)'),
-                  const SizedBox(width: 8),
-                  _buildFilterChip('draft', 'Draft ($draftCount)'),
-                ],
-              ),
-            ),
-          ),
-
-          // ── Count ──
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 10, 20, 4),
-              child: Text(
-                '${_filtered.length} quiz${_filtered.length == 1 ? '' : 'zes'}',
-                style: const TextStyle(color: _T.textMid, fontSize: 13),
-              ),
-            ),
-          ),
-
-          // ── List or empty ──
-          _filtered.isEmpty
+          // ── Classes list or empty ──
+          _classes.isEmpty
               ? SliverFillRemaining(
                   hasScrollBody: false,
                   child: Center(
@@ -613,18 +655,18 @@ class _QuizzesTabState extends State<_QuizzesTab> {
                           Container(
                             padding: const EdgeInsets.all(24),
                             decoration: BoxDecoration(color: _T.primaryLight, shape: BoxShape.circle),
-                            child: Icon(Icons.quiz_outlined, size: 48, color: _T.primary.withOpacity(0.5)),
+                            child: Icon(Icons.class_outlined, size: 48, color: _T.primary.withOpacity(0.5)),
                           ),
                           const SizedBox(height: 16),
-                          Text(
-                            widget.quizzes.isEmpty ? 'No quizzes yet.' : 'No quizzes found.',
-                            style: const TextStyle(color: _T.textMid, fontSize: 16, fontWeight: FontWeight.w500),
+                          const Text(
+                            'No classes yet.',
+                            style: TextStyle(color: _T.textMid, fontSize: 16, fontWeight: FontWeight.w500),
                           ),
                           const SizedBox(height: 4),
-                          Text(
-                            widget.quizzes.isEmpty ? 'Tap "New Quiz" to get started!' : 'Try adjusting your search or filter.',
+                          const Text(
+                            'Tap "New Class" to create your first class!',
                             textAlign: TextAlign.center,
-                            style: const TextStyle(color: _T.textLight, fontSize: 13),
+                            style: TextStyle(color: _T.textLight, fontSize: 13),
                           ),
                         ],
                       ),
@@ -632,11 +674,11 @@ class _QuizzesTabState extends State<_QuizzesTab> {
                   ),
                 )
               : SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 100),
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate(
-                      (context, index) => _buildQuizCard(_filtered[index]),
-                      childCount: _filtered.length,
+                      (context, index) => _buildClassCard(_classes[index]),
+                      childCount: _classes.length,
                     ),
                   ),
                 ),
@@ -666,39 +708,20 @@ class _QuizzesTabState extends State<_QuizzesTab> {
     );
   }
 
-  Widget _buildFilterChip(String value, String label) {
-    final isSelected = _filter == value;
-    return GestureDetector(
-      onTap: () => _setFilter(value),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-        decoration: BoxDecoration(
-          color: isSelected ? _T.primary : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isSelected ? _T.primary : Colors.grey.shade300),
-          boxShadow: isSelected ? [BoxShadow(color: _T.primary.withOpacity(0.25), blurRadius: 8, offset: const Offset(0, 2))] : [],
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? Colors.white : _T.textMid,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            fontSize: 12,
-          ),
-        ),
-      ),
-    );
-  }
+  Widget _buildClassCard(Map<String, dynamic> cls) {
+    final int classId = cls['id'];
+    final String name = cls['name'] ?? 'Untitled Class';
+    final String description = cls['description'] ?? '';
+    final int studentCount = cls['students_count'] ?? 0;
+    final int quizCount = cls['quizzes_count'] ?? 0;
+    final String? code = cls['code'];
 
-  Widget _buildQuizCard(Map<String, dynamic> quiz) {
-    final int quizId = quiz['id'];
-    final bool isPublished = quiz['is_published'] == true || quiz['is_published'] == 1;
-    final bool isToggling = widget.togglingIds.contains(quizId);
-    final String title = quiz['title'] ?? 'Untitled Quiz';
-    final String description = quiz['description'] ?? '';
-    final int questions = quiz['questions_count'] ?? 0;
-    final bool hasAttempts = quiz['has_attempts'] == true;
+    // Color generation matching TeacherClassListTab
+    final colors = [
+      const Color(0xFF2ECC71), const Color(0xFF6C63FF), const Color(0xFF3B82F6),
+      const Color(0xFFF59E0B), const Color(0xFFEF4444), const Color(0xFF8B5CF6),
+    ];
+    final classColor = colors[name.codeUnitAt(0) % colors.length];
 
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
@@ -706,12 +729,12 @@ class _QuizzesTabState extends State<_QuizzesTab> {
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: () async {
-          final result = await Navigator.pushNamed(
+          await Navigator.pushNamed(
             context,
-            '/quiz-detail',
-            arguments: {'quiz_id': quizId, 'quiz_title': title},
+            '/class-detail',
+            arguments: {'class_id': classId, 'class_name': name},
           );
-          if (result == true) widget.onRefresh();
+          _loadDashboard();
         },
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -720,7 +743,7 @@ class _QuizzesTabState extends State<_QuizzesTab> {
             Container(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
               decoration: BoxDecoration(
-                color: isPublished ? _T.primaryLight : Colors.grey.shade50,
+                color: classColor.withOpacity(0.1),
                 borderRadius: const BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
               ),
               child: Row(
@@ -729,17 +752,22 @@ class _QuizzesTabState extends State<_QuizzesTab> {
                     width: 46,
                     height: 46,
                     decoration: BoxDecoration(
-                      color: isPublished ? _T.primary : Colors.grey.shade300,
+                      color: classColor,
                       borderRadius: BorderRadius.circular(13),
                     ),
-                    child: const Icon(Icons.quiz_rounded, color: Colors.white, size: 24),
+                    child: Center(
+                      child: Text(
+                        name[0].toUpperCase(),
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: _T.textDark)),
+                        Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: _T.textDark)),
                         if (description.isNotEmpty) ...[
                           const SizedBox(height: 2),
                           Text(description, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, color: _T.textMid)),
@@ -747,19 +775,7 @@ class _QuizzesTabState extends State<_QuizzesTab> {
                       ],
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: isPublished ? _T.primary.withOpacity(0.12) : Colors.grey.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: isPublished ? _T.primary.withOpacity(0.3) : Colors.grey.withOpacity(0.3)),
-                    ),
-                    child: Text(
-                      isPublished ? 'Published' : 'Draft',
-                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: isPublished ? _T.primary : _T.textMid),
-                    ),
-                  ),
+                  Icon(Icons.chevron_right_rounded, color: classColor),
                 ],
               ),
             ),
@@ -772,147 +788,111 @@ class _QuizzesTabState extends State<_QuizzesTab> {
                 children: [
                   Row(
                     children: [
-                      _buildMeta(Icons.help_outline_rounded, '$questions question${questions != 1 ? 's' : ''}'),
-                      if (hasAttempts) ...[
-                        const SizedBox(width: 14),
-                        _buildMeta(Icons.lock_outline_rounded, 'Has attempts', color: _T.orange),
-                      ],
+                      if (code != null && code.isNotEmpty)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: classColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: classColor.withOpacity(0.3)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.key_rounded, size: 12, color: classColor),
+                              const SizedBox(width: 5),
+                              Text(
+                                code,
+                                style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: classColor, letterSpacing: 1.5),
+                              ),
+                            ],
+                          ),
+                        ),
+                      const Spacer(),
+                      _buildMeta(Icons.people_outline_rounded, '$studentCount student${studentCount != 1 ? 's' : ''}'),
+                      const SizedBox(width: 12),
+                      _buildMeta(Icons.quiz_outlined, '$quizCount quiz${quizCount != 1 ? 'zes' : ''}'),
                     ],
                   ),
                   const SizedBox(height: 12),
                   Divider(color: Colors.grey.shade100, height: 1),
                   const SizedBox(height: 12),
 
-                  // ── Action buttons ──
-                  // ── Action buttons ──
-SingleChildScrollView(
-  scrollDirection: Axis.horizontal,
-  child: Row(
-    children: [
-      _buildActionBtn(
-        icon: Icons.bar_chart_rounded,
-        label: 'Results',
-        color: _T.primary,
-        onTap: () => Navigator.pushNamed(context, '/quiz-results', arguments: {'quiz_id': quizId, 'quiz_title': title}),
-      ),
-      const SizedBox(width: 8),
-      _buildActionBtn(
-        icon: Icons.analytics_outlined,
-        label: 'Analytics',
-        color: _T.accent,
-        onTap: () => Navigator.pushNamed(context, '/quiz-analytics', arguments: {'quiz_id': quizId, 'quiz_title': title}),
-      ),
-      const SizedBox(width: 8),
-      if (!hasAttempts) ...[
-        _buildIconBtn(
-          icon: Icons.edit_rounded,
-          color: _T.accent,
-          tooltip: 'Edit',
-          onTap: () async {
-            final result = await Navigator.pushNamed(
-              context,
-              '/edit-quiz',
-              arguments: {'quiz_id': quizId, 'title': title, 'description': description},
-            );
-            if (result == true) widget.onRefresh();
-          },
-        ),
-        const SizedBox(width: 6),
-        _buildIconBtn(
-          icon: Icons.delete_rounded,
-          color: _T.danger,
-          tooltip: 'Delete',
-          onTap: () => widget.onDeleteQuiz(quiz),
-        ),
-        const SizedBox(width: 6),
-      ],
-      _buildIconBtn(
-        icon: Icons.download_rounded,
-        color: _T.orange,
-        tooltip: 'Export',
-        onTap: () async {
-          widget.onExportStart();
-          try {
-            final res = await AuthService.downloadFile(
-              '/teacher/quizzes/$quizId/export-full',
-              'quiz_${quizId}_report.xlsx',
-            );
-            if (!mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(res['success'] ? 'Report downloaded' : (res['message'] ?? 'Download failed')),
-                backgroundColor: res['success'] ? _T.success : _T.danger,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                margin: const EdgeInsets.all(16),
-              ),
-            );
-          } catch (e) {
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Error: $e'), backgroundColor: _T.danger, behavior: SnackBarBehavior.floating),
-              );
-            }
-          } finally {
-            widget.onExportEnd();
-          }
-        },
-      ),
-      const SizedBox(width: 6),
-      isToggling
-          ? const SizedBox(width: 36, height: 36, child: CircularProgressIndicator(strokeWidth: 2, color: _T.primary))
-          : _buildIconBtn(
-              icon: isPublished ? Icons.visibility_off_rounded : Icons.visibility_rounded,
-              color: isPublished ? _T.orange : _T.primary,
-              tooltip: isPublished ? 'Unpublish' : 'Publish',
-              onTap: () => widget.onTogglePublish(quiz),
-            ),
-    ],
-  ),
-),
+                  // ── Action buttons (matching TeacherClassListTab pattern) ──
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Delete
+                      GestureDetector(
+                        onTap: () => _deleteClass(cls),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: _T.danger.withOpacity(0.3)),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Row(
+                            children: [
+                              Icon(Icons.delete_rounded, size: 13, color: _T.danger),
+                              SizedBox(width: 4),
+                              Text('Delete', style: TextStyle(color: _T.danger, fontSize: 12, fontWeight: FontWeight.w600)),
+                            ],
+                          ),
+                        ),
+                      ),
+                      // Edit + Manage
+                      Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () => _editClass(cls),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: _T.accent.withOpacity(0.3)),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: const Row(
+                                children: [
+                                  Icon(Icons.edit_rounded, size: 13, color: _T.accent),
+                                  SizedBox(width: 4),
+                                  Text('Edit', style: TextStyle(color: _T.accent, fontSize: 12, fontWeight: FontWeight.w600)),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: () async {
+                              await Navigator.pushNamed(
+                                context,
+                                '/class-detail',
+                                arguments: {'class_id': classId, 'class_name': name},
+                              );
+                              _loadDashboard();
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: classColor,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: const Row(
+                                children: [
+                                  Text('Manage', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                                  SizedBox(width: 4),
+                                  Icon(Icons.arrow_forward_rounded, size: 13, color: Colors.white),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActionBtn({required IconData icon, required String label, required Color color, required VoidCallback onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 14, color: color),
-            const SizedBox(width: 5),
-            Text(label, style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w600)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildIconBtn({required IconData icon, required Color color, required String tooltip, required VoidCallback onTap}) {
-    return Tooltip(
-      message: tooltip,
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon, size: 18, color: color),
         ),
       ),
     );

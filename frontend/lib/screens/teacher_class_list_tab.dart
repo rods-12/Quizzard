@@ -667,10 +667,10 @@ class _TeacherClassListTabState extends State<TeacherClassListTab> {
                             border: Border.all(color: _T.danger.withOpacity(0.3)),
                             borderRadius: BorderRadius.circular(20),
                           ),
-                          child: Row(
+                          child: const Row(
                             children: [
                               Icon(Icons.delete_rounded, size: 13, color: _T.danger),
-                              const SizedBox(width: 4),
+                              SizedBox(width: 4),
                               Text('Delete', style: TextStyle(color: _T.danger, fontSize: 12, fontWeight: FontWeight.w600)),
                             ],
                           ),
@@ -686,10 +686,10 @@ class _TeacherClassListTabState extends State<TeacherClassListTab> {
                                 border: Border.all(color: _T.accent.withOpacity(0.3)),
                                 borderRadius: BorderRadius.circular(20),
                               ),
-                              child: Row(
+                              child: const Row(
                                 children: [
                                   Icon(Icons.edit_rounded, size: 13, color: _T.accent),
-                                  const SizedBox(width: 4),
+                                  SizedBox(width: 4),
                                   Text('Edit', style: TextStyle(color: _T.accent, fontSize: 12, fontWeight: FontWeight.w600)),
                                 ],
                               ),
