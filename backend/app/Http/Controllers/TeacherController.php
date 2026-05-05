@@ -23,12 +23,10 @@ class TeacherController extends Controller
             ->withCount('questions')
             ->get()
             ->map(function ($quiz) {
-                // Count how many students attempted this quiz
                 $attemptCount = QuizAttempt::where('quiz_id', $quiz->id)
                     ->where('status', 'completed')
                     ->count();
 
-                // Get average score
                 $avgScore = QuizAttempt::where('quiz_id', $quiz->id)
                     ->where('status', 'completed')
                     ->avg('score');
@@ -43,6 +41,22 @@ class TeacherController extends Controller
                     'has_attempts'    => $attemptCount > 0,
                     'average_score'   => $avgScore ? round($avgScore, 1) : null,
                     'created_at'      => $quiz->created_at,
+                ];
+            });
+
+        // Get all classes by this teacher
+        $classes = ClassRoom::where('teacher_id', $teacher->id)
+            ->withCount(['students', 'quizzes'])
+            ->get()
+            ->map(function ($class) {
+                return [
+                    'id'             => $class->id,
+                    'name'           => $class->name,
+                    'description'    => $class->description,
+                    'code'           => $class->code,
+                    'students_count' => $class->students_count,
+                    'quizzes_count'  => $class->quizzes_count,
+                    'created_at'     => $class->created_at,
                 ];
             });
 
@@ -66,9 +80,13 @@ class TeacherController extends Controller
                 'profile_picture' => $teacher->profile_picture,
             ],
             'quizzes'           => $quizzes,
-            'total_quizzes'     => $quizzes->count(),
-            'published_quizzes' => $quizzes->where('is_published', true)->count(),
-            'total_students'    => $totalStudents,
+            'classes'           => $classes,
+            'stats' => [
+                'total_quizzes'     => $quizzes->count(),
+                'published_quizzes' => $quizzes->where('is_published', true)->count(),
+                'total_students'    => $totalStudents,
+                'total_classes'     => $classes->count(),
+            ],
         ]);
     }
 

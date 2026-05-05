@@ -1377,8 +1377,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                   PopupMenuButton<String>(
                     icon: const Icon(Icons.more_vert, color: Colors.grey),
                     onSelected: (value) {
-                      if (value == 'view_results')
-                        _viewClassQuizResults(quiz);
+                      if (value == 'view_results')_viewClassQuizResults(quiz);
                       if (value == 'edit_due') _editDueDate(quiz);
                       if (value == 'remove') _unassignQuiz(quiz);
                     },
