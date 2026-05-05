@@ -337,7 +337,7 @@ class _TeacherQuizzesTabState extends State<TeacherQuizzesTab> {
                         children: [
                           Container(
                             padding: const EdgeInsets.all(24),
-                            decoration: BoxDecoration(color: _T.primaryLight, shape: BoxShape.circle),
+                            decoration: const BoxDecoration(color: _T.primaryLight, shape: BoxShape.circle),
                             child: Icon(Icons.quiz_outlined, size: 48, color: _T.primary.withOpacity(0.5)),
                           ),
                           const SizedBox(height: 16),
@@ -407,7 +407,7 @@ class _TeacherQuizzesTabState extends State<TeacherQuizzesTab> {
           ),
         ),
         const Spacer(),
-        CircularProgressIndicator(color: _T.primary, strokeWidth: 3),
+        const CircularProgressIndicator(color: _T.primary, strokeWidth: 3),
         const SizedBox(height: 16),
         const Text('Loading quizzes...', style: TextStyle(color: _T.textMid, fontSize: 14)),
         const Spacer(),

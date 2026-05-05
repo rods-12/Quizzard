@@ -95,73 +95,73 @@ class AuthController extends Controller
 
     // ─── REGISTER ────────────────────────────────────────────
     public function register(Request $request)
-{
-    $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
-        'first_name' => ['required', 'string', 'max:50', 'regex:/^[\pL\s\-\.]+$/u'],
-        'middle_initial' => 'nullable|string|size:1|alpha',
-        'surname' => ['required', 'string', 'max:50', 'regex:/^[\pL\s\-\.]+$/u'],
-        'email' => 'required|email|max:30|unique:users,email',
-        'password' => [
-            'required',
-            'string',
-            'min:8',
-            'max:50',
-            'confirmed',
-            'regex:/[A-Z]/',
-            'regex:/[a-z]/',
-            'regex:/[0-9]/',
-            'regex:/[@$!%*#?&]/',
-        ],
-        'role' => 'required|in:teacher,student',
-    ], [
-        'first_name.regex' => 'First name must not contain emojis or special characters.',
-        'surname.regex' => 'Last name must not contain emojis or special characters.',
-        'password.regex' => 'Password must contain uppercase, lowercase, number, and special character (@$!%*#?&).',
-        'password.min' => 'Password must be at least 8 characters.',
-        'password.max' => 'Password must not exceed 50 characters.',
-        'password.confirmed' => 'Passwords do not match.',
-        'email.unique' => 'This email is already registered.',
-        'email.max' => 'Email must not exceed 30 characters.',
-    ]);
+    {
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'first_name' => ['required', 'string', 'max:50', 'regex:/^[\pL\s\-\.]+$/u'],
+            'middle_initial' => 'nullable|string|size:1|alpha',
+            'surname' => ['required', 'string', 'max:50', 'regex:/^[\pL\s\-\.]+$/u'],
+            'email' => 'required|email|max:30|unique:users,email',
+            'password' => [
+                'required',
+                'string',
+                'min:8',
+                'max:50',
+                'confirmed',
+                'regex:/[A-Z]/',
+                'regex:/[a-z]/',
+                'regex:/[0-9]/',
+                'regex:/[@$!%*#?&]/',
+            ],
+            'role' => 'required|in:teacher,student',
+        ], [
+            'first_name.regex' => 'First name must not contain emojis or special characters.',
+            'surname.regex' => 'Last name must not contain emojis or special characters.',
+            'password.regex' => 'Password must contain uppercase, lowercase, number, and special character (@$!%*#?&).',
+            'password.min' => 'Password must be at least 8 characters.',
+            'password.max' => 'Password must not exceed 50 characters.',
+            'password.confirmed' => 'Passwords do not match.',
+            'email.unique' => 'This email is already registered.',
+            'email.max' => 'Email must not exceed 30 characters.',
+        ]);
 
-    if ($validator->fails()) {
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'The given data was invalid.',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $fullName = trim(sprintf('%s%s %s',
+            $request->first_name,
+            $request->middle_initial ? ' ' . strtoupper(substr($request->middle_initial, 0, 1)) . '.' : '',
+            $request->surname
+        ));
+
+        $user = User::create([
+            'name' => $fullName,
+            'first_name' => $request->first_name,
+            'middle_initial' => $request->middle_initial,
+            'surname' => $request->surname,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'role' => $request->role,
+            'status' => 'pending',
+        ]);
+
         return response()->json([
-            'message' => 'The given data was invalid.',
-            'errors' => $validator->errors(),
-        ], 422);
+            'message' => 'Registration successful! Please wait for an administrator to approve your account.',
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'first_name' => $user->first_name,
+                'middle_initial' => $user->middle_initial,
+                'surname' => $user->surname,
+                'email' => $user->email,
+                'role' => $user->role,
+                'status' => $user->status,
+            ]
+        ], 201);
     }
-
-    $fullName = trim(sprintf('%s%s %s',
-        $request->first_name,
-        $request->middle_initial ? ' ' . strtoupper(substr($request->middle_initial, 0, 1)) . '.' : '',
-        $request->surname
-    ));
-
-    $user = User::create([
-        'name' => $fullName,
-        'first_name' => $request->first_name,
-        'middle_initial' => $request->middle_initial,
-        'surname' => $request->surname,
-        'email' => $request->email,
-        'password' => Hash::make($request->password),
-        'role' => $request->role,
-        'status' => 'pending',
-    ]);
-
-    return response()->json([
-        'message' => 'Registration successful! Please wait for an administrator to approve your account.',
-        'user' => [
-            'id' => $user->id,
-            'name' => $user->name,
-            'first_name' => $user->first_name,
-            'middle_initial' => $user->middle_initial,
-            'surname' => $user->surname,
-            'email' => $user->email,
-            'role' => $user->role,
-            'status' => $user->status,
-        ]
-    ], 201);
-}
 
     // ─── LOGOUT ──────────────────────────────────────────────
     public function logout(Request $request)

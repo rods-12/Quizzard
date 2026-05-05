@@ -30,6 +30,7 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
   // Store answers for each question
   // key = question id, value = answer
   final Map<int, dynamic> _answers = {};
+  final ScrollController _dotsScrollController = ScrollController();
 
   @override
   void initState() {
@@ -61,30 +62,59 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
     _attemptId = int.parse(attemptResult['data']['attempt']['id'].toString());
 
     // Load quiz questions
-    final quizResult =
-        await AuthService.authGet('/quizzes/${widget.quizId}');
+    final quizResult = await AuthService.authGet('/quizzes/${widget.quizId}');
 
     setState(() {
       _isLoading = false;
       if (quizResult['success']) {
-        _questions =
-            quizResult['data']['data']['questions'] as List;
+        _questions = quizResult['data']['data']['questions'] as List;
       } else {
         _errorMessage = quizResult['message'];
       }
     });
   }
 
+  @override
+  void dispose() {
+    _dotsScrollController.dispose(); // <-- don't forget to dispose
+    super.dispose();
+  }
+
   void _goToNext() {
     if (_currentIndex < _questions.length - 1) {
       setState(() => _currentIndex++);
+      _scrollToCurrentDot();
     }
   }
 
   void _goToPrevious() {
     if (_currentIndex > 0) {
       setState(() => _currentIndex--);
+      _scrollToCurrentDot();
     }
+  }
+
+  void _scrollToCurrentDot() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_dotsScrollController.hasClients) return;
+      
+      final viewportWidth = _dotsScrollController.position.viewportDimension;
+      final maxScroll = _dotsScrollController.position.maxScrollExtent;
+      
+      // Find the center position of the current dot
+      // Dot width varies (32 or 36) + margin 8, so we estimate 44
+      const double estimatedDotWidth = 44.0;
+      
+      final double targetOffset = (_currentIndex * estimatedDotWidth) 
+          - (viewportWidth / 2) 
+          + (estimatedDotWidth / 2);
+      
+      _dotsScrollController.animateTo(
+        targetOffset.clamp(0.0, maxScroll),
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    });
   }
 
   bool _isAnswered(int questionId) {
@@ -97,15 +127,12 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
 
   Future<void> _confirmSubmit() async {
     // Count unanswered questions
-    final unanswered = _questions
-        .where((q) => !_isAnswered(q['id']))
-        .length;
+    final unanswered = _questions.where((q) => !_isAnswered(q['id'])).length;
 
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Submit Quiz?'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -118,8 +145,7 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
               Text(
                 '$unanswered question(s) unanswered.',
                 style: const TextStyle(
-                    color: Colors.orange,
-                    fontWeight: FontWeight.bold),
+                    color: Colors.orange, fontWeight: FontWeight.bold),
               ),
             ],
             const SizedBox(height: 8),
@@ -136,8 +162,7 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF6C63FF),
             ),
-            child: const Text('Submit',
-                style: TextStyle(color: Colors.white)),
+            child: const Text('Submit', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -240,8 +265,7 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
   Widget _buildBody() {
     if (_isLoading) {
       return const Center(
-        child:
-            CircularProgressIndicator(color: Color(0xFF6C63FF)),
+        child: CircularProgressIndicator(color: Color(0xFF6C63FF)),
       );
     }
 
@@ -252,8 +276,7 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline,
-                  size: 60, color: Colors.red),
+              const Icon(Icons.error_outline, size: 60, color: Colors.red),
               const SizedBox(height: 16),
               Text(
                 _errorMessage!,
@@ -277,8 +300,7 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
       );
     }
 
-    final question =
-        Map<String, dynamic>.from(_questions[_currentIndex]);
+    final question = Map<String, dynamic>.from(_questions[_currentIndex]);
     final questionId = question['id'] as int;
     final totalQuestions = _questions.length;
 
@@ -302,8 +324,7 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
                   ),
                   Text(
                     '${_questions.where((q) => _isAnswered(q['id'])).length} answered',
-                    style: const TextStyle(
-                        color: Colors.grey, fontSize: 13),
+                    style: const TextStyle(color: Colors.grey, fontSize: 13),
                   ),
                 ],
               ),
@@ -314,14 +335,15 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
                 child: LinearProgressIndicator(
                   value: (_currentIndex + 1) / totalQuestions,
                   backgroundColor: Colors.grey.shade200,
-                  valueColor: const AlwaysStoppedAnimation<Color>(
-                      Color(0xFF6C63FF)),
+                  valueColor:
+                      const AlwaysStoppedAnimation<Color>(Color(0xFF6C63FF)),
                   minHeight: 8,
                 ),
               ),
               const SizedBox(height: 8),
               // Question dots
               SingleChildScrollView(
+                controller: _dotsScrollController,
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: List.generate(totalQuestions, (index) {
@@ -330,7 +352,10 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
                     final isCurrent = index == _currentIndex;
 
                     return GestureDetector(
-                      onTap: () => setState(() => _currentIndex = index),
+                      onTap: () {
+                        setState(() => _currentIndex = index);
+                        _scrollToCurrentDot();
+                      },
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
                         margin: const EdgeInsets.symmetric(horizontal: 4),
@@ -351,9 +376,8 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
                               color: isCurrent || isAnswered
                                   ? Colors.white
                                   : Colors.grey.shade700,
-                              fontWeight: isCurrent
-                                  ? FontWeight.bold
-                                  : FontWeight.w500,
+                              fontWeight:
+                                  isCurrent ? FontWeight.bold : FontWeight.w500,
                               fontSize: isCurrent ? 14 : 12,
                             ),
                           ),
@@ -390,10 +414,8 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
                     label: const Text('Previous'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: const Color(0xFF6C63FF),
-                      side: const BorderSide(
-                          color: Color(0xFF6C63FF)),
-                      padding:
-                          const EdgeInsets.symmetric(vertical: 14),
+                      side: const BorderSide(color: Color(0xFF6C63FF)),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12)),
                     ),
@@ -415,9 +437,7 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
                         : Icons.check_circle,
                   ),
                   label: Text(
-                    _currentIndex < totalQuestions - 1
-                        ? 'Next'
-                        : 'Submit Quiz',
+                    _currentIndex < totalQuestions - 1 ? 'Next' : 'Submit Quiz',
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: (_currentIndex < totalQuestions - 1)
@@ -437,37 +457,36 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
     );
   }
 
-  Widget _buildQuestion(
-      Map<String, dynamic> question, int questionId) {
+  Widget _buildQuestion(Map<String, dynamic> question, int questionId) {
     final qType = question['question_type'] as String;
 
     switch (qType) {
       case 'multiple_choice':
         return MultipleChoiceWidget(
+          key: ValueKey(questionId), // <-- add this
           question: question,
           selectedAnswerId: _answers[questionId] as int?,
-          onAnswerSelected: (id) =>
-              setState(() => _answers[questionId] = id),
+          onAnswerSelected: (id) => setState(() => _answers[questionId] = id),
         );
       case 'true_false':
         return TrueFalseWidget(
+          key: ValueKey(questionId), // <-- add this
           question: question,
           selectedAnswerId: _answers[questionId] as int?,
-          onAnswerSelected: (id) =>
-              setState(() => _answers[questionId] = id),
+          onAnswerSelected: (id) => setState(() => _answers[questionId] = id),
         );
       case 'identification':
         return IdentificationWidget(
+          key: ValueKey(questionId), // <-- add this
           question: question,
           currentAnswer: _answers[questionId] as String? ?? '',
-          onAnswerChanged: (val) =>
-              setState(() => _answers[questionId] = val),
+          onAnswerChanged: (val) => setState(() => _answers[questionId] = val),
         );
       case 'matching':
         return MatchingWidget(
+          key: ValueKey(questionId), // <-- add this
           question: question,
-          currentAnswers:
-              _answers[questionId] as Map<String, String>?,
+          currentAnswers: _answers[questionId] as Map<String, String>?,
           onAnswerChanged: (matches) =>
               setState(() => _answers[questionId] = matches),
         );
