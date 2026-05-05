@@ -9,6 +9,8 @@ use App\Models\StudentAnswer;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\QuizFullReportExport;
+use App\Models\ClassRoom;
+
 
 class TeacherController extends Controller
 {
@@ -401,6 +403,82 @@ class TeacherController extends Controller
             'quiz_' . $quizId . '_report.xlsx'
         );
     }
+
+
+        /**
+     * Export class quiz results to Excel.
+     * Returns all students in the class with their scores (0 if not taken).
+     */
+    public function exportClassQuizResults(Request $request, $classId, $quizId)
+    {
+        $teacherId = $request->user()->id;
+
+        // Verify class belongs to teacher
+        $class = \App\Models\ClassRoom::where('id', $classId)
+            ->where('teacher_id', $teacherId)
+            ->firstOrFail();
+
+        // Verify quiz belongs to teacher
+        $quiz = \App\Models\Quiz::where('id', $quizId)
+            ->where('teacher_id', $teacherId)
+            ->firstOrFail();
+
+        // Verify quiz is assigned to this class
+        $isAssigned = $class->quizzes()->where('quiz_id', $quizId)->exists();
+        if (!$isAssigned) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Quiz is not assigned to this class.',
+            ], 404);
+        }
+
+        // Calculate total points
+        $totalPoints = (float) $quiz->questions()->sum('points') ?: 0;
+
+        // Get all students in class with profiles
+        $students = $class->students()
+            ->with('studentProfile')
+            ->orderBy('surname')
+            ->orderBy('first_name')
+            ->get();
+
+        // Get completed attempts for this quiz by these students
+        $attempts = \App\Models\QuizAttempt::where('quiz_id', $quizId)
+            ->whereIn('student_id', $students->pluck('id'))
+            ->where('status', 'completed')
+            ->get()
+            ->keyBy('student_id');
+
+        // Build export data
+        $exportData = $students->map(function ($student, $index) use ($attempts, $totalPoints) {
+            $attempt = $attempts->get($student->id);
+            $hasTaken = $attempt !== null;
+            $score = $hasTaken ? ($attempt->score ?? 0) : 0;
+
+            $percentage = $totalPoints > 0
+                ? round(($score / $totalPoints) * 100, 1)
+                : 0;
+
+            return [
+                'rank'         => $index + 1,
+                'student_id'   => $student->studentProfile?->student_id ?? $student->id,
+                'first_name'   => $student->first_name,
+                'surname'      => $student->surname,
+                'score'        => $score,
+                'total_points' => $totalPoints,
+                'percentage'   => $percentage,
+                'status'       => $hasTaken ? 'Taken' : 'Not Taken',
+            ];
+        });
+
+        $filename = str_replace(' ', '_', $class->name) . '_' . str_replace(' ', '_', $quiz->title) . '_results.xlsx';
+
+        return Excel::download(
+            new \App\Exports\ClassQuizResultsExport($exportData, $class->name, $quiz->title),
+            $filename
+        );
+    }
+
 
 
 }

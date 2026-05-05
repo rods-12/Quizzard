@@ -8,6 +8,8 @@ use App\Models\QuizAttempt;
 use App\Models\StudentAnswer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Exports\StudentPerformanceExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ClassController extends Controller
 {
@@ -227,4 +229,214 @@ class ClassController extends Controller
             'message' => 'Quiz removed from class successfully.',
         ]);
     }
+
+
+
+        /**
+     * Get quiz results for all students in a specific class.
+     * Returns every student with their score, or 0 if not taken.
+     */
+    public function classQuizResults(Request $request, $classId, $quizId)
+    {
+        $teacherId = $request->user()->id;
+
+        // Verify class belongs to teacher
+        $class = ClassRoom::where('id', $classId)
+            ->where('teacher_id', $teacherId)
+            ->firstOrFail();
+
+        // Verify quiz is assigned to this class and belongs to teacher
+        $quiz = Quiz::where('id', $quizId)
+            ->where('teacher_id', $teacherId)
+            ->firstOrFail();
+
+        $isAssigned = $class->quizzes()->where('quiz_id', $quizId)->exists();
+
+        if (!$isAssigned) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Quiz is not assigned to this class.',
+            ], 404);
+        }
+
+        // Calculate total points from quiz questions
+        $totalPoints = (float) $quiz->questions()->sum('points') ?: 0;
+
+        // Get all students in the class with their profile
+        $students = $class->students()
+            ->with('studentProfile')
+            ->get();
+
+        // Get all completed attempts for this quiz by these students
+        $attempts = QuizAttempt::where('quiz_id', $quizId)
+            ->whereIn('student_id', $students->pluck('id'))
+            ->where('status', 'completed')
+            ->get()
+            ->keyBy('student_id');
+
+        // Build results for every student
+        $studentResults = $students->map(function ($student) use ($attempts, $totalPoints) {
+            $attempt = $attempts->get($student->id);
+            $hasTaken = $attempt !== null;
+            $score = $hasTaken ? ($attempt->score ?? 0) : 0;
+
+            $percentage = $totalPoints > 0
+                ? round(($score / $totalPoints) * 100, 1)
+                : 0;
+
+            return [
+                'student_id'   => $student->studentProfile?->student_id ?? $student->id,
+                'first_name'   => $student->first_name,
+                'surname'      => $student->surname,
+                'has_taken'    => $hasTaken,
+                'score'        => $score,
+                'total_points' => $totalPoints,
+                'percentage'   => $percentage,
+            ];
+        });
+
+        // Calculate summary stats
+        $takenCount = $studentResults->where('has_taken', true)->count();
+        $notTakenCount = $studentResults->count() - $takenCount;
+        $averageScore = $takenCount > 0
+            ? round($studentResults->where('has_taken', true)->avg('score'), 1)
+            : 0;
+        $averagePercentage = $takenCount > 0
+            ? round($studentResults->where('has_taken', true)->avg('percentage'), 1)
+            : 0;
+
+        return response()->json([
+            'success' => true,
+            'quiz' => [
+                'id'    => $quiz->id,
+                'title' => $quiz->title,
+            ],
+            'total_points'       => $totalPoints,
+            'total_students'     => $students->count(),
+            'taken_count'        => $takenCount,
+            'not_taken_count'    => $notTakenCount,
+            'average_score'      => $averageScore,
+            'average_percentage' => $averagePercentage,
+            'students'           => $studentResults->values(),
+        ]);
+    }
+
+    /**
+     * Get all students in a class with their overall performance metrics.
+     */
+    public function studentPerformance(Request $request, $classId)
+    {
+        $teacherId = $request->user()->id;
+
+        $class = ClassRoom::where('id', $classId)
+            ->where('teacher_id', $teacherId)
+            ->with(['students.studentProfile', 'quizzes'])
+            ->firstOrFail();
+
+        $students = $class->students;
+        $totalQuizzes = $class->quizzes->count();
+        $quizIds = $class->quizzes->pluck('id');
+
+        // Get all completed attempts for this class's quizzes
+        $attempts = QuizAttempt::whereIn('quiz_id', $quizIds)
+            ->where('status', 'completed')
+            ->get()
+            ->groupBy('student_id');
+
+        $studentData = $students->map(function ($student) use ($attempts, $totalQuizzes) {
+            $studentAttempts = $attempts->get($student->id, collect());
+            $quizzesTaken = $studentAttempts->unique('quiz_id')->count();
+
+            // Calculate overall percentage across all attempts
+            $overallPercentage = 0;
+            if ($studentAttempts->isNotEmpty()) {
+                $overallPercentage = round($studentAttempts->avg(function ($attempt) {
+                    return $attempt->total_points > 0
+                        ? ($attempt->score / $attempt->total_points) * 100
+                        : 0;
+                }), 2);
+            }
+
+            return [
+                'student_id' => $student->studentProfile?->student_id ?? 'STU-' . strtoupper(substr(md5($student->id), 0, 6)),
+                'first_name' => $student->first_name,
+                'surname' => $student->surname,
+                'email' => $student->email,
+                'quizzes_taken' => $quizzesTaken,
+                'total_quizzes' => $totalQuizzes,
+                'overall_percentage' => $overallPercentage,
+                'has_taken_any' => $quizzesTaken > 0,
+            ];
+        })->sortBy('surname')->values();
+
+        // Summary stats
+        $studentsWithAttempts = $studentData->where('has_taken_any', true);
+        $classAverage = $studentsWithAttempts->count() > 0
+            ? round($studentsWithAttempts->avg('overall_percentage'), 2)
+            : 0;
+
+        return response()->json([
+        'students' => $studentData,
+        'summary' => [
+            'total_students' => $studentData->count(),
+            'total_quizzes' => $totalQuizzes,
+            'class_average_percentage' => $classAverage,
+            'students_with_attempts' => $studentsWithAttempts->count(),
+        ],
+    ]);
+    }
+
+    /**
+     * Export student performance to Excel.
+     */
+    public function exportStudentPerformance(Request $request, $classId)
+    {
+        $teacherId = $request->user()->id;
+
+        $class = ClassRoom::where('id', $classId)
+            ->where('teacher_id', $teacherId)
+            ->with(['students.studentProfile', 'quizzes'])
+            ->firstOrFail();
+
+        $students = $class->students;
+        $totalQuizzes = $class->quizzes->count();
+        $quizIds = $class->quizzes->pluck('id');
+
+        $attempts = QuizAttempt::whereIn('quiz_id', $quizIds)
+            ->where('status', 'completed')
+            ->get()
+            ->groupBy('student_id');
+
+        $exportData = $students->map(function ($student) use ($attempts, $totalQuizzes) {
+            $studentAttempts = $attempts->get($student->id, collect());
+            $quizzesTaken = $studentAttempts->unique('quiz_id')->count();
+
+            $overallPercentage = 0;
+            if ($studentAttempts->isNotEmpty()) {
+                $overallPercentage = round($studentAttempts->avg(function ($attempt) {
+                    return $attempt->total_points > 0
+                        ? ($attempt->score / $attempt->total_points) * 100
+                        : 0;
+                }), 2);
+            }
+
+            return [
+                'student_id' => $student->studentProfile?->student_id ?? 'STU-' . strtoupper(substr(md5($student->id), 0, 6)),
+                'first_name' => $student->first_name,
+                'surname' => $student->surname,
+                'quizzes_taken' => $quizzesTaken,
+                'total_quizzes' => $totalQuizzes,
+                'overall_percentage' => $overallPercentage,
+            ];
+        })->sortBy('surname')->values();
+
+        $filename = str_replace(' ', '_', $class->name) . '_student_performance.xlsx';
+
+        return Excel::download(
+            new StudentPerformanceExport($exportData, $class->name),
+            $filename
+        );
+    }
+
+
 }

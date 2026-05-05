@@ -51,6 +51,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/classes/{classId}/assign-quiz', [ClassController::class, 'assignQuiz']);
     Route::delete('/classes/{classId}/quizzes/{quizId}', [ClassController::class, 'unassignQuiz']);
     Route::patch('/classes/{classId}/quizzes/{quizId}/due-date', [ClassController::class, 'updateDueDate']);
+    Route::get('/classes/{classId}/quizzes/{quizId}/results', [ClassController::class, 'classQuizResults']);
+    Route::get('/classes/{classId}/students/performance', [ClassController::class, 'studentPerformance']);
+    Route::get('/classes/{classId}/students/export-performance', [ClassController::class, 'exportStudentPerformance']);
 
     // Quiz CRUD
     Route::get('/quizzes',                           [QuizController::class, 'index']);
@@ -79,6 +82,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/teacher/quizzes/{quizId}/export-results', [TeacherController::class, 'exportResults']);
     Route::get('/teacher/quizzes/{quizId}/export-analytics', [TeacherController::class, 'exportAnalytics']);
     Route::get('/teacher/quizzes/{quizId}/export-full', [TeacherController::class, 'exportFullReport']);
+    Route::get('/teacher/classes/{classId}/quizzes/{quizId}/export-results', [TeacherController::class, 'exportClassQuizResults']);
 
 
     // AI Quiz Generation
