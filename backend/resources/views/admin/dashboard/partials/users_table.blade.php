@@ -86,8 +86,8 @@
                     <td class="rounded-r-xl border-y border-r px-4 py-4 transition-all duration-200"
                         style="border-color:rgba(255,255,255,0.06);">
                         <div class="flex flex-wrap gap-2">
+                            {{-- inline onclick removed — delegated listener on document in index.blade.php handles this --}}
                             <button type="button"
-                                    onclick="event.stopPropagation();"
                                     class="btn-edit-user inline-flex items-center rounded-lg px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition"
                                     style="background:#6366f1;"
                                     onmouseover="this.style.background='#4f46e5';"
@@ -103,8 +103,7 @@
                                 Update
                             </button>
                             <button type="button"
-                                    onclick="event.stopPropagation();"
-                                    class="btn-delete-user inline-flex items-center rounded-lg px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition"
+                                    class="btn-delete-user inline-flex items-center rounded-lg px-3.5 py-2 text-xs font-semibold shadow-sm transition"
                                     style="background:rgba(239,68,68,0.2);color:#f87171;border:1px solid rgba(239,68,68,0.3);"
                                     onmouseover="this.style.background='rgba(239,68,68,0.35)';"
                                     onmouseout="this.style.background='rgba(239,68,68,0.2)';"
@@ -134,7 +133,7 @@
 @endif
 
 @else
-{{-- ===== ADMIN TABLE — 100% original, zero changes ===== --}}
+{{-- ===== ADMIN TABLE — original design, only change: inline onclick removed --}}
 <div class="overflow-x-auto p-2">
     <table class="min-w-full border-separate border-spacing-y-3 text-sm text-slate-700">
         <thead class="text-left text-xs font-bold uppercase tracking-wide text-slate-600">
@@ -194,14 +193,23 @@
                     </td>
                     <td class="rounded-r-2xl border-y border-r border-slate-200 bg-white px-4 py-4 shadow-sm transition-all duration-200 ease-out group-hover:bg-blue-50 group-hover:border-blue-500 group-hover:shadow-[0_0_0_3px_rgba(59,130,246,0.18),0_16px_30px_-12px_rgba(15,23,42,0.25)] group-hover:scale-[1.01]">
                         <div class="flex flex-wrap gap-2">
-                            <button type="button" onclick="event.stopPropagation();"
+                            {{-- inline onclick removed — delegated listener on document in index.blade.php handles this --}}
+                            <button type="button"
                                     class="btn-edit-user inline-flex items-center rounded-xl bg-amber-500 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-amber-600"
-                                    data-id="{{ $user->id }}" data-first-name="{{ $user->first_name }}" data-middle-initial="{{ $user->middle_initial }}" data-surname="{{ $user->surname }}" data-email="{{ $user->email }}" data-role="{{ $user->role }}" data-status="{{ $user->status }}" data-update-url="{{ route('admin.users.update', $user) }}">
+                                    data-id="{{ $user->id }}"
+                                    data-first-name="{{ $user->first_name }}"
+                                    data-middle-initial="{{ $user->middle_initial }}"
+                                    data-surname="{{ $user->surname }}"
+                                    data-email="{{ $user->email }}"
+                                    data-role="{{ $user->role }}"
+                                    data-status="{{ $user->status }}"
+                                    data-update-url="{{ route('admin.users.update', $user) }}">
                                 Update
                             </button>
-                            <button type="button" onclick="event.stopPropagation();"
+                            <button type="button"
                                     class="btn-delete-user inline-flex items-center rounded-xl bg-red-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-red-700"
-                                    data-name="{{ $user->name }}" data-delete-url="{{ route('admin.users.destroy', $user) }}">
+                                    data-name="{{ $user->name }}"
+                                    data-delete-url="{{ route('admin.users.destroy', $user) }}">
                                 Delete
                             </button>
                         </div>

@@ -6,6 +6,38 @@
     <title>{{ auth()->check() && auth()->user()->role === 'superadmin' ? 'Quizzard SuperAdmin' : 'Quizzard Admin' }}</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    @php $isSuperAdmin = auth()->check() && auth()->user()->role === 'superadmin'; @endphp
+
+    @if($isSuperAdmin)
+    {{-- Global SuperAdmin select styling — placed in <head> so it wins over Tailwind --}}
+    <style>
+        .sa-select,
+        select.sa-select {
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            appearance: none !important;
+            background-color: #1e2433 !important;
+            border-color: rgba(255,255,255,0.08) !important;
+            color: #94a3b8 !important;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
+            background-repeat: no-repeat !important;
+            background-position: right 12px center !important;
+            padding-right: 36px !important;
+        }
+        .sa-select:focus,
+        select.sa-select:focus {
+            outline: none !important;
+            border-color: rgba(99,102,241,0.5) !important;
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.15) !important;
+        }
+        .sa-select option,
+        select.sa-select option {
+            background-color: #1e2433 !important;
+            color: #e2e8f0 !important;
+        }
+    </style>
+    @endif
 </head>
 
 @php
@@ -75,14 +107,17 @@
                         <p class="text-xs font-semibold text-white truncate">{{ auth()->user()->name }}</p>
                         <p class="text-xs truncate mt-0.5" style="color:#475569;">{{ auth()->user()->email }}</p>
                     </div>
-                    <form action="{{ route('admin.logout') }}" method="POST">
+                    <form action="{{ route('admin.logout') }}" method="POST" id="sa-logout-form">
                         @csrf
-                        <button type="submit"
+                        <button type="submit" id="sa-logout-btn"
                                 class="w-full rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-150"
                                 style="background:rgba(239,68,68,0.1);color:#f87171;border:1px solid rgba(239,68,68,0.2);"
-                                onmouseover="this.style.background='rgba(239,68,68,0.18)';"
-                                onmouseout="this.style.background='rgba(239,68,68,0.1)';">
-                            Logout
+                                onmouseover="if(!this.disabled){this.style.background='rgba(239,68,68,0.18)';}"
+                                onmouseout="if(!this.disabled){this.style.background='rgba(239,68,68,0.1)';}">
+                            <span id="sa-logout-label" class="flex items-center justify-center gap-2">
+                                <span id="sa-logout-spinner" class="hidden h-4 w-4 animate-spin rounded-full border-2 border-red-400 border-t-transparent"></span>
+                                <span id="sa-logout-text">Logout</span>
+                            </span>
                         </button>
                     </form>
                 </div>
@@ -110,6 +145,24 @@
     </div>
     @stack('modals')
     @stack('scripts')
+
+    {{-- SuperAdmin logout loading state --}}
+    <script>
+        (function () {
+            var form = document.getElementById('sa-logout-form');
+            var btn  = document.getElementById('sa-logout-btn');
+            var spinner = document.getElementById('sa-logout-spinner');
+            var text = document.getElementById('sa-logout-text');
+            if (!form || !btn) return;
+            form.addEventListener('submit', function () {
+                btn.disabled = true;
+                btn.style.opacity = '0.7';
+                btn.style.cursor = 'not-allowed';
+                if (spinner) spinner.classList.remove('hidden');
+                if (text)    text.textContent = 'Logging out...';
+            });
+        })();
+    </script>
 </body>
 
 @else
@@ -139,10 +192,14 @@
                     </a>
                 </nav>
                 <div class="border-t border-slate-800 p-4">
-                    <form action="{{ route('admin.logout') }}" method="POST">
+                    <form action="{{ route('admin.logout') }}" method="POST" id="admin-logout-form">
                         @csrf
-                        <button type="submit" class="w-full rounded-xl bg-red-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-red-700">
-                            Logout
+                        <button type="submit" id="admin-logout-btn"
+                                class="w-full rounded-xl bg-red-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-red-700 disabled:opacity-70 disabled:cursor-not-allowed">
+                            <span id="admin-logout-label" class="flex items-center justify-center gap-2">
+                                <span id="admin-logout-spinner" class="hidden h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                                <span id="admin-logout-text">Logout</span>
+                            </span>
                         </button>
                     </form>
                 </div>
@@ -168,6 +225,22 @@
     </div>
     @stack('modals')
     @stack('scripts')
+
+    {{-- Admin logout loading state --}}
+    <script>
+        (function () {
+            var form    = document.getElementById('admin-logout-form');
+            var btn     = document.getElementById('admin-logout-btn');
+            var spinner = document.getElementById('admin-logout-spinner');
+            var text    = document.getElementById('admin-logout-text');
+            if (!form || !btn) return;
+            form.addEventListener('submit', function () {
+                btn.disabled = true;
+                if (spinner) spinner.classList.remove('hidden');
+                if (text)    text.textContent = 'Logging out...';
+            });
+        })();
+    </script>
 </body>
 @endif
 
