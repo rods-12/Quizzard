@@ -1,5 +1,7 @@
 <?php
 
+//AdminQuizController.php//
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -235,28 +237,16 @@ class AdminQuizController extends Controller
 ->values();
 
 if ($request->get('export') === 'excel' && $tab === 'results') {
-    $exportRows = $resultsRows->values()->map(function ($row, $index) {
-        $row['rank'] = $index + 1;
-        return $row;
-    });
+            $exportRows = $resultsRows->values()->map(function ($row, $index) {
+                $row['rank'] = $index + 1;
+                return $row;
+            });
 
-    return Excel::download(
-        new QuizResultsExport($exportRows),
-        'quiz-results-report.xlsx'
-    );
-}
-
-if ($request->get('export') === 'excel' && $tab === 'results') {
-    $exportRows = $resultsRows->values()->map(function ($row, $index) {
-        $row['rank'] = $index + 1;
-        return $row;
-    });
-
-    return Excel::download(
-        new QuizResultsExport($exportRows),
-        'quiz-results-report.xlsx'
-    );
-}
+            return Excel::download(
+                new QuizResultsExport($exportRows, $quiz->title),
+                'quiz-results-report.xlsx'
+            );
+        }
 
         $attemptIds = $completedAttempts->pluck('id');
 
@@ -295,11 +285,11 @@ if ($request->get('export') === 'excel' && $tab === 'results') {
         })->values();
 
         if ($request->get('export') === 'excel' && $tab === 'analytics') {
-    return Excel::download(
-        new QuizAnalyticsExport($questionAnalytics),
-        'quiz-analytics-report.xlsx'
-    );
-}
+            return Excel::download(
+                new QuizAnalyticsExport($questionAnalytics, $quiz->title),
+                'quiz-analytics-report.xlsx'
+            );
+        }
 
         return view('admin.quizzes.show', [
             'class' => $class,
@@ -404,9 +394,8 @@ public function exportAnalytics($classId, $quizId)
     });
 
     return Excel::download(
-        new QuizAnalyticsExport($questionAnalytics),
+        new QuizAnalyticsExport($questionAnalytics, $quiz->title),
         'quiz-analytics.xlsx'
     );
 }
 }
-

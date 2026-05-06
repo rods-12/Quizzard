@@ -157,8 +157,7 @@
 
                 <div class="flex w-full flex-col gap-3 sm:flex-row xl:w-auto">
                     @if($isSuperAdmin)
-                        <select id="filterBy" class="rounded-lg border px-4 py-2.5 text-sm outline-none transition"
-                                style="background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.08); color: #94a3b8;">
+                        <select id="filterBy" class="sa-select rounded-lg border px-4 py-2.5 text-sm">
                     @else
                         <select id="filterBy" class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
                     @endif
@@ -469,7 +468,7 @@
                 <div class="grid gap-4 sm:grid-cols-2">
                     <div>
                         <label class="mb-1.5 block text-sm font-medium {{ $isSuperAdmin ? '' : 'text-slate-700' }}" @if($isSuperAdmin) style="color:#94a3b8;" @endif>Role</label>
-                        <select name="role" id="createRole" required class="w-full rounded-xl border px-4 py-2.5 outline-none {{ $isSuperAdmin ? '' : 'border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100' }}" @if($isSuperAdmin) style="background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.08);color:#e2e8f0;" @endif>
+                        <select name="role" id="createRole" required class="w-full rounded-xl border px-4 py-2.5 outline-none {{ $isSuperAdmin ? 'sa-select' : 'border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100' }}">
                             <option value="teacher">Teacher</option>
                             <option value="student">Student</option>
                             @if($isSuperAdmin)<option value="admin">Admin</option>@endif
@@ -477,7 +476,7 @@
                     </div>
                     <div>
                         <label class="mb-1.5 block text-sm font-medium {{ $isSuperAdmin ? '' : 'text-slate-700' }}" @if($isSuperAdmin) style="color:#94a3b8;" @endif>Status</label>
-                        <select name="status" required class="w-full rounded-xl border px-4 py-2.5 outline-none {{ $isSuperAdmin ? '' : 'border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100' }}" @if($isSuperAdmin) style="background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.08);color:#e2e8f0;" @endif>
+                        <select name="status" required class="w-full rounded-xl border px-4 py-2.5 outline-none {{ $isSuperAdmin ? 'sa-select' : 'border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100' }}">
                             <option value="pending">Pending</option>
                             <option value="active">Active</option>
                             <option value="deactivated">Deactivated</option>
@@ -494,7 +493,10 @@
                 </div>
                 <div class="flex justify-end gap-3 pt-2">
                     <button type="button" class="close-modal rounded-xl px-5 py-2.5 font-semibold transition {{ $isSuperAdmin ? '' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}" @if($isSuperAdmin) style="background:rgba(255,255,255,0.05);color:#94a3b8;border:1px solid rgba(255,255,255,0.08);" @endif>Cancel</button>
-                    <button type="submit" class="rounded-xl px-5 py-2.5 font-semibold text-white transition {{ $isSuperAdmin ? '' : 'bg-emerald-600 hover:bg-emerald-700' }}" @if($isSuperAdmin) style="background:#6366f1;" onmouseover="this.style.background='#4f46e5';" onmouseout="this.style.background='#6366f1';" @endif>Create</button>
+                    <button type="submit" id="createSubmitBtn" class="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 font-semibold text-white transition disabled:opacity-60 disabled:cursor-not-allowed {{ $isSuperAdmin ? '' : 'bg-emerald-600 hover:bg-emerald-700' }}" @if($isSuperAdmin) style="background:#6366f1;" onmouseover="this.style.background='#4f46e5';" onmouseout="this.style.background='#6366f1';" @endif>
+                        <span class="create-spinner hidden h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                        <span class="create-label">Create</span>
+                    </button>
                 </div>
             </form>
         </div>
@@ -546,7 +548,7 @@
                 <div class="grid gap-4 sm:grid-cols-2">
                     <div>
                         <label class="mb-1.5 block text-sm font-medium {{ $isSuperAdmin ? '' : 'text-slate-700' }}" @if($isSuperAdmin) style="color:#94a3b8;" @endif>Role</label>
-                        <select name="role" id="editRole" required class="w-full rounded-xl border px-4 py-2.5 outline-none {{ $isSuperAdmin ? '' : 'border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100' }}" @if($isSuperAdmin) style="background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.08);color:#e2e8f0;" @endif>
+                        <select name="role" id="editRole" required class="w-full rounded-xl border px-4 py-2.5 outline-none {{ $isSuperAdmin ? 'sa-select' : 'border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100' }}">
                             <option value="teacher">Teacher</option>
                             <option value="student">Student</option>
                             @if($isSuperAdmin)<option value="admin">Admin</option>@endif
@@ -554,7 +556,7 @@
                     </div>
                     <div>
                         <label class="mb-1.5 block text-sm font-medium {{ $isSuperAdmin ? '' : 'text-slate-700' }}" @if($isSuperAdmin) style="color:#94a3b8;" @endif>Status</label>
-                        <select name="status" id="editStatus" required class="w-full rounded-xl border px-4 py-2.5 outline-none {{ $isSuperAdmin ? '' : 'border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100' }}" @if($isSuperAdmin) style="background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.08);color:#e2e8f0;" @endif>
+                        <select name="status" id="editStatus" required class="w-full rounded-xl border px-4 py-2.5 outline-none {{ $isSuperAdmin ? 'sa-select' : 'border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100' }}">
                             <option value="pending">Pending</option>
                             <option value="active">Active</option>
                             <option value="deactivated">Deactivated</option>
@@ -571,11 +573,9 @@
                 </div>
                 <div class="flex justify-end gap-3 pt-2">
                     <button type="button" class="close-modal rounded-xl px-5 py-2.5 font-semibold transition {{ $isSuperAdmin ? '' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}" @if($isSuperAdmin) style="background:rgba(255,255,255,0.05);color:#94a3b8;border:1px solid rgba(255,255,255,0.08);" @endif>Cancel</button>
-                    <button id="updateUserBtn" type="submit" class="rounded-xl px-5 py-2.5 font-semibold text-white transition disabled:opacity-60 disabled:cursor-not-allowed {{ $isSuperAdmin ? '' : 'bg-amber-500 hover:bg-amber-600' }}" @if($isSuperAdmin) style="background:#6366f1;" onmouseover="this.style.background='#4f46e5';" onmouseout="this.style.background='#6366f1';" @endif>
-                        <span class="flex items-center justify-center gap-2">
-                            <span class="spinner hidden h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
-                            <span>Update</span>
-                        </span>
+                    <button id="updateUserBtn" type="submit" class="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 font-semibold text-white transition disabled:opacity-60 disabled:cursor-not-allowed {{ $isSuperAdmin ? '' : 'bg-amber-500 hover:bg-amber-600' }}" @if($isSuperAdmin) style="background:#6366f1;" onmouseover="if(!this.disabled){this.style.background='#4f46e5';}" onmouseout="if(!this.disabled){this.style.background='#6366f1';}" @endif>
+                        <span class="update-spinner hidden h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                        <span class="update-label">Update</span>
                     </button>
                 </div>
             </form>
@@ -602,71 +602,263 @@
             <form method="POST" id="deleteForm" class="flex justify-end gap-3">
                 @csrf @method('DELETE')
                 <button type="button" class="close-modal rounded-xl px-5 py-2.5 font-semibold transition {{ $isSuperAdmin ? '' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}" @if($isSuperAdmin) style="background:rgba(255,255,255,0.05);color:#94a3b8;border:1px solid rgba(255,255,255,0.08);" @endif>Cancel</button>
-                <button type="submit" class="rounded-xl bg-red-600 px-5 py-2.5 font-semibold text-white hover:bg-red-700">Delete</button>
+                <button type="submit" id="deleteSubmitBtn" class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 font-semibold text-white transition hover:bg-red-700 disabled:opacity-60 disabled:cursor-not-allowed">
+                    <span class="delete-spinner hidden h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                    <span class="delete-label">Delete</span>
+                </button>
             </form>
         </div>
     </div>
 @endpush
 
 @push('scripts')
-    <script>
-        const dashboardUrl = "{{ route('admin.dashboard') }}";
-        const currentType = "{{ $type }}";
-        const currentStatus = "{{ $status }}";
-        const searchInput = document.getElementById('searchInput');
-        const filterBySelect = document.getElementById('filterBy');
-        const usersTableContainer = document.getElementById('usersTableContainer');
-        const rowNavigationLoader = document.getElementById('rowNavigationLoader');
-        let isRowNavigating = false;
-        let currentFilterBy = @json($filterBy ?? 'all');
-        if (filterBySelect) { filterBySelect.value = currentFilterBy; }
-        const createModal = document.getElementById('createModal');
-        const editModal = document.getElementById('editModal');
-        const deleteModal = document.getElementById('deleteModal');
-        const allModals = [createModal, editModal, deleteModal];
-        function openModal(modal) { if (!modal) return; modal.classList.remove('hidden'); modal.classList.add('flex'); document.body.classList.add('overflow-hidden'); }
-        function closeModal(modal) { if (!modal) return; modal.classList.add('hidden'); modal.classList.remove('flex'); const hasVisibleModal = allModals.some(m => m && !m.classList.contains('hidden')); if (!hasVisibleModal) { document.body.classList.remove('overflow-hidden'); } }
-        function closeAllModals() { allModals.forEach(modal => closeModal(modal)); }
-        function showRowNavigationLoader() { if (!rowNavigationLoader || isRowNavigating) return; isRowNavigating = true; rowNavigationLoader.classList.remove('hidden'); rowNavigationLoader.classList.add('flex'); document.body.classList.add('overflow-hidden'); }
-        allModals.forEach(modal => { if (!modal) return; modal.addEventListener('click', function(e) { if (e.target === modal) { closeModal(modal); } }); });
-        document.querySelectorAll('.close-modal').forEach(button => { button.addEventListener('click', function() { const modal = button.closest('#createModal, #viewModal, #editModal, #deleteModal'); closeModal(modal); }); });
-        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { closeAllModals(); } });
-        function setLocalButtonLoading(button, loadingText = 'Processing...') { if (!button) return; if (!button.dataset.originalHtml) { button.dataset.originalHtml = button.innerHTML; } button.disabled = true; button.innerHTML = `<span class="inline-flex items-center justify-center gap-2"><span class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span><span>${loadingText}</span></span>`; }
-        function resetLocalButtonLoading(button) { if (!button) return; button.disabled = false; if (button.dataset.originalHtml) { button.innerHTML = button.dataset.originalHtml; } }
-        const btnCreateTeacher = document.getElementById('btnCreateTeacher');
-        const btnCreateStudent = document.getElementById('btnCreateStudent');
-        const btnCreateAdmin = document.getElementById('btnCreateAdmin');
-        if (btnCreateTeacher) { btnCreateTeacher.addEventListener('click', function() { document.getElementById('createRole').value = 'teacher'; document.getElementById('createModalTitle').textContent = 'Create Teacher Account'; openModal(createModal); }); }
-        if (btnCreateStudent) { btnCreateStudent.addEventListener('click', function() { document.getElementById('createRole').value = 'student'; document.getElementById('createModalTitle').textContent = 'Create Student Account'; openModal(createModal); }); }
-        if (btnCreateAdmin) { btnCreateAdmin.addEventListener('click', function() { document.getElementById('createRole').value = 'admin'; document.getElementById('createModalTitle').textContent = 'Create Admin Account'; openModal(createModal); }); }
-        if (filterBySelect) { filterBySelect.addEventListener('change', function() { currentFilterBy = this.value; performSearch(); }); }
-        let searchTimeout;
-        if (searchInput) { searchInput.addEventListener('input', function() { clearTimeout(searchTimeout); searchTimeout = setTimeout(function() { performSearch(); }, 250); }); }
-        function performSearch() { const search = searchInput.value; const url = `${dashboardUrl}?type=${encodeURIComponent(currentType)}&status=${encodeURIComponent(currentStatus)}&search=${encodeURIComponent(search)}&filter_by=${encodeURIComponent(currentFilterBy)}`; loadUsers(url); }
-        document.addEventListener('click', async function(e) {
-            const row = e.target.closest('tr[data-view-url]');
-            const backLink = e.target.closest('.js-dashboard-back-link');
-            const editBtn = e.target.closest('.btn-edit-user');
-            const deleteBtn = e.target.closest('.btn-delete-user');
-            const paginationLink = e.target.closest('#usersPagination a');
-            if (backLink) { e.preventDefault(); const backUrl = backLink.getAttribute('href'); if (backUrl && !isRowNavigating) { showRowNavigationLoader(); window.location.href = backUrl; } return; }
-            if (row && !editBtn && !deleteBtn) { const viewUrl = row.dataset.viewUrl; if (viewUrl && !isRowNavigating) { showRowNavigationLoader(); window.location.href = viewUrl; } return; }
-            if (editBtn) { document.getElementById('editFirstName').value = editBtn.dataset.firstName ?? ''; document.getElementById('editMiddleInitial').value = editBtn.dataset.middleInitial ?? ''; document.getElementById('editSurname').value = editBtn.dataset.surname ?? ''; document.getElementById('editEmail').value = editBtn.dataset.email ?? ''; document.getElementById('editRole').value = editBtn.dataset.role ?? ''; document.getElementById('editStatus').value = editBtn.dataset.status ?? ''; document.getElementById('editPassword').value = ''; document.getElementById('editPasswordConfirmation').value = ''; document.getElementById('editForm').action = editBtn.dataset.updateUrl ?? ''; openModal(editModal); return; }
-            if (deleteBtn) { document.getElementById('deleteUserName').textContent = deleteBtn.dataset.name ?? ''; document.getElementById('deleteForm').action = deleteBtn.dataset.deleteUrl ?? ''; openModal(deleteModal); return; }
-            if (paginationLink) { e.preventDefault(); const url = paginationLink.getAttribute('href'); if (url) { loadUsers(url); } }
+<script>
+    const dashboardUrl    = "{{ route('admin.dashboard') }}";
+    const currentType     = "{{ $type }}";
+    const currentStatus   = "{{ $status }}";
+    const searchInput     = document.getElementById('searchInput');
+    const filterBySelect  = document.getElementById('filterBy');
+    const usersTableContainer = document.getElementById('usersTableContainer');
+    const rowNavigationLoader = document.getElementById('rowNavigationLoader');
+
+    let isRowNavigating  = false;
+    let currentFilterBy  = @json($filterBy ?? 'all');
+    if (filterBySelect) { filterBySelect.value = currentFilterBy; }
+
+    const createModal = document.getElementById('createModal');
+    const editModal   = document.getElementById('editModal');
+    const deleteModal = document.getElementById('deleteModal');
+    const allModals   = [createModal, editModal, deleteModal];
+
+    // ── Modal helpers ────────────────────────────────────────────────
+    function openModal(modal) {
+        if (!modal) return;
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.classList.add('overflow-hidden');
+    }
+    function closeModal(modal) {
+        if (!modal) return;
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        const hasVisible = allModals.some(m => m && !m.classList.contains('hidden'));
+        if (!hasVisible) { document.body.classList.remove('overflow-hidden'); }
+    }
+    function closeAllModals() { allModals.forEach(m => closeModal(m)); }
+
+    // ── Button loading helpers ───────────────────────────────────────
+    function setButtonLoading(btn, spinnerClass, labelClass, labelText) {
+        if (!btn) return;
+        btn.disabled = true;
+        const sp = btn.querySelector(spinnerClass);
+        const lb = btn.querySelector(labelClass);
+        if (sp) sp.classList.remove('hidden');
+        if (lb && labelText) lb.textContent = labelText;
+    }
+    function resetButtonLoading(btn, spinnerClass, labelClass, labelText) {
+        if (!btn) return;
+        btn.disabled = false;
+        const sp = btn.querySelector(spinnerClass);
+        const lb = btn.querySelector(labelClass);
+        if (sp) sp.classList.add('hidden');
+        if (lb && labelText) lb.textContent = labelText;
+    }
+
+    function showRowNavigationLoader() {
+        if (!rowNavigationLoader || isRowNavigating) return;
+        isRowNavigating = true;
+        rowNavigationLoader.classList.remove('hidden');
+        rowNavigationLoader.classList.add('flex');
+        document.body.classList.add('overflow-hidden');
+    }
+
+    // ── Close on backdrop / Escape / close-modal buttons ────────────
+    allModals.forEach(modal => {
+        if (!modal) return;
+        modal.addEventListener('click', function (e) {
+            if (e.target === modal) { closeModal(modal); }
         });
-        function userSkeleton() { return `<div class="py-12 text-center"><div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-slate-600"></div><p class="mt-3 text-sm text-slate-600">Loading users...</p></div>`; }
-        async function loadUsers(url) { try { usersTableContainer.innerHTML = userSkeleton(); const response = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } }); const data = await response.json(); usersTableContainer.innerHTML = data.html; } catch (error) { usersTableContainer.innerHTML = `<div class="py-8 text-center text-red-600">Failed to load users.</div>`; console.error(error); } }
-        document.getElementById('editForm').addEventListener('submit', async function(e) {
+    });
+    document.querySelectorAll('.close-modal').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const modal = btn.closest('#createModal, #editModal, #deleteModal');
+            closeModal(modal);
+            // reset update btn if edit modal closed mid-flight
+            const updateBtn = document.getElementById('updateUserBtn');
+            resetButtonLoading(updateBtn, '.update-spinner', '.update-label', 'Update');
+        });
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') { closeAllModals(); }
+    });
+
+    // ── Create buttons ───────────────────────────────────────────────
+    const btnCreateTeacher = document.getElementById('btnCreateTeacher');
+    const btnCreateStudent = document.getElementById('btnCreateStudent');
+    const btnCreateAdmin   = document.getElementById('btnCreateAdmin');
+    if (btnCreateTeacher) {
+        btnCreateTeacher.addEventListener('click', function () {
+            document.getElementById('createRole').value = 'teacher';
+            document.getElementById('createModalTitle').textContent = 'Create Teacher Account';
+            openModal(createModal);
+        });
+    }
+    if (btnCreateStudent) {
+        btnCreateStudent.addEventListener('click', function () {
+            document.getElementById('createRole').value = 'student';
+            document.getElementById('createModalTitle').textContent = 'Create Student Account';
+            openModal(createModal);
+        });
+    }
+    if (btnCreateAdmin) {
+        btnCreateAdmin.addEventListener('click', function () {
+            document.getElementById('createRole').value = 'admin';
+            document.getElementById('createModalTitle').textContent = 'Create Admin Account';
+            openModal(createModal);
+        });
+    }
+
+    // ── Create form submit ───────────────────────────────────────────
+    const createForm = document.querySelector('#createModal form');
+    if (createForm) {
+        createForm.addEventListener('submit', function () {
+            const btn = document.getElementById('createSubmitBtn');
+            setButtonLoading(btn, '.create-spinner', '.create-label', 'Creating...');
+        });
+    }
+
+    // ── Search / filter ──────────────────────────────────────────────
+    if (filterBySelect) {
+        filterBySelect.addEventListener('change', function () {
+            currentFilterBy = this.value;
+            performSearch();
+        });
+    }
+    let searchTimeout;
+    if (searchInput) {
+        searchInput.addEventListener('input', function () {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(performSearch, 250);
+        });
+    }
+    function performSearch() {
+        const search = searchInput ? searchInput.value : '';
+        const url = `${dashboardUrl}?type=${encodeURIComponent(currentType)}&status=${encodeURIComponent(currentStatus)}&search=${encodeURIComponent(search)}&filter_by=${encodeURIComponent(currentFilterBy)}`;
+        loadUsers(url);
+    }
+
+    // ── MAIN DELEGATED CLICK HANDLER ─────────────────────────────────
+    // ORDER MATTERS: check edit/delete FIRST, then row navigation, then pagination.
+    document.addEventListener('click', async function (e) {
+
+        // 1. Back link
+        const backLink = e.target.closest('.js-dashboard-back-link');
+        if (backLink) {
             e.preventDefault();
-            const submitBtn = this.querySelector('button[type="submit"]');
-            setLocalButtonLoading(submitBtn, 'Updating...');
-            try { const formData = new FormData(this); const response = await fetch(this.action, { method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } }); const data = await response.json(); if (response.ok) { closeModal(editModal); await loadUsers(dashboardUrl + window.location.search); } else { alert(data.message || 'Error updating user'); } }
-            catch (error) { console.error(error); alert('Error updating user'); }
-            finally { resetLocalButtonLoading(submitBtn); }
-        });
-    </script>
-    <script>
-        document.addEventListener('click', function(e) { if (e.target.classList.contains('close-modal') || e.target.closest('.close-modal')) { resetLocalButtonLoading(document.querySelector('#editForm button[type="submit"]')); } });
-    </script>
+            const backUrl = backLink.getAttribute('href');
+            if (backUrl && !isRowNavigating) {
+                showRowNavigationLoader();
+                window.location.href = backUrl;
+            }
+            return;
+        }
+
+        // 2. Edit button — MUST be before row check
+        const editBtn = e.target.closest('.btn-edit-user');
+        if (editBtn) {
+            e.stopPropagation();
+            document.getElementById('editFirstName').value         = editBtn.dataset.firstName    ?? '';
+            document.getElementById('editMiddleInitial').value     = editBtn.dataset.middleInitial ?? '';
+            document.getElementById('editSurname').value           = editBtn.dataset.surname       ?? '';
+            document.getElementById('editEmail').value             = editBtn.dataset.email         ?? '';
+            document.getElementById('editRole').value              = editBtn.dataset.role          ?? '';
+            document.getElementById('editStatus').value            = editBtn.dataset.status        ?? '';
+            document.getElementById('editPassword').value          = '';
+            document.getElementById('editPasswordConfirmation').value = '';
+            document.getElementById('editForm').action             = editBtn.dataset.updateUrl     ?? '';
+            openModal(editModal);
+            return;
+        }
+
+        // 3. Delete button — MUST be before row check
+        const deleteBtn = e.target.closest('.btn-delete-user');
+        if (deleteBtn) {
+            e.stopPropagation();
+            document.getElementById('deleteUserName').textContent = deleteBtn.dataset.name        ?? '';
+            document.getElementById('deleteForm').action          = deleteBtn.dataset.deleteUrl   ?? '';
+            openModal(deleteModal);
+            return;
+        }
+
+        // 4. Row navigation (only if not clicking a button inside)
+        const row = e.target.closest('tr[data-view-url]');
+        if (row) {
+            const viewUrl = row.dataset.viewUrl;
+            if (viewUrl && !isRowNavigating) {
+                showRowNavigationLoader();
+                window.location.href = viewUrl;
+            }
+            return;
+        }
+
+        // 5. Pagination
+        const paginationLink = e.target.closest('#usersPagination a');
+        if (paginationLink) {
+            e.preventDefault();
+            const url = paginationLink.getAttribute('href');
+            if (url) { loadUsers(url); }
+        }
+    });
+
+    // ── Edit form submit ─────────────────────────────────────────────
+    document.getElementById('editForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const submitBtn = document.getElementById('updateUserBtn');
+        setButtonLoading(submitBtn, '.update-spinner', '.update-label', 'Updating...');
+        try {
+            const formData = new FormData(this);
+            const response = await fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+            });
+            const data = await response.json();
+            if (response.ok) {
+                closeModal(editModal);
+                await loadUsers(dashboardUrl + window.location.search);
+            } else {
+                alert(data.message || 'Error updating user');
+                resetButtonLoading(submitBtn, '.update-spinner', '.update-label', 'Update');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Error updating user');
+            resetButtonLoading(submitBtn, '.update-spinner', '.update-label', 'Update');
+        }
+    });
+
+    // ── Delete form submit ───────────────────────────────────────────
+    document.getElementById('deleteForm').addEventListener('submit', function () {
+        const btn = document.getElementById('deleteSubmitBtn');
+        setButtonLoading(btn, '.delete-spinner', '.delete-label', 'Deleting...');
+    });
+
+    // ── Load users via AJAX ──────────────────────────────────────────
+    function userSkeleton() {
+        return `<div class="py-12 text-center"><div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-slate-600"></div><p class="mt-3 text-sm text-slate-600">Loading users...</p></div>`;
+    }
+    async function loadUsers(url) {
+        try {
+            usersTableContainer.innerHTML = userSkeleton();
+            const response = await fetch(url, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+            });
+            const data = await response.json();
+            usersTableContainer.innerHTML = data.html;
+        } catch (error) {
+            usersTableContainer.innerHTML = `<div class="py-8 text-center text-red-600">Failed to load users.</div>`;
+            console.error(error);
+        }
+    }
+</script>
 @endpush

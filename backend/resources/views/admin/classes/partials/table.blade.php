@@ -5,92 +5,113 @@
 <style>
     .sa-class-row { transition: background 0.15s ease; }
     .sa-class-row:hover { background: rgba(99,102,241,0.06) !important; }
+    .sa-class-row:hover .sa-class-id { color: #a5b4fc !important; }
     .sa-class-row:hover .sa-class-title { color: #a5b4fc !important; }
     .sa-class-row:hover .sa-class-desc { color: #64748b !important; }
+    .sa-class-row:hover .sa-class-hint { opacity: 1 !important; }
 </style>
 
-<table class="min-w-full" style="border-collapse:separate;border-spacing:0;">
-    <thead style="background:rgba(255,255,255,0.03);">
-        <tr>
-            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider" style="color:#475569;">Class</th>
-            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider" style="color:#475569;">Teacher</th>
-            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider" style="color:#475569;">Students</th>
-            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider" style="color:#475569;">Code</th>
-            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider" style="color:#475569;">Created</th>
-            <th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider" style="color:#475569;">Actions</th>
-        </tr>
-    </thead>
-    <tbody style="background:#0f1117;">
-        @forelse($classes as $class)
-            <tr class="sa-class-row class-row cursor-pointer"
-                style="border-bottom:1px solid rgba(255,255,255,0.04);"
-                data-url="{{ route('admin.classes.details', $class->id) }}">
-
-                <td class="px-6 py-4">
-                    <div class="min-w-0 rounded-xl border border-transparent p-3 transition duration-200"
-                         style="border-color:rgba(255,255,255,0.04);">
-                        <div class="sa-class-title font-semibold transition" style="color:#e2e8f0;">
-                            {{ $class->name }}
-                        </div>
-                        <div class="sa-class-desc mt-1 max-w-xs truncate text-sm transition" style="color:#475569;">
-                            {{ $class->description ?: 'No description' }}
-                        </div>
-                    </div>
-                </td>
-                <td class="px-6 py-4 text-sm" style="color:#94a3b8;">
-                    {{ $class->teacher->name ?? 'Unknown Teacher' }}
-                </td>
-                <td class="px-6 py-4 text-sm" style="color:#94a3b8;">
-                    {{ $class->students->count() }}
-                </td>
-                <td class="px-6 py-4 text-sm" style="color:#94a3b8;">
-                    {{ $class->class_code }}
-                </td>
-                <td class="px-6 py-4 text-sm" style="color:#94a3b8;">
-                    {{ $class->created_at ? $class->created_at->format('M d, Y') : '—' }}
-                </td>
-                <td class="px-6 py-4">
-                    <div class="flex items-center justify-center gap-2 flex-wrap">
-                        <button type="button"
-                                class="edit-class-btn class-action-btn inline-flex items-center justify-center rounded-lg px-4 py-2 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-60"
-                                style="background:rgba(99,102,241,0.15);color:#a5b4fc;border:1px solid rgba(99,102,241,0.25);"
-                                onmouseover="this.style.background='rgba(99,102,241,0.28)';"
-                                onmouseout="this.style.background='rgba(99,102,241,0.15)';"
-                                data-id="{{ $class->id }}"
-                                data-loading-text="Loading...">
-                            <span class="flex items-center justify-center gap-2">
-                                <span class="spinner hidden h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
-                                <span>Update</span>
-                            </span>
-                        </button>
-                        <button type="button"
-                                class="delete-class-btn class-action-btn inline-flex items-center justify-center rounded-lg px-4 py-2 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-60"
-                                style="background:rgba(239,68,68,0.12);color:#f87171;border:1px solid rgba(239,68,68,0.2);"
-                                onmouseover="this.style.background='rgba(239,68,68,0.25)';"
-                                onmouseout="this.style.background='rgba(239,68,68,0.12)';"
-                                data-id="{{ $class->id }}"
-                                data-name="{{ $class->name }}"
-                                data-loading-text="Loading...">
-                            <span class="flex items-center justify-center gap-2">
-                                <span class="spinner hidden h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
-                                <span>Delete</span>
-                            </span>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        @empty
+<div class="overflow-x-auto p-2">
+    <table class="min-w-full border-separate border-spacing-y-2 text-sm">
+        <thead class="text-left text-xs font-bold uppercase tracking-wide" style="color:#475569;">
             <tr>
-                <td colspan="6" class="px-6 py-10 text-center text-sm" style="color:#475569;">
-                    No classes found.
-                </td>
+                <th class="px-4 py-3">Class</th>
+                <th class="px-4 py-3">Teacher</th>
+                <th class="px-4 py-3">Students</th>
+                <th class="px-4 py-3">Code</th>
+                <th class="px-4 py-3">Created</th>
+                <th class="px-4 py-3 text-center">Actions</th>
             </tr>
-        @endforelse
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @forelse($classes as $class)
+                <tr class="sa-class-row class-row group cursor-pointer"
+                    style="background:rgba(255,255,255,0.02);"
+                    data-url="{{ route('admin.classes.details', $class->id) }}">
+
+                    <td class="rounded-l-xl border-y border-l px-4 py-4 transition-all duration-200"
+                        style="border-color:rgba(255,255,255,0.06);">
+                        <div class="flex flex-col">
+                            <span class="sa-class-title font-semibold transition" style="color:#e2e8f0;">
+                                {{ $class->name }}
+                            </span>
+                            <span class="sa-class-desc mt-0.5 max-w-xs truncate text-xs transition" style="color:#475569;">
+                                {{ $class->description ?: 'No description' }}
+                            </span>
+                            <span class="sa-class-hint mt-1 text-xs font-medium transition-opacity duration-200"
+                                  style="color:#6366f1;opacity:0;">
+                                Click to view class quizzes
+                            </span>
+                        </div>
+                    </td>
+
+                    <td class="border-y px-4 py-4 text-sm transition-all duration-200"
+                        style="border-color:rgba(255,255,255,0.06);color:#94a3b8;">
+                        {{ $class->teacher->name ?? 'Unknown Teacher' }}
+                    </td>
+
+                    <td class="border-y px-4 py-4 text-sm transition-all duration-200"
+                        style="border-color:rgba(255,255,255,0.06);color:#94a3b8;">
+                        {{ $class->students->count() }}
+                    </td>
+
+                    <td class="border-y px-4 py-4 text-sm transition-all duration-200"
+                        style="border-color:rgba(255,255,255,0.06);color:#94a3b8;">
+                        {{ $class->class_code }}
+                    </td>
+
+                    <td class="border-y px-4 py-4 text-sm transition-all duration-200"
+                        style="border-color:rgba(255,255,255,0.06);color:#94a3b8;">
+                        {{ $class->created_at ? $class->created_at->format('M d, Y') : '—' }}
+                    </td>
+
+                    <td class="rounded-r-xl border-y border-r px-4 py-4 transition-all duration-200"
+                        style="border-color:rgba(255,255,255,0.06);">
+                        <div class="flex items-center justify-center gap-2 flex-wrap">
+                            <button type="button"
+                                    onclick="event.stopPropagation();"
+                                    class="edit-class-btn class-action-btn inline-flex items-center justify-center rounded-lg px-3.5 py-2 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-60"
+                                    style="background:rgba(99,102,241,0.15);color:#a5b4fc;border:1px solid rgba(99,102,241,0.25);"
+                                    onmouseover="this.style.background='rgba(99,102,241,0.28)';"
+                                    onmouseout="this.style.background='rgba(99,102,241,0.15)';"
+                                    data-id="{{ $class->id }}"
+                                    data-loading-text="Loading...">
+                                <span class="flex items-center justify-center gap-2">
+                                    <span class="spinner hidden h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
+                                    <span>Update</span>
+                                </span>
+                            </button>
+                            <button type="button"
+                                    onclick="event.stopPropagation();"
+                                    class="delete-class-btn class-action-btn inline-flex items-center justify-center rounded-lg px-3.5 py-2 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-60"
+                                    style="background:rgba(239,68,68,0.12);color:#f87171;border:1px solid rgba(239,68,68,0.2);"
+                                    onmouseover="this.style.background='rgba(239,68,68,0.25)';"
+                                    onmouseout="this.style.background='rgba(239,68,68,0.12)';"
+                                    data-id="{{ $class->id }}"
+                                    data-name="{{ $class->name }}"
+                                    data-loading-text="Loading...">
+                                <span class="flex items-center justify-center gap-2">
+                                    <span class="spinner hidden h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
+                                    <span>Delete</span>
+                                </span>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="6" class="rounded-xl px-4 py-10 text-center text-sm"
+                        style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);color:#475569;">
+                        No classes found.
+                    </td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
+</div>
 
 @if($classes->hasPages())
-    <div class="px-6 py-4" style="border-top:1px solid rgba(255,255,255,0.06);">
+    <div class="px-4 py-4" style="border-top:1px solid rgba(255,255,255,0.06);">
         {{ $classes->links() }}
     </div>
 @endif
