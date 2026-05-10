@@ -53,59 +53,59 @@ class AiQuizController extends Controller
         if ($request->passage) $context .= "Passage:\n{$request->passage}\n";
 
         $prompt = <<<PROMPT
-Generate exactly {$numQuestions} quiz questions based on the content below.
+            Generate exactly {$numQuestions} quiz questions based on the content below.
 
-Difficulty: {$difficulty}
-Question types to include (distribute evenly): {$typesFormatted}
+            Difficulty: {$difficulty}
+            Question types to include (distribute evenly): {$typesFormatted}
 
-{$context}
+            {$context}
 
-STRICT OUTPUT RULES:
-- Respond ONLY with a valid JSON object containing a "questions" array.
-- Each object in the "questions" array must follow this structure depending on type:
+            STRICT OUTPUT RULES:
+            - Respond ONLY with a valid JSON object containing a "questions" array.
+            - Each object in the "questions" array must follow this structure depending on type:
 
-For "multiple_choice":
-{
-  "type": "multiple_choice",
-  "question_text": "...",
-  "points": 1,
-  "options": [
-    {"option_text": "...", "is_correct": false},
-    {"option_text": "...", "is_correct": false},
-    {"option_text": "...", "is_correct": false},
-    {"option_text": "...", "is_correct": true}
-  ]
-}
+            For "multiple_choice":
+            {
+            "type": "multiple_choice",
+            "question_text": "...",
+            "points": 1,
+            "options": [
+                {"option_text": "...", "is_correct": false},
+                {"option_text": "...", "is_correct": false},
+                {"option_text": "...", "is_correct": false},
+                {"option_text": "...", "is_correct": true}
+            ]
+            }
 
-For "true_false":
-{
-  "type": "true_false",
-  "question_text": "...",
-  "points": 1,
-  "correct_answer": true
-}
+            For "true_false":
+            {
+            "type": "true_false",
+            "question_text": "...",
+            "points": 1,
+            "correct_answer": true
+            }
 
-For "identification":
-{
-  "type": "identification",
-  "question_text": "...",
-  "points": 1,
-  "answer": "..."
-}
+            For "identification":
+            {
+            "type": "identification",
+            "question_text": "...",
+            "points": 1,
+            "answer": "..."
+            }
 
-For "matching":
-{
-  "type": "matching",
-  "question_text": "Match the following:",
-  "points": 2,
-  "pairs": [
-    {"left": "...", "right": "..."},
-    {"left": "...", "right": "..."},
-    {"left": "...", "right": "..."},
-    {"left": "...", "right": "..."}
-  ]
-}
-PROMPT;
+            For "matching":
+            {
+            "type": "matching",
+            "question_text": "Match the following:",
+            "points": 2,
+            "pairs": [
+                {"left": "...", "right": "..."},
+                {"left": "...", "right": "..."},
+                {"left": "...", "right": "..."},
+                {"left": "...", "right": "..."}
+            ]
+            }
+        PROMPT;
 
         $payload = [
             'model'    => 'llama-3.3-70b-versatile',

@@ -200,7 +200,7 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
                             color: Colors.white,
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
-                            letterSpacing: -0.3,
+                            letterSpacing: -0.3,  
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
