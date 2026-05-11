@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -17,9 +16,9 @@ class ClassRoom extends Model
         'name',
         'description',
         'class_code',
+        'grading_mode',
     ];
 
-    // Auto-generate class code when creating
     protected static function booted()
     {
         static::creating(function ($class) {
@@ -47,7 +46,7 @@ class ClassRoom extends Model
     public function quizzes()
     {
         return $this->belongsToMany(Quiz::class, 'class_quizzes', 'class_id', 'quiz_id')
-            ->withPivot('assigned_at', 'due_date')
+            ->withPivot('assigned_at', 'due_date', 'grading_mode')
             ->withTimestamps();
     }
 }
