@@ -12,7 +12,8 @@ class AuthService {
  
 
   // static const String ip = 'localhost';
-  static const String ip         = '10.105.198.155';
+  static const String ip = '10.105.198.155';
+
   static const String baseUrl    = 'http://$ip:8000/api';
   static const String storageUrl = 'http://$ip:8000/storage';
 
