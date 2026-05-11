@@ -36,6 +36,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/student/profile', [StudentController::class, 'getProfile']);
     Route::put('/student/profile', [StudentController::class, 'updateProfile']);
     Route::get('/student/quizzes', [StudentController::class, 'allQuizzes']);
+    Route::get('/student/attempts/{attemptId}', [StudentController::class, 'getAttempt']); // Phase 5
 
     // Teacher routes
     Route::get('/teacher/dashboard', [TeacherController::class, 'dashboard']);
@@ -83,7 +84,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/teacher/quizzes/{quizId}/export-analytics', [TeacherController::class, 'exportAnalytics']);
     Route::get('/teacher/quizzes/{quizId}/export-full', [TeacherController::class, 'exportFullReport']);
     Route::get('/teacher/classes/{classId}/quizzes/{quizId}/export-results', [TeacherController::class, 'exportClassQuizResults']);
-
 
     // AI Quiz Generation
     Route::post('/ai/generate-questions', [AiQuizController::class, 'generate']);
