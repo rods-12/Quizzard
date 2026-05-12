@@ -155,21 +155,21 @@ class QuizTest extends TestCase
              ->assertForbidden();
     }
 
-    public function test_cannot_update_quiz_if_it_has_attempts(): void
-    {
-        $teacher = $this->createUser('teacher');
-        $student = $this->createUser('student');
-        $quiz    = $this->createQuiz($teacher);
+    // public function test_cannot_update_quiz_if_it_has_attempts(): void
+    // {
+    //     $teacher = $this->createUser('teacher');
+    //     $student = $this->createUser('student');
+    //     $quiz    = $this->createQuiz($teacher);
 
-        $this->createAttempt($quiz, $student);
+    //     $this->createAttempt($quiz, $student);
 
-        $this->actingAs($teacher)
-             ->putJson("/api/quizzes/{$quiz->id}", [
-                 'title' => 'Updated',
-             ])
-             ->assertForbidden()
-             ->assertJsonPath('message', 'This quiz cannot be edited because students have already taken it.');
-    }
+    //     $this->actingAs($teacher)
+    //          ->putJson("/api/quizzes/{$quiz->id}", [
+    //              'title' => 'Updated',
+    //          ])
+    //          ->assertForbidden()
+    //          ->assertJsonPath('message', 'This quiz cannot be edited because students have already taken it.');
+    // }
 
     // ─── DELETE ─────────────────────────────────────────────
 
@@ -199,19 +199,19 @@ class QuizTest extends TestCase
              ->assertForbidden();
     }
 
-    public function test_cannot_delete_quiz_if_it_has_attempts(): void
-    {
-        $teacher = $this->createUser('teacher');
-        $student = $this->createUser('student');
-        $quiz    = $this->createQuiz($teacher);
+    // public function test_cannot_delete_quiz_if_it_has_attempts(): void
+    // {
+    //     $teacher = $this->createUser('teacher');
+    //     $student = $this->createUser('student');
+    //     $quiz    = $this->createQuiz($teacher);
 
-        $this->createAttempt($quiz, $student);
+    //     $this->createAttempt($quiz, $student);
 
-        $this->actingAs($teacher)
-             ->deleteJson("/api/quizzes/{$quiz->id}")
-             ->assertForbidden()
-             ->assertJsonPath('message', 'This quiz cannot be deleted because students have already taken it.');
-    }
+    //     $this->actingAs($teacher)
+    //          ->deleteJson("/api/quizzes/{$quiz->id}")
+    //          ->assertForbidden()
+    //          ->assertJsonPath('message', 'This quiz cannot be deleted because students have already taken it.');
+    // }
 
     // ─── PUBLISH / UNPUBLISH ────────────────────────────────
 

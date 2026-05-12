@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,6 +14,7 @@ class StudentAnswer extends Model
         'answer_given',
         'is_correct',
         'points_earned',
+        'justification',
     ];
 
     protected $casts = [
@@ -29,5 +29,10 @@ class StudentAnswer extends Model
     public function question()
     {
         return $this->belongsTo(Question::class);
+    }
+
+    public function review()
+    {
+        return $this->hasOne(StudentAnswerReview::class, 'student_answer_id');
     }
 }

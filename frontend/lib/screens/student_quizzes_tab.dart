@@ -15,6 +15,7 @@ class _AppTheme {
   static const Color success = Color(0xFF22C55E);
   static const Color warning = Color(0xFFF59E0B);
   static const Color danger = Color(0xFFEF4444);
+  static const Color review = Color(0xFF3B82F6); // blue for under_review
 
   static BoxDecoration get cardDecoration => BoxDecoration(
         color: surface,
@@ -27,6 +28,18 @@ class _AppTheme {
           ),
         ],
       );
+}
+
+// ─── Attempt status helpers ──────────────────────────────────────────────────
+bool _isAwaitingReview(Map<String, dynamic> quiz) {
+  final status = quiz['attempt_status'] as String?;
+  return status == 'submitted' || status == 'under_review';
+}
+
+bool _isReviewed(Map<String, dynamic> quiz) {
+  final status = quiz['attempt_status'] as String?;
+  // legacy 'completed' treated same as reviewed for backwards compat
+  return status == 'reviewed' || status == 'completed';
 }
 
 class StudentQuizzesTab extends StatefulWidget {
@@ -128,15 +141,20 @@ class _StudentQuizzesTabState extends State<StudentQuizzesTab>
                   color: _AppTheme.danger.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.error_outline_rounded, size: 48, color: _AppTheme.danger),
+                child: Icon(Icons.error_outline_rounded,
+                    size: 48, color: _AppTheme.danger),
               ),
               const SizedBox(height: 16),
-              Text(_errorMessage!, textAlign: TextAlign.center, style: const TextStyle(color: _AppTheme.textMid)),
+              Text(_errorMessage!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: _AppTheme.textMid)),
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _loadQuizzes,
-                style: ElevatedButton.styleFrom(backgroundColor: _AppTheme.primary),
-                child: const Text('Retry', style: TextStyle(color: Colors.white)),
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: _AppTheme.primary),
+                child: const Text('Retry',
+                    style: TextStyle(color: Colors.white)),
               ),
             ],
           ),
@@ -175,10 +193,10 @@ class _StudentQuizzesTabState extends State<StudentQuizzesTab>
               const SizedBox(height: 4),
               Text(
                 '${_quizzes.length} total · ${_doneQuizzes.length} completed · ${_assignedQuizzes.length} pending',
-                style: const TextStyle(color: Colors.white70, fontSize: 13),
+                style:
+                    const TextStyle(color: Colors.white70, fontSize: 13),
               ),
               const SizedBox(height: 16),
-              // Tab bar integrated in header
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.15),
@@ -244,54 +262,22 @@ class _StudentQuizzesTabState extends State<StudentQuizzesTab>
           Text(label),
           const SizedBox(width: 6),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: _tabController.index == 0 // Will be updated by TabBar
-                  ? _AppTheme.primaryLight
-                  : Colors.white.withOpacity(0.2),
+              color: _AppTheme.primaryLight,
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
               '$count',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
-                color: _tabController.index == 0
-                    ? _AppTheme.primary
-                    : Colors.white,
+                color: _AppTheme.primary,
               ),
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildErrorState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: _AppTheme.danger.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.error_outline_rounded, size: 48, color: _AppTheme.danger),
-            ),
-            const SizedBox(height: 16),
-            Text(_errorMessage!, textAlign: TextAlign.center, style: const TextStyle(color: _AppTheme.textMid)),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _loadQuizzes,
-              style: ElevatedButton.styleFrom(backgroundColor: _AppTheme.primary),
-              child: const Text('Retry', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -311,13 +297,15 @@ class _StudentQuizzesTabState extends State<StudentQuizzesTab>
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
         itemCount: quizzes.length,
         itemBuilder: (context, index) {
-          return _buildQuizCard(quizzes[index]);
+          return _buildQuizCard(
+              Map<String, dynamic>.from(quizzes[index]));
         },
       ),
     );
   }
 
-  Widget _buildEmptyState({required IconData icon, required String message}) {
+  Widget _buildEmptyState(
+      {required IconData icon, required String message}) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(40),
@@ -330,7 +318,9 @@ class _StudentQuizzesTabState extends State<StudentQuizzesTab>
                 color: _AppTheme.primaryLight,
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, size: 48, color: _AppTheme.primary.withOpacity(0.5)),
+              child: Icon(icon,
+                  size: 48,
+                  color: _AppTheme.primary.withOpacity(0.5)),
             ),
             const SizedBox(height: 16),
             Text(
@@ -350,26 +340,102 @@ class _StudentQuizzesTabState extends State<StudentQuizzesTab>
 
   Widget _buildQuizCard(Map<String, dynamic> quiz) {
     final alreadyTaken = quiz['already_taken'] == true;
+    final awaitingReview = _isAwaitingReview(quiz);
+    final reviewed = _isReviewed(quiz);
+    final attemptStatus = quiz['attempt_status'] as String?;
+    final attemptId = quiz['attempt_id'];
+
     final dueDate = quiz['due_date'] != null
         ? DateTime.tryParse(quiz['due_date'])
         : null;
-    final isPastDue = dueDate != null && dueDate.isBefore(DateTime.now()) && !alreadyTaken;
+    final isPastDue =
+        dueDate != null && dueDate.isBefore(DateTime.now()) && !alreadyTaken;
+
+    // Determine icon and colors
+    IconData cardIcon;
+    Color iconBg;
+    Color iconColor;
+
+    if (awaitingReview) {
+      final isUnderReview = attemptStatus == 'under_review';
+      cardIcon = isUnderReview
+          ? Icons.rate_review_rounded
+          : Icons.hourglass_top_rounded;
+      iconBg = _AppTheme.warning.withOpacity(0.1);
+      iconColor = _AppTheme.warning;
+    } else if (alreadyTaken) {
+      cardIcon = Icons.check_circle_rounded;
+      iconBg = _AppTheme.success.withOpacity(0.1);
+      iconColor = _AppTheme.success;
+    } else if (isPastDue) {
+      cardIcon = Icons.warning_rounded;
+      iconBg = _AppTheme.danger.withOpacity(0.1);
+      iconColor = _AppTheme.danger;
+    } else {
+      cardIcon = Icons.quiz_rounded;
+      iconBg = _AppTheme.primaryLight;
+      iconColor = _AppTheme.primary;
+    }
+
+    // Determine badge text and colors
+    String badgeText;
+    Color badgeTextColor;
+    Color badgeBg;
+    Color badgeBorder;
+
+    if (awaitingReview) {
+      final isUnderReview = attemptStatus == 'under_review';
+      badgeText = isUnderReview ? '🔍 Under Review' : '⏳ Awaiting Review';
+      badgeTextColor = _AppTheme.warning;
+      badgeBg = _AppTheme.warning.withOpacity(0.1);
+      badgeBorder = _AppTheme.warning.withOpacity(0.3);
+    } else if (alreadyTaken) {
+      badgeText = '✓ Done';
+      badgeTextColor = _AppTheme.success;
+      badgeBg = _AppTheme.success.withOpacity(0.1);
+      badgeBorder = _AppTheme.success.withOpacity(0.3);
+    } else if (isPastDue) {
+      badgeText = 'Past Due';
+      badgeTextColor = _AppTheme.danger;
+      badgeBg = _AppTheme.danger.withOpacity(0.1);
+      badgeBorder = _AppTheme.danger.withOpacity(0.3);
+    } else {
+      badgeText = 'Pending';
+      badgeTextColor = _AppTheme.primary;
+      badgeBg = _AppTheme.primaryLight;
+      badgeBorder = _AppTheme.primary.withOpacity(0.3);
+    }
+
+    // Determine tap behavior
+    VoidCallback? onTap;
+    if (awaitingReview && attemptId != null) {
+      // Go to pending review screen
+      onTap = () => Navigator.pushNamed(
+            context,
+            '/pending-review',
+            arguments: {
+              'attempt_id': int.parse(attemptId.toString()),
+              'quiz_title': quiz['title'],
+            },
+          );
+    } else if (!alreadyTaken && !isPastDue) {
+      onTap = () => Navigator.pushNamed(
+            context,
+            '/quiz-taking',
+            arguments: {
+              'quiz_id': quiz['id'],
+              'quiz_title': quiz['title'],
+            },
+          );
+    }
+    // reviewed + alreadyTaken → null (no tap, score shown)
 
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: _AppTheme.cardDecoration,
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: (alreadyTaken || isPastDue)
-            ? null
-            : () => Navigator.pushNamed(
-                  context,
-                  '/quiz-taking',
-                  arguments: {
-                    'quiz_id': quiz['id'],
-                    'quiz_title': quiz['title'],
-                  },
-                ),
+        onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -382,26 +448,10 @@ class _StudentQuizzesTabState extends State<StudentQuizzesTab>
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: alreadyTaken
-                          ? _AppTheme.success.withOpacity(0.1)
-                          : isPastDue
-                              ? _AppTheme.danger.withOpacity(0.1)
-                              : _AppTheme.primaryLight,
+                      color: iconBg,
                       borderRadius: BorderRadius.circular(13),
                     ),
-                    child: Icon(
-                      alreadyTaken
-                          ? Icons.check_circle_rounded
-                          : isPastDue
-                              ? Icons.warning_rounded
-                              : Icons.quiz_rounded,
-                      color: alreadyTaken
-                          ? _AppTheme.success
-                          : isPastDue
-                              ? _AppTheme.danger
-                              : _AppTheme.primary,
-                      size: 26,
-                    ),
+                    child: Icon(cardIcon, color: iconColor, size: 26),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -430,34 +480,17 @@ class _StudentQuizzesTabState extends State<StudentQuizzesTab>
                   const SizedBox(width: 8),
                   // Status badge
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
-                      color: alreadyTaken
-                          ? _AppTheme.success.withOpacity(0.1)
-                          : isPastDue
-                              ? _AppTheme.danger.withOpacity(0.1)
-                              : _AppTheme.primaryLight,
+                      color: badgeBg,
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: alreadyTaken
-                            ? _AppTheme.success.withOpacity(0.3)
-                            : isPastDue
-                                ? _AppTheme.danger.withOpacity(0.3)
-                                : _AppTheme.primary.withOpacity(0.3),
-                      ),
+                      border: Border.all(color: badgeBorder),
                     ),
                     child: Text(
-                      alreadyTaken
-                          ? '✓ Done'
-                          : isPastDue
-                              ? 'Past Due'
-                              : 'Pending',
+                      badgeText,
                       style: TextStyle(
-                        color: alreadyTaken
-                            ? _AppTheme.success
-                            : isPastDue
-                                ? _AppTheme.danger
-                                : _AppTheme.primary,
+                        color: badgeTextColor,
                         fontWeight: FontWeight.bold,
                         fontSize: 11,
                       ),
@@ -470,7 +503,7 @@ class _StudentQuizzesTabState extends State<StudentQuizzesTab>
               Divider(color: Colors.grey.shade100, height: 1),
               const SizedBox(height: 12),
 
-              // Meta row with deadline, questions count, score
+              // Meta row
               Wrap(
                 spacing: 16,
                 runSpacing: 8,
@@ -492,37 +525,41 @@ class _StudentQuizzesTabState extends State<StudentQuizzesTab>
                       'No deadline',
                       color: _AppTheme.textLight,
                     ),
-                  if (alreadyTaken) ...[
+                  // Show score only when fully reviewed
+                  if (reviewed && quiz['score'] != null) ...[
                     _buildMeta(
                       Icons.star_rounded,
                       'Score: ${quiz['score']}/${quiz['total_points']}',
-                      color: _getScoreColor(quiz['score'], quiz['total_points']),
+                      color: _getScoreColor(
+                          quiz['score'], quiz['total_points']),
                     ),
                   ],
+                  // Show "pending score" label when awaiting review
+                  if (awaitingReview)
+                    _buildMeta(
+                      Icons.lock_clock_rounded,
+                      'Score pending',
+                      color: _AppTheme.warning,
+                    ),
                 ],
               ),
 
               const SizedBox(height: 12),
+
+              // Action button
               SizedBox(
                 width: double.infinity,
                 height: 44,
                 child: ElevatedButton(
-                  onPressed: (alreadyTaken || isPastDue)
-                      ? null
-                      : () => Navigator.pushNamed(
-                            context,
-                            '/quiz-taking',
-                            arguments: {
-                              'quiz_id': quiz['id'],
-                              'quiz_title': quiz['title'],
-                            },
-                          ),
+                  onPressed: onTap,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: alreadyTaken
-                        ? Colors.grey.shade200
-                        : isPastDue
-                            ? _AppTheme.danger.withOpacity(0.1)
-                            : _AppTheme.primary,
+                    backgroundColor: awaitingReview
+                        ? _AppTheme.warning.withOpacity(0.15)
+                        : alreadyTaken
+                            ? Colors.grey.shade200
+                            : isPastDue
+                                ? _AppTheme.danger.withOpacity(0.1)
+                                : _AppTheme.primary,
                     disabledBackgroundColor: alreadyTaken
                         ? Colors.grey.shade100
                         : _AppTheme.danger.withOpacity(0.05),
@@ -532,17 +569,21 @@ class _StudentQuizzesTabState extends State<StudentQuizzesTab>
                     elevation: 0,
                   ),
                   child: Text(
-                    alreadyTaken
-                        ? 'Already Completed'
-                        : isPastDue
-                            ? 'Past Due'
-                            : 'Take Quiz',
+                    awaitingReview
+                        ? 'View Submission'
+                        : alreadyTaken
+                            ? 'Already Completed'
+                            : isPastDue
+                                ? 'Past Due'
+                                : 'Take Quiz',
                     style: TextStyle(
-                      color: alreadyTaken
-                          ? _AppTheme.textLight
-                          : isPastDue
-                              ? _AppTheme.danger
-                              : Colors.white,
+                      color: awaitingReview
+                          ? _AppTheme.warning
+                          : alreadyTaken
+                              ? _AppTheme.textLight
+                              : isPastDue
+                                  ? _AppTheme.danger
+                                  : Colors.white,
                       fontWeight: FontWeight.bold,
                     ),
                   ),

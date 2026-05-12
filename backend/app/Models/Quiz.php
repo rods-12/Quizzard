@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -40,6 +39,11 @@ class Quiz extends Model
             'class_id'
         );
     }
+
+    // public function classQuizzes()
+    // {
+    //     return $this->hasMany(ClassQuiz::class, 'quiz_id');
+    // }
 
     public function attempts()
     {

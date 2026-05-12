@@ -6,8 +6,11 @@ use App\Models\Quiz;
 use App\Models\Question;
 use App\Models\QuizAttempt;
 use App\Models\StudentAnswer;
+use App\Models\StudentAnswerReview;
+use App\Models\ClassRoom;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 
 class QuizController extends Controller
 {
@@ -83,7 +86,6 @@ class QuizController extends Controller
             return response()->json(['message' => 'Forbidden.'], 403);
         }
 
-        // Block edit if quiz has attempts
         $hasAttempts = QuizAttempt::where('quiz_id', $quizId)->exists();
         if ($hasAttempts) {
             return response()->json([
@@ -117,7 +119,6 @@ class QuizController extends Controller
             return response()->json(['message' => 'Forbidden.'], 403);
         }
 
-        // Block delete if quiz has attempts
         $hasAttempts = QuizAttempt::where('quiz_id', $quizId)->exists();
         if ($hasAttempts) {
             return response()->json([
@@ -159,36 +160,44 @@ class QuizController extends Controller
             ->where('is_published', true)
             ->firstOrFail();
 
-        $existingAttempt = QuizAttempt::where('student_id', $request->user()->id)
+        $studentId = $request->user()->id;
+
+        // ── Re-submission prevention ───────────────────────────────
+        // Block if ANY active attempt exists, regardless of status.
+        // in_progress  → 409 with resume data so the client can continue
+        // submitted    → 409 (awaiting teacher review)
+        // under_review → 409 (teacher is currently reviewing)
+        // reviewed     → 409 (already completed)
+        $existingAttempt = QuizAttempt::where('student_id', $studentId)
             ->where('quiz_id', $quizId)
-            ->where('status', 'completed')
+            ->whereIn('status', [
+                QuizAttempt::STATUS_IN_PROGRESS,
+                QuizAttempt::STATUS_SUBMITTED,
+                QuizAttempt::STATUS_UNDER_REVIEW,
+                QuizAttempt::STATUS_REVIEWED,
+            ])
             ->first();
 
         if ($existingAttempt) {
+            $statusMessages = [
+                QuizAttempt::STATUS_IN_PROGRESS  => 'You have an attempt in progress. Resume it instead of starting a new one.',
+                QuizAttempt::STATUS_SUBMITTED     => 'You have already submitted this quiz. It is awaiting teacher review.',
+                QuizAttempt::STATUS_UNDER_REVIEW  => 'Your submission is currently being reviewed by your teacher.',
+                QuizAttempt::STATUS_REVIEWED      => 'You have already completed this quiz.',
+            ];
+
             return response()->json([
-                'message' => 'You have already completed this quiz.',
+                'message' => $statusMessages[$existingAttempt->status] ?? 'An attempt already exists for this quiz.',
                 'attempt' => $existingAttempt,
             ], 409);
         }
 
-        $inProgressAttempt = QuizAttempt::where('student_id', $request->user()->id)
-            ->where('quiz_id', $quizId)
-            ->where('status', 'in_progress')
-            ->first();
-
-        if ($inProgressAttempt) {
-            return response()->json([
-                'message' => 'Resuming existing attempt.',
-                'attempt' => $inProgressAttempt,
-            ]);
-        }
-
         $attempt = QuizAttempt::create([
-            'student_id'   => $request->user()->id,
+            'student_id'   => $studentId,
             'quiz_id'      => $quizId,
             'score'        => 0,
             'total_points' => $quiz->questions()->sum('points'),
-            'status'       => 'in_progress',
+            'status'       => QuizAttempt::STATUS_IN_PROGRESS,
             'started_at'   => now(),
         ]);
 
@@ -201,19 +210,69 @@ class QuizController extends Controller
     // ─── POST /api/quizzes/{quizId}/submit ────────────────────────
     public function submitQuiz(Request $request, $quizId)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'attempt_id' => 'required|integer',
             'answers'    => 'required|array',
         ]);
 
-        $attempt = QuizAttempt::where('id', $request->attempt_id)
-            ->where('student_id', $request->user()->id)
-            ->where('quiz_id', $quizId)
-            ->where('status', 'in_progress')
-            ->firstOrFail();
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed.',
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
 
-        $totalScore    = 0;
-        $answersToSave = [];
+        // ── Re-submission guard ────────────────────────────────────
+        // The attempt must belong to this student, this quiz,
+        // AND be in_progress. Any other status means it was already
+        // submitted — return 409 instead of 404 for clarity.
+        $studentId = $request->user()->id;
+
+        $existingAttempt = QuizAttempt::where('id', $request->attempt_id)
+            ->where('student_id', $studentId)
+            ->where('quiz_id', $quizId)
+            ->first();
+
+        if (!$existingAttempt) {
+            return response()->json([
+                'message' => 'Attempt not found.',
+            ], 404);
+        }
+
+        if ($existingAttempt->status !== QuizAttempt::STATUS_IN_PROGRESS) {
+            return response()->json([
+                'message' => 'This attempt has already been submitted and cannot be resubmitted.',
+                'status'  => $existingAttempt->status,
+            ], 409);
+        }
+
+        $attempt = $existingAttempt;
+
+        // ── Determine grading_mode from class_quizzes ──────────────
+        $classQuiz = ClassRoom::whereHas('students', function ($q) use ($studentId) {
+                $q->where('student_id', $studentId);
+            })
+            ->whereHas('quizzes', function ($q) use ($quizId) {
+                $q->where('quiz_id', $quizId);
+            })
+            ->with(['quizzes' => function ($q) use ($quizId) {
+                $q->where('quiz_id', $quizId);
+            }])
+            ->first();
+
+        $gradingMode = 'automatic';
+        if ($classQuiz && $classQuiz->quizzes->isNotEmpty()) {
+            $gradingMode = $classQuiz->quizzes->first()->pivot->grading_mode ?? 'automatic';
+        }
+
+        // ── Build and score answers ────────────────────────────────
+        $quiz = Quiz::with(['questions' => function ($q) {
+            $q->orderBy('order')->with('answerOptions');
+        }])->findOrFail($quizId);
+
+        $actualTotalPoints = $quiz->questions()->sum('points');
+        $totalScore        = 0;
+        $answersToSave     = [];
 
         foreach ($request->answers as $answerData) {
             $questionId = $answerData['question_id'];
@@ -225,47 +284,58 @@ class QuizController extends Controller
             $pointsEarned = 0;
             $answerGiven  = '';
 
-            if ($answerType === 'multiple_choice' || $answerType === 'true_false') {
-                $selectedOptionId = $answerData['selected_option_id'] ?? null;
-                $answerGiven      = (string) $selectedOptionId;
+            if ($gradingMode === 'automatic') {
+                if ($answerType === 'multiple_choice' || $answerType === 'true_false') {
+                    $selectedOptionId = $answerData['selected_option_id'] ?? null;
+                    $answerGiven      = (string) $selectedOptionId;
 
-                if ($selectedOptionId) {
+                    if ($selectedOptionId) {
+                        $correctOption = $question->answerOptions->where('is_correct', true)->first();
+                        if ($correctOption && $correctOption->id == $selectedOptionId) {
+                            $isCorrect    = true;
+                            $pointsEarned = $question->points;
+                        }
+                    }
+                } elseif ($answerType === 'identification') {
+                    $answerText  = trim($answerData['answer_text'] ?? '');
+                    $answerGiven = $answerText;
+
                     $correctOption = $question->answerOptions->where('is_correct', true)->first();
-                    if ($correctOption && $correctOption->id == $selectedOptionId) {
+                    if ($correctOption && strtolower($answerText) === strtolower(trim($correctOption->option_text))) {
                         $isCorrect    = true;
                         $pointsEarned = $question->points;
                     }
-                }
-            } elseif ($answerType === 'identification') {
-                $answerText  = trim($answerData['answer_text'] ?? '');
-                $answerGiven = $answerText;
+                } elseif ($answerType === 'matching') {
+                    $matches     = $answerData['matches'] ?? [];
+                    $answerGiven = json_encode($matches);
 
-                $correctOption = $question->answerOptions->where('is_correct', true)->first();
-                if ($correctOption && strtolower($answerText) === strtolower(trim($correctOption->option_text))) {
-                    $isCorrect    = true;
-                    $pointsEarned = $question->points;
-                }
-            } elseif ($answerType === 'matching') {
-                $matches     = $answerData['matches'] ?? [];
-                $answerGiven = json_encode($matches);
+                    $correctPairs  = $question->answerOptions;
+                    $totalPairs    = $correctPairs->count();
+                    $correctCount  = 0;
+                    $pointsPerPair = $totalPairs > 0 ? $question->points / $totalPairs : 0;
 
-                $correctPairs  = $question->answerOptions;
-                $totalPairs    = $correctPairs->count();
-                $correctCount  = 0;
-                $pointsPerPair = $totalPairs > 0 ? $question->points / $totalPairs : 0;
-
-                foreach ($correctPairs as $pair) {
-                    $studentB = $matches[$pair->option_text] ?? '';
-                    if (strtolower(trim($studentB)) === strtolower(trim($pair->match_pair))) {
-                        $correctCount++;
+                    foreach ($correctPairs as $pair) {
+                        $studentB = $matches[$pair->option_text] ?? '';
+                        if (strtolower(trim($studentB)) === strtolower(trim($pair->match_pair))) {
+                            $correctCount++;
+                        }
                     }
+
+                    $pointsEarned = round($correctCount * $pointsPerPair);
+                    $isCorrect    = $correctCount === $totalPairs;
                 }
 
-                $pointsEarned = round($correctCount * $pointsPerPair);
-                $isCorrect    = $correctCount === $totalPairs;
+                $totalScore += $pointsEarned;
+            } else {
+                // Manual mode — capture the answer as-is, no scoring
+                if ($answerType === 'multiple_choice' || $answerType === 'true_false') {
+                    $answerGiven = (string) ($answerData['selected_option_id'] ?? '');
+                } elseif ($answerType === 'identification') {
+                    $answerGiven = trim($answerData['answer_text'] ?? '');
+                } elseif ($answerType === 'matching') {
+                    $answerGiven = json_encode($answerData['matches'] ?? []);
+                }
             }
-
-            $totalScore += $pointsEarned;
 
             $answersToSave[] = [
                 'attempt_id'    => $attempt->id,
@@ -280,58 +350,85 @@ class QuizController extends Controller
 
         StudentAnswer::insert($answersToSave);
 
-        $quiz = Quiz::with(['questions' => function ($q) {
-            $q->orderBy('order')->with('answerOptions');
-        }])->findOrFail($quizId);
+        // ── Finalize attempt per grading mode ─────────────────────
+        if ($gradingMode === 'automatic') {
+            $attempt->update([
+                'score'        => $totalScore,
+                'total_points' => $actualTotalPoints,
+                'status'       => QuizAttempt::STATUS_REVIEWED,
+                'completed_at' => now(),
+            ]);
 
-        // Recalculate total_points from actual questions at submit time
-        $actualTotalPoints = $quiz->questions()->sum('points');
+            $questionResults = [];
+            foreach ($quiz->questions as $question) {
+                $savedAnswer = StudentAnswer::where('attempt_id', $attempt->id)
+                    ->where('question_id', $question->id)
+                    ->first();
 
+                $questionResults[] = [
+                    'id'             => $question->id,
+                    'question_text'  => $question->question_text,
+                    'question_type'  => $question->question_type,
+                    'points'         => $question->points,
+                    'points_earned'  => $savedAnswer?->points_earned ?? 0,
+                    'is_correct'     => $savedAnswer?->is_correct ?? false,
+                    'answer_given'   => $savedAnswer?->answer_given ?? '',
+                    'answer_options' => $question->answerOptions->map(function ($opt) {
+                        return [
+                            'id'          => $opt->id,
+                            'option_text' => $opt->option_text,
+                            'is_correct'  => $opt->is_correct,
+                            'match_pair'  => $opt->match_pair,
+                            'order'       => $opt->order,
+                        ];
+                    }),
+                ];
+            }
+
+            $percentage = $actualTotalPoints > 0
+                ? round(($totalScore / $actualTotalPoints) * 100)
+                : 0;
+
+            return response()->json([
+                'message'          => 'Quiz submitted successfully!',
+                'attempt_id'       => $attempt->id,
+                'score'            => $totalScore,
+                'total_points'     => $actualTotalPoints,
+                'percentage'       => $percentage,
+                'is_passed'        => $percentage >= 60,
+                'quiz_title'       => $quiz->title,
+                'question_results' => $questionResults,
+            ]);
+        }
+
+        // ── Manual mode: create review rows, return minimal response
         $attempt->update([
-            'score'        => $totalScore,
+            'score'        => 0,
             'total_points' => $actualTotalPoints,
-            'status'       => 'completed',
+            'status'       => QuizAttempt::STATUS_SUBMITTED,
             'completed_at' => now(),
         ]);
 
-        $questionResults = [];
-        foreach ($quiz->questions as $question) {
-            $savedAnswer = StudentAnswer::where('attempt_id', $attempt->id)
-                ->where('question_id', $question->id)
-                ->first();
+        $savedAnswers = StudentAnswer::where('attempt_id', $attempt->id)->get();
 
-            $questionResults[] = [
-                'id'             => $question->id,
-                'question_text'  => $question->question_text,
-                'question_type'  => $question->question_type,
-                'points'         => $question->points,
-                'points_earned'  => $savedAnswer?->points_earned ?? 0,
-                'is_correct'     => $savedAnswer?->is_correct ?? false,
-                'answer_given'   => $savedAnswer?->answer_given ?? '',
-                'answer_options' => $question->answerOptions->map(function ($opt) {
-                    return [
-                        'id'          => $opt->id,
-                        'option_text' => $opt->option_text,
-                        'is_correct'  => $opt->is_correct,
-                        'match_pair'  => $opt->match_pair,
-                        'order'       => $opt->order,
-                    ];
-                }),
+        $reviewRows = $savedAnswers->map(function ($answer) {
+            return [
+                'student_answer_id' => $answer->id,
+                'teacher_id'        => null,
+                'points_awarded'    => null,
+                'feedback'          => null,
+                'reviewed_at'       => null,
+                'created_at'        => now(),
+                'updated_at'        => now(),
             ];
-        }
+        })->toArray();
 
-        $percentage = $actualTotalPoints > 0
-            ? round(($totalScore / $actualTotalPoints) * 100)
-            : 0;
+        StudentAnswerReview::insert($reviewRows);
 
         return response()->json([
-            'message'          => 'Quiz submitted successfully!',
-            'attempt_id'       => $attempt->id,
-            'score'            => $totalScore,
-            'total_points'     => $actualTotalPoints,
-            'percentage'       => $percentage,
-            'quiz_title'       => $quiz->title,
-            'question_results' => $questionResults,
-        ]);
+            'message'    => 'Quiz submitted. Your answers are pending teacher review.',
+            'attempt_id' => $attempt->id,
+            'status'     => QuizAttempt::STATUS_SUBMITTED,
+        ], 202);
     }
 }

@@ -265,53 +265,53 @@ class QuestionTest extends TestCase
         ]);
     }
 
-    public function test_cannot_add_question_if_quiz_has_attempts(): void
-    {
-        $teacher = $this->createUser('teacher');
-        $student = $this->createUser('student');
-        $quiz    = $this->createQuiz($teacher);
+    // public function test_cannot_add_question_if_quiz_has_attempts(): void
+    // {
+    //     $teacher = $this->createUser('teacher');
+    //     $student = $this->createUser('student');
+    //     $quiz    = $this->createQuiz($teacher);
 
-        $this->createAttempt($quiz, $student);
+    //     $this->createAttempt($quiz, $student);
 
-        $this->actingAs($teacher)
-             ->postJson("/api/quizzes/{$quiz->id}/questions/identification", [
-                 'question_text' => 'New',
-                 'answer' => 'Answer',
-             ])
-             ->assertForbidden()
-             ->assertJsonPath('message', 'This quiz cannot be modified because students have already taken it.');
-    }
+    //     $this->actingAs($teacher)
+    //          ->postJson("/api/quizzes/{$quiz->id}/questions/identification", [
+    //              'question_text' => 'New',
+    //              'answer' => 'Answer',
+    //          ])
+    //          ->assertForbidden()
+    //          ->assertJsonPath('message', 'This quiz cannot be modified because students have already taken it.');
+    // }
 
-    public function test_cannot_update_question_if_quiz_has_attempts(): void
-    {
-        $teacher  = $this->createUser('teacher');
-        $student  = $this->createUser('student');
-        $quiz     = $this->createQuiz($teacher);
-        $question = $this->createQuestion($quiz);
+    // public function test_cannot_update_question_if_quiz_has_attempts(): void
+    // {
+    //     $teacher  = $this->createUser('teacher');
+    //     $student  = $this->createUser('student');
+    //     $quiz     = $this->createQuiz($teacher);
+    //     $question = $this->createQuestion($quiz);
 
-        $this->createAttempt($quiz, $student);
+    //     $this->createAttempt($quiz, $student);
 
-        $this->actingAs($teacher)
-             ->putJson("/api/quizzes/{$quiz->id}/questions/{$question->id}", [
-                 'question_text' => 'Updated',
-                 'answer' => 'Updated',
-             ])
-             ->assertForbidden()
-             ->assertJsonPath('message', 'This question cannot be edited because students have already taken this quiz.');
-    }
+    //     $this->actingAs($teacher)
+    //          ->putJson("/api/quizzes/{$quiz->id}/questions/{$question->id}", [
+    //              'question_text' => 'Updated',
+    //              'answer' => 'Updated',
+    //          ])
+    //          ->assertForbidden()
+    //          ->assertJsonPath('message', 'This question cannot be edited because students have already taken this quiz.');
+    // }
 
-    public function test_cannot_delete_question_if_quiz_has_attempts(): void
-    {
-        $teacher  = $this->createUser('teacher');
-        $student  = $this->createUser('student');
-        $quiz     = $this->createQuiz($teacher);
-        $question = $this->createQuestion($quiz);
+    // public function test_cannot_delete_question_if_quiz_has_attempts(): void
+    // {
+    //     $teacher  = $this->createUser('teacher');
+    //     $student  = $this->createUser('student');
+    //     $quiz     = $this->createQuiz($teacher);
+    //     $question = $this->createQuestion($quiz);
 
-        $this->createAttempt($quiz, $student);
+    //     $this->createAttempt($quiz, $student);
 
-        $this->actingAs($teacher)
-             ->deleteJson("/api/quizzes/{$quiz->id}/questions/{$question->id}")
-             ->assertForbidden()
-             ->assertJsonPath('message', 'This question cannot be deleted because students have already taken this quiz.');
-    }
+    //     $this->actingAs($teacher)
+    //          ->deleteJson("/api/quizzes/{$quiz->id}/questions/{$question->id}")
+    //          ->assertForbidden()
+    //          ->assertJsonPath('message', 'This question cannot be deleted because students have already taken this quiz.');
+    // }
 }

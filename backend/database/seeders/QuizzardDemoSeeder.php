@@ -359,16 +359,19 @@ class QuizzardDemoSeeder extends Seeder
 
                 foreach ($studentsInClass as $studentId) {
                     if (rand(0, 1) === 1) {
+                        $status = rand(0, 1) === 1 ? 'reviewed' : 'submitted';
                         $attemptRows[] = [
-                            'quiz_id'      => $quizId,
-                            'student_id'   => $studentId,
-                            'score'        => rand(0, $totalPoints),
-                            'total_points' => $totalPoints,
-                            'status'       => 'completed',
-                            'started_at'   => $now,
-                            'completed_at' => $now,
-                            'created_at'   => $now,
-                            'updated_at'   => $now,
+                            'quiz_id'          => $quizId,
+                            'student_id'       => $studentId,
+                            'score'            => rand(0, $totalPoints),
+                            'total_points'     => $totalPoints,
+                            'status'           => $status,
+                            'reviewed_at'      => $status === 'reviewed' ? $now : null,
+                            'teacher_feedback' => $status === 'reviewed' ? 'Great job on this quiz!' : null,
+                            'started_at'       => $now,
+                            'completed_at'     => $now,
+                            'created_at'       => $now,
+                            'updated_at'       => $now,
                         ];
                     }
                 }

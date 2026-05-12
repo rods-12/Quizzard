@@ -622,6 +622,9 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
 
   Widget _buildQuizCard(Map<String, dynamic> quiz) {
     final alreadyTaken = quiz['already_taken'] as bool;
+    final status = quiz['status'] as String?;
+    final isPending = alreadyTaken && status != 'reviewed';
+    final isDone = alreadyTaken && status == 'reviewed';
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: _AppTheme.cardDecoration,
@@ -642,12 +645,24 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                 width: 50,
                 height: 50,
                 decoration: BoxDecoration(
-                  color: alreadyTaken ? _AppTheme.success.withOpacity(0.1) : _AppTheme.primaryLight,
+                  color: isDone
+                      ? _AppTheme.success.withOpacity(0.1)
+                      : isPending
+                          ? const Color(0xFFF59E0B).withOpacity(0.1)
+                          : _AppTheme.primaryLight,
                   borderRadius: BorderRadius.circular(13),
                 ),
                 child: Icon(
-                  alreadyTaken ? Icons.check_circle_rounded : Icons.quiz_rounded,
-                  color: alreadyTaken ? _AppTheme.success : _AppTheme.primary,
+                  isDone
+                      ? Icons.check_circle_rounded
+                      : isPending
+                          ? Icons.hourglass_top_rounded
+                          : Icons.quiz_rounded,
+                  color: isDone
+                      ? _AppTheme.success
+                      : isPending
+                          ? const Color(0xFFF59E0B)
+                          : _AppTheme.primary,
                   size: 26,
                 ),
               ),
@@ -658,18 +673,34 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                   children: [
                     Text(
                       quiz['title'],
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: _AppTheme.textDark),
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                          color: _AppTheme.textDark),
                     ),
                     const SizedBox(height: 3),
                     Text(
                       'By ${quiz['teacher_name']}',
-                      style: const TextStyle(color: _AppTheme.textMid, fontSize: 12),
+                      style: const TextStyle(
+                          color: _AppTheme.textMid, fontSize: 12),
                     ),
-                    if (alreadyTaken) ...[
+                    if (isDone) ...[
                       const SizedBox(height: 4),
                       Text(
                         'Score: ${quiz['score']}/${quiz['total_points']}',
-                        style: const TextStyle(color: _AppTheme.success, fontSize: 12, fontWeight: FontWeight.w600),
+                        style: const TextStyle(
+                            color: _AppTheme.success,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600),
+                      ),
+                    ] else if (isPending) ...[
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Pending teacher review',
+                        style: TextStyle(
+                            color: Color(0xFFF59E0B),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600),
                       ),
                     ],
                   ],
@@ -677,22 +708,49 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
               ),
               if (!alreadyTaken)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                   decoration: BoxDecoration(
                     color: _AppTheme.primary,
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: const Text('Take', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                  child: const Text('Take',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12)),
+                )
+              else if (isPending)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF59E0B).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                        color: const Color(0xFFF59E0B).withOpacity(0.3)),
+                  ),
+                  child: const Text('Pending',
+                      style: TextStyle(
+                          color: Color(0xFFF59E0B),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12)),
                 )
               else
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                   decoration: BoxDecoration(
                     color: _AppTheme.success.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: _AppTheme.success.withOpacity(0.3)),
+                    border: Border.all(
+                        color: _AppTheme.success.withOpacity(0.3)),
                   ),
-                  child: const Text('Done', style: TextStyle(color: _AppTheme.success, fontWeight: FontWeight.bold, fontSize: 12)),
+                  child: const Text('Done',
+                      style: TextStyle(
+                          color: _AppTheme.success,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12)),
                 ),
             ],
           ),

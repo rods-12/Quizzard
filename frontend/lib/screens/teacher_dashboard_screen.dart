@@ -113,7 +113,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     Navigator.pushReplacementNamed(context, '/login');
   }
 
-  // ─── Class Actions (mirrors TeacherClassListTab) ──────────────────────────
+  // ─── Class Actions ────────────────────────────────────────────────────────
 
   Future<void> _createClass() async {
     final nameController = TextEditingController();
@@ -546,12 +546,13 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     );
   }
 
-  // ─── HOME TAB (Classes Dashboard) ─────────────────────────────────────────
+  // ─── HOME TAB ─────────────────────────────────────────────────────────────
 
   Widget _buildHomeTab() {
     final totalClasses = _stats['total_classes'] ?? _classes.length;
     final totalStudents = _stats['total_students'] ?? 0;
     final totalQuizzes = _stats['total_quizzes'] ?? 0;
+    final pendingReviewCount = _stats['pending_review_count'] ?? 0;
 
     final hour = DateTime.now().hour;
     final greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
@@ -604,7 +605,6 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                     ],
                   ),
                   const SizedBox(height: 20),
-                  // Stat cards
                   Row(
                     children: [
                       _buildStatCard(Icons.class_rounded, '$totalClasses', 'Classes'),
@@ -618,6 +618,85 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
               ),
             ),
           ),
+
+          // ── Pending Reviews Banner (only shown when > 0) ──
+          if (pendingReviewCount > 0)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                child: GestureDetector(
+                  onTap: () async {
+                    await Navigator.pushNamed(context, '/manual-review-quizzes');
+                    _loadDashboard();
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF7ED),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: _T.orange.withOpacity(0.4)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: _T.orange.withOpacity(0.08),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: _T.orange.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(Icons.rate_review_rounded, color: _T.orange, size: 22),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Pending Reviews',
+                                style: TextStyle(
+                                  color: _T.orange,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '$pendingReviewCount submission${pendingReviewCount != 1 ? 's' : ''} awaiting your review',
+                                style: TextStyle(color: _T.orange.withOpacity(0.8), fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: _T.orange,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            children: [
+                              Text(
+                                'Review',
+                                style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(width: 4),
+                              const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 13),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
 
           // ── Section title ──
           SliverToBoxAdapter(
@@ -716,7 +795,6 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     final int quizCount = cls['quizzes_count'] ?? 0;
     final String? code = cls['code'];
 
-    // Color generation matching TeacherClassListTab
     final colors = [
       const Color(0xFF2ECC71), const Color(0xFF6C63FF), const Color(0xFF3B82F6),
       const Color(0xFFF59E0B), const Color(0xFFEF4444), const Color(0xFF8B5CF6),
@@ -739,7 +817,6 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Color band top ──
             Container(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
               decoration: BoxDecoration(
@@ -779,8 +856,6 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                 ],
               ),
             ),
-
-            // ── Body ──
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
               child: Column(
@@ -817,12 +892,9 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                   const SizedBox(height: 12),
                   Divider(color: Colors.grey.shade100, height: 1),
                   const SizedBox(height: 12),
-
-                  // ── Action buttons (matching TeacherClassListTab pattern) ──
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Delete
                       GestureDetector(
                         onTap: () => _deleteClass(cls),
                         child: Container(
@@ -840,7 +912,6 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                           ),
                         ),
                       ),
-                      // Edit + Manage
                       Row(
                         children: [
                           GestureDetector(

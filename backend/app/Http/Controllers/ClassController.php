@@ -28,7 +28,7 @@ class ClassController extends Controller
     // Create a new class
     public function store(Request $request)
     {
-        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+        $validator = Validator::make($request->all(), [
             'name'        => 'required|string|max:100',
             'description' => 'nullable|string',
         ], [
@@ -65,7 +65,7 @@ class ClassController extends Controller
             ->with(['quizzes' => function ($q) {
                 $q->select('quizzes.id', 'quizzes.title', 'quizzes.is_published')
                 ->withCount('questions')
-                ->withPivot('due_date', 'assigned_at');
+                ->withPivot('due_date', 'assigned_at', 'grading_mode');
             }])
             ->firstOrFail();
 
@@ -81,6 +81,7 @@ class ClassController extends Controller
 
         return response()->json(['class' => $class]);
     }
+
     // Update a class
     public function update(Request $request, $classId)
     {
@@ -88,10 +89,16 @@ class ClassController extends Controller
             ->where('teacher_id', $request->user()->id)
             ->firstOrFail();
 
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'name'        => 'required|string|max:100',
             'description' => 'nullable|string',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
 
         $class->update([
             'name'        => $request->name,
@@ -158,8 +165,9 @@ class ClassController extends Controller
             ->firstOrFail();
 
         $validator = Validator::make($request->all(), [
-            'quiz_id'  => 'required|integer|exists:quizzes,id',
-            'due_date' => 'nullable|date|after:now',
+            'quiz_id'      => 'required|integer|exists:quizzes,id',
+            'due_date'     => 'nullable|date|after:now',
+            'grading_mode' => 'nullable|string|in:automatic,manual',
         ]);
 
         if ($validator->fails()) {
@@ -170,19 +178,41 @@ class ClassController extends Controller
             ->where('teacher_id', $request->user()->id)
             ->firstOrFail();
 
-        if ($class->quizzes()->where('quiz_id', $quiz->id)->exists()) {
+        // Check if quiz is already assigned to this class
+        $existingAssignment = $class->quizzes()->where('quiz_id', $quiz->id)->first();
+
+        if ($existingAssignment) {
+            // If already assigned, check if grading_mode change is being attempted
+            if ($request->has('grading_mode')) {
+                // Block grading_mode change if attempts already exist for this quiz in this class
+                $studentIds = $class->students()->pluck('users.id')->toArray();
+                $attemptsExist = QuizAttempt::where('quiz_id', $quiz->id)
+                    ->whereIn('student_id', $studentIds)
+                    ->exists();
+
+                if ($attemptsExist) {
+                    return response()->json([
+                        'message' => 'Grading mode cannot be changed after students have already attempted this quiz.',
+                    ], 422);
+                }
+            }
+
             return response()->json([
                 'message' => 'Quiz is already assigned to this class.',
             ], 409);
         }
 
+        $gradingMode = $request->input('grading_mode', 'automatic');
+
         $class->quizzes()->attach($quiz->id, [
-            'assigned_at' => now(),
-            'due_date'    => $request->due_date,
+            'assigned_at'  => now(),
+            'due_date'     => $request->due_date,
+            'grading_mode' => $gradingMode,
         ]);
 
         return response()->json([
-            'message' => 'Quiz assigned to class successfully.',
+            'message'      => 'Quiz assigned to class successfully.',
+            'grading_mode' => $gradingMode,
         ]);
     }
 
@@ -220,8 +250,46 @@ class ClassController extends Controller
         ]);
 
         return response()->json([
-            'success' => true,  // <-- Added this
+            'success' => true,
             'message' => 'Due date updated successfully.',
+        ]);
+    }
+
+
+    public function updateGradingMode(Request $request, $classId, $quizId)
+    {
+        $class = ClassRoom::where('id', $classId)
+            ->where('teacher_id', $request->user()->id)
+            ->firstOrFail();
+
+        $validator = Validator::make($request->all(), [
+            'grading_mode' => 'required|string|in:automatic,manual',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        $assigned = $class->quizzes()->where('quiz_id', $quizId)->exists();
+
+        if (!$assigned) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Quiz is not assigned to this class.',
+            ], 404);
+        }
+
+        $class->quizzes()->updateExistingPivot($quizId, [
+            'grading_mode' => $request->grading_mode,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Grading mode updated successfully.',
+            'grading_mode' => $request->grading_mode,
         ]);
     }
 
@@ -239,9 +307,7 @@ class ClassController extends Controller
         ]);
     }
 
-
-
-        /**
+    /**
      * Get quiz results for all students in a specific class.
      * Returns every student with their score, or 0 if not taken.
      */
@@ -385,14 +451,14 @@ class ClassController extends Controller
             : 0;
 
         return response()->json([
-        'students' => $studentData,
-        'summary' => [
-            'total_students' => $studentData->count(),
-            'total_quizzes' => $totalQuizzes,
-            'class_average_percentage' => $classAverage,
-            'students_with_attempts' => $studentsWithAttempts->count(),
-        ],
-    ]);
+            'students' => $studentData,
+            'summary' => [
+                'total_students' => $studentData->count(),
+                'total_quizzes' => $totalQuizzes,
+                'class_average_percentage' => $classAverage,
+                'students_with_attempts' => $studentsWithAttempts->count(),
+            ],
+        ]);
     }
 
     /**
@@ -446,6 +512,4 @@ class ClassController extends Controller
             $filename
         );
     }
-
-
 }

@@ -21,10 +21,10 @@ import 'screens/quiz_analytics_screen.dart';
 import 'screens/student_info_screen.dart';
 import 'screens/ai_quiz_generate_screen.dart';
 import 'screens/class_quiz_results_screen.dart';
-
-
-
-
+import 'screens/pending_review_screen.dart';
+import 'screens/manual_review_quiz_list_screen.dart';
+import 'screens/manual_review_students_screen.dart';
+import 'screens/manual_review_screen.dart';
 
 void main() {
   runApp(const QuizzardApp());
@@ -54,29 +54,34 @@ class QuizzardApp extends StatelessWidget {
         '/question-preview':   (context) => const QuestionPreviewScreen(),
         '/create-quiz':        (context) => const CreateQuizScreen(),
         '/quiz-result':        (context) => const QuizResultScreen(),
+        '/manual-review-quizzes': (context) => const ManualReviewQuizListScreen(),
         '/quiz-analytics': (context) {
-            final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-            return QuizAnalyticsScreen(
-              quizId: args['quiz_id'],
-              quizTitle: args['quiz_title'],
-            );
+          final args = ModalRoute.of(context)!.settings.arguments
+              as Map<String, dynamic>;
+          return QuizAnalyticsScreen(
+            quizId: args['quiz_id'],
+            quizTitle: args['quiz_title'],
+          );
         },
         '/quiz-taking': (context) {
-          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+          final args = ModalRoute.of(context)!.settings.arguments
+              as Map<String, dynamic>;
           return QuizTakingScreen(
             quizId: args['quiz_id'],
             quizTitle: args['quiz_title'],
           );
         },
         '/quiz-detail': (context) {
-          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+          final args = ModalRoute.of(context)!.settings.arguments
+              as Map<String, dynamic>;
           return QuizDetailScreen(
             quizId: args['quiz_id'],
             quizTitle: args['quiz_title'],
           );
         },
         '/edit-quiz': (context) {
-          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+          final args = ModalRoute.of(context)!.settings.arguments
+              as Map<String, dynamic>;
           return EditQuizScreen(
             quizId: args['quiz_id'],
             initialTitle: args['title'],
@@ -84,34 +89,37 @@ class QuizzardApp extends StatelessWidget {
           );
         },
         '/add-question': (context) {
-          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+          final args = ModalRoute.of(context)!.settings.arguments
+              as Map<String, dynamic>;
           return AddQuestionScreen(quizId: args['quiz_id']);
         },
-
         '/ai-quiz-generate': (context) {
-          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+          final args = ModalRoute.of(context)!.settings.arguments
+              as Map<String, dynamic>;
           return AiQuizGenerateScreen(
             quizId: args['quiz_id'],
             quizTitle: args['quiz_title'],
           );
         },
-        
         '/edit-question': (context) {
-          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+          final args = ModalRoute.of(context)!.settings.arguments
+              as Map<String, dynamic>;
           return EditQuestionScreen(
             quizId: args['quiz_id'],
             question: args['question'],
           );
         },
         '/quiz-results': (context) {
-          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+          final args = ModalRoute.of(context)!.settings.arguments
+              as Map<String, dynamic>;
           return QuizResultsScreen(
             quizId: args['quiz_id'],
             quizTitle: args['quiz_title'],
           );
         },
         '/student-attempt-detail': (context) {
-          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+          final args = ModalRoute.of(context)!.settings.arguments
+              as Map<String, dynamic>;
           return StudentAttemptDetailScreen(
             quizId: args['quiz_id'],
             quizTitle: args['quiz_title'],
@@ -120,14 +128,16 @@ class QuizzardApp extends StatelessWidget {
           );
         },
         '/class-detail': (context) {
-          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+          final args = ModalRoute.of(context)!.settings.arguments
+              as Map<String, dynamic>;
           return ClassDetailScreen(
             classId: args['class_id'],
             className: args['class_name'],
           );
         },
         '/student-class-quizzes': (context) {
-          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+          final args = ModalRoute.of(context)!.settings.arguments
+              as Map<String, dynamic>;
           return StudentClassQuizzesScreen(
             classId: args['class_id'],
             className: args['class_name'],
@@ -135,7 +145,8 @@ class QuizzardApp extends StatelessWidget {
         },
         '/student-info': (context) => const StudentInfoScreen(),
         '/class-quiz-results': (context) {
-          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+          final args = ModalRoute.of(context)!.settings.arguments
+              as Map<String, dynamic>;
           return ClassQuizResultsScreen(
             classId: args['class_id'],
             className: args['class_name'] ?? '',
@@ -143,7 +154,34 @@ class QuizzardApp extends StatelessWidget {
             quizTitle: args['quiz_title'],
           );
         },
-
+        '/pending-review': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments
+              as Map<String, dynamic>;
+          return PendingReviewScreen(
+            attemptId: args['attempt_id'],
+            quizTitle: args['quiz_title'],
+          );
+        },
+        '/manual-review-students': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments
+              as Map<String, dynamic>;
+          return ManualReviewStudentsScreen(
+            classId: args['class_id'],
+            className: args['class_name'],
+            quizId: args['quiz_id'],
+            quizTitle: args['quiz_title'],
+          );
+        },
+        '/manual-review': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments
+              as Map<String, dynamic>;
+          return ManualReviewScreen(
+            attemptId: args['attempt_id'],
+            quizTitle: args['quiz_title'],
+            studentName: args['student_name'],
+            readOnly: args['read_only'] ?? false,
+          );
+        },
       },
     );
   }

@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeacherController;
+use App\Http\Controllers\ManualReviewController;
 use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\QuizController;
 use App\Http\Controllers\ClassController;
@@ -36,11 +37,25 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/student/profile', [StudentController::class, 'getProfile']);
     Route::put('/student/profile', [StudentController::class, 'updateProfile']);
     Route::get('/student/quizzes', [StudentController::class, 'allQuizzes']);
+    Route::get('/student/attempts/{attemptId}', [StudentController::class, 'getAttempt']); // Phase 5
 
     // Teacher routes
     Route::get('/teacher/dashboard', [TeacherController::class, 'dashboard']);
     Route::get('/teacher/quizzes/{quizId}/results', [TeacherController::class, 'quizResults']);
     Route::get('/teacher/quizzes/{quizId}/results/{attemptId}', [TeacherController::class, 'attemptDetail']);
+    Route::get('/teacher/quizzes/{quizId}/analytics', [TeacherController::class, 'quizAnalytics']);
+    Route::get('/teacher/quizzes/{quizId}/export-results', [TeacherController::class, 'exportResults']);
+    Route::get('/teacher/quizzes/{quizId}/export-analytics', [TeacherController::class, 'exportAnalytics']);
+    Route::get('/teacher/quizzes/{quizId}/export-full', [TeacherController::class, 'exportFullReport']);
+    Route::get('/teacher/classes/{classId}/quizzes/{quizId}/export-results', [TeacherController::class, 'exportClassQuizResults']);
+
+    // Teacher manual review routes
+    Route::get('/teacher/manual-review/quizzes', [ManualReviewController::class, 'pendingManualQuizzes']);
+    Route::get('/teacher/manual-review/classes/{classId}/quizzes/{quizId}/attempts', [ManualReviewController::class, 'classAttemptList']);
+    Route::get('/teacher/manual-review/attempts/{attemptId}', [ManualReviewController::class, 'attemptDetail']);
+    Route::patch('/teacher/manual-review/attempts/{attemptId}/save-draft', [ManualReviewController::class, 'saveDraft']);
+    Route::post('/teacher/manual-review/attempts/{attemptId}/finalize', [ManualReviewController::class, 'finalizeReview']);
+    Route::post('/teacher/manual-review/attempts/{attemptId}/reopen', [ManualReviewController::class, 'reopenAttempt']);
 
     // Class routes
     Route::get('/classes', [ClassController::class, 'index']);
@@ -51,6 +66,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/classes/{classId}/assign-quiz', [ClassController::class, 'assignQuiz']);
     Route::delete('/classes/{classId}/quizzes/{quizId}', [ClassController::class, 'unassignQuiz']);
     Route::patch('/classes/{classId}/quizzes/{quizId}/due-date', [ClassController::class, 'updateDueDate']);
+    Route::patch('/classes/{classId}/quizzes/{quizId}/grading-mode', [ClassController::class, 'updateGradingMode']);
     Route::get('/classes/{classId}/quizzes/{quizId}/results', [ClassController::class, 'classQuizResults']);
     Route::get('/classes/{classId}/students/performance', [ClassController::class, 'studentPerformance']);
     Route::get('/classes/{classId}/students/export-performance', [ClassController::class, 'exportStudentPerformance']);
@@ -76,17 +92,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/quizzes/{quizId}/questions/{questionId}',            [QuestionController::class, 'update']);
     Route::delete('/quizzes/{quizId}/questions/{questionId}',         [QuestionController::class, 'destroy']);
 
-    // Analytics route
-    Route::get('/teacher/quizzes/{quizId}/analytics', [TeacherController::class, 'quizAnalytics']);
-
-    Route::get('/teacher/quizzes/{quizId}/export-results', [TeacherController::class, 'exportResults']);
-    Route::get('/teacher/quizzes/{quizId}/export-analytics', [TeacherController::class, 'exportAnalytics']);
-    Route::get('/teacher/quizzes/{quizId}/export-full', [TeacherController::class, 'exportFullReport']);
-    Route::get('/teacher/classes/{classId}/quizzes/{quizId}/export-results', [TeacherController::class, 'exportClassQuizResults']);
-
-
     // AI Quiz Generation
     Route::post('/ai/generate-questions', [AiQuizController::class, 'generate']);
     Route::post('/ai/quizzes/{quizId}/save-questions', [AiQuizController::class, 'saveQuestions']);
-
 });

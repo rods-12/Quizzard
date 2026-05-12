@@ -9,12 +9,10 @@ use Illuminate\Http\Request;
 
 class StudentController extends Controller
 {
-    // Get dashboard data for the logged-in student
     public function dashboard(Request $request)
     {
         $student = $request->user();
 
-        // Get only published quizzes assigned to classes the student is enrolled in
         $availableQuizzes = Quiz::where('is_published', true)
             ->whereHas('classes', function ($query) use ($student) {
                 $query->whereHas('students', function ($studentQuery) use ($student) {
@@ -27,8 +25,15 @@ class StudentController extends Controller
             ->map(function ($quiz) use ($student) {
                 $attempt = QuizAttempt::where('student_id', $student->id)
                     ->where('quiz_id', $quiz->id)
-                    ->where('status', 'completed')
+                    ->whereIn('status', [
+                        QuizAttempt::STATUS_SUBMITTED,
+                        QuizAttempt::STATUS_UNDER_REVIEW,
+                        QuizAttempt::STATUS_REVIEWED,
+                    ])
+                    ->orderByDesc('created_at')
                     ->first();
+
+                $reviewed = $attempt && $attempt->status === QuizAttempt::STATUS_REVIEWED;
 
                 return [
                     'id'            => $quiz->id,
@@ -36,13 +41,14 @@ class StudentController extends Controller
                     'description'   => $quiz->description,
                     'teacher_name'  => $quiz->teacher->name ?? 'Unknown',
                     'already_taken' => $attempt ? true : false,
-                    'score'         => $attempt ? $attempt->score : null,
-                    'total_points'  => $attempt ? $attempt->total_points : null,
+                    'status'        => $attempt ? $attempt->status : null,
+                    'score'         => $reviewed ? $attempt->score : null,
+                    'total_points'  => $reviewed ? $attempt->total_points : null,
                 ];
             });
 
         $recentScores = QuizAttempt::where('student_id', $student->id)
-            ->where('status', 'completed')
+            ->where('status', QuizAttempt::STATUS_REVIEWED)
             ->with('quiz:id,title')
             ->orderBy('completed_at', 'desc')
             ->take(5)
@@ -73,12 +79,11 @@ class StudentController extends Controller
             'available_quizzes'   => $availableQuizzes,
             'recent_scores'       => $recentScores,
             'total_quizzes_taken' => QuizAttempt::where('student_id', $student->id)
-                ->where('status', 'completed')
+                ->where('status', QuizAttempt::STATUS_REVIEWED)
                 ->count(),
         ]);
     }
 
-    // Get student profile
     public function getProfile(Request $request)
     {
         $student = $request->user();
@@ -96,7 +101,6 @@ class StudentController extends Controller
         ]);
     }
 
-    // Update student profile
     public function updateProfile(Request $request)
     {
         $request->validate([
@@ -135,7 +139,6 @@ class StudentController extends Controller
         ]);
     }
 
-    // Get all classes student is enrolled in
     public function myClasses(Request $request)
     {
         $student = $request->user();
@@ -170,7 +173,6 @@ class StudentController extends Controller
         ]);
     }
 
-    // Join a class using class code
     public function joinClass(Request $request)
     {
         $request->validate([
@@ -207,7 +209,6 @@ class StudentController extends Controller
         ]);
     }
 
-    // Leave a class
     public function leaveClass(Request $request, $classId)
     {
         $class = \App\Models\ClassRoom::findOrFail($classId);
@@ -225,7 +226,6 @@ class StudentController extends Controller
         ]);
     }
 
-    // Get all quizzes in a specific class
     public function classQuizzes(Request $request, $classId)
     {
         $student = $request->user();
@@ -239,8 +239,12 @@ class StudentController extends Controller
             ->withPivot('due_date', 'assigned_at')
             ->get();
 
-        $completedAttempts = \App\Models\QuizAttempt::where('student_id', $student->id)
-            ->where('status', 'completed')
+        $attempts = QuizAttempt::where('student_id', $student->id)
+            ->whereIn('status', [
+                QuizAttempt::STATUS_SUBMITTED,
+                QuizAttempt::STATUS_UNDER_REVIEW,
+                QuizAttempt::STATUS_REVIEWED,
+            ])
             ->whereIn('quiz_id', $quizzes->pluck('id'))
             ->get()
             ->keyBy('quiz_id');
@@ -250,9 +254,9 @@ class StudentController extends Controller
                 'id'   => $class->id,
                 'name' => $class->name,
             ],
-            'quizzes' => $quizzes->map(function ($quiz) use ($completedAttempts) {
-                $attempt = $completedAttempts->get($quiz->id);
-                $alreadyTaken = $attempt !== null;
+            'quizzes' => $quizzes->map(function ($quiz) use ($attempts) {
+                $attempt  = $attempts->get($quiz->id);
+                $reviewed = $attempt && $attempt->status === QuizAttempt::STATUS_REVIEWED;
 
                 return [
                     'id'              => $quiz->id,
@@ -260,20 +264,19 @@ class StudentController extends Controller
                     'description'     => $quiz->description,
                     'questions_count' => $quiz->questions_count,
                     'due_date'        => $quiz->pivot->due_date,
-                    'already_taken'   => $alreadyTaken,
-                    'score'           => $alreadyTaken ? $attempt->score : null,
-                    'total_points'    => $alreadyTaken ? $attempt->total_points : null,
+                    'already_taken'   => $attempt ? true : false,
+                    'status'          => $attempt ? $attempt->status : null,
+                    'score'           => $reviewed ? $attempt->score : null,
+                    'total_points'    => $reviewed ? $attempt->total_points : null,
                 ];
             }),
         ]);
     }
 
-    // Get all quizzes across all enrolled classes
     public function allQuizzes(Request $request)
     {
         $student = $request->user();
 
-        // Get all classes the student is enrolled in, with their published quizzes
         $classes = \App\Models\ClassRoom::whereHas('students', function ($q) use ($student) {
             $q->where('student_id', $student->id);
         })
@@ -284,10 +287,14 @@ class StudentController extends Controller
         }, 'teacher:id,name,first_name,middle_initial,surname'])
         ->get();
 
-        // Get all completed attempts for this student in one query
         $quizIds = $classes->pluck('quizzes.*.id')->flatten()->unique()->filter();
-        $completedAttempts = \App\Models\QuizAttempt::where('student_id', $student->id)
-            ->where('status', 'completed')
+
+        $attempts = QuizAttempt::where('student_id', $student->id)
+            ->whereIn('status', [
+                QuizAttempt::STATUS_SUBMITTED,
+                QuizAttempt::STATUS_UNDER_REVIEW,
+                QuizAttempt::STATUS_REVIEWED,
+            ])
             ->whereIn('quiz_id', $quizIds)
             ->get()
             ->keyBy('quiz_id');
@@ -296,8 +303,8 @@ class StudentController extends Controller
 
         foreach ($classes as $class) {
             foreach ($class->quizzes as $quiz) {
-                $attempt = $completedAttempts->get($quiz->id);
-                $alreadyTaken = $attempt !== null;
+                $attempt  = $attempts->get($quiz->id);
+                $reviewed = $attempt && $attempt->status === QuizAttempt::STATUS_REVIEWED;
 
                 $quizzes[] = [
                     'id'              => $quiz->id,
@@ -305,9 +312,10 @@ class StudentController extends Controller
                     'description'     => $quiz->description,
                     'questions_count' => $quiz->questions_count,
                     'due_date'        => $quiz->pivot->due_date,
-                    'already_taken'   => $alreadyTaken,
-                    'score'           => $alreadyTaken ? $attempt->score : null,
-                    'total_points'    => $alreadyTaken ? $attempt->total_points : null,
+                    'already_taken'   => $attempt ? true : false,
+                    'status'          => $attempt ? $attempt->status : null,
+                    'score'           => $reviewed ? $attempt->score : null,
+                    'total_points'    => $reviewed ? $attempt->total_points : null,
                     'class_id'        => $class->id,
                     'class_name'      => $class->name,
                     'teacher_name'    => $class->teacher->name ?? 'Unknown',
@@ -320,5 +328,76 @@ class StudentController extends Controller
         ]);
     }
 
+    public function getAttempt(Request $request, $attemptId)
+    {
+        $student = $request->user();
 
+        $attempt = QuizAttempt::where('id', $attemptId)
+            ->where('student_id', $student->id)
+            ->whereIn('status', [
+                QuizAttempt::STATUS_SUBMITTED,
+                QuizAttempt::STATUS_UNDER_REVIEW,
+                QuizAttempt::STATUS_REVIEWED,
+            ])
+            ->with([
+                'quiz:id,title,description',
+                'answers.question.answerOptions',
+                'answers.review',
+            ])
+            ->first();
+
+        if (!$attempt) {
+            return response()->json(['message' => 'Attempt not found.'], 404);
+        }
+
+        $isReviewed = $attempt->status === QuizAttempt::STATUS_REVIEWED;
+
+        $answers = $attempt->answers->map(function ($answer) use ($isReviewed) {
+            $base = [
+                'question_id'   => $answer->question_id,
+                'question_text' => $answer->question->question_text ?? null,
+                'question_type' => $answer->question->question_type ?? null,
+                'answer_given'  => $answer->answer_given,
+                'justification' => $answer->justification,
+                'answer_options' => $answer->question->answerOptions->map(fn($opt) => ['id' => $opt->id, 'option_text' => $opt->option_text,])->values()->toArray(),
+            ];
+
+            if ($isReviewed) {
+                $base['is_correct']     = $answer->is_correct;
+                $base['points_earned']  = $answer->review
+                    ? $answer->review->points_awarded
+                    : $answer->points_earned;
+                $base['feedback']       = $answer->review->feedback ?? null;
+            }
+
+            return $base;
+        });
+
+        $response = [
+            'attempt_id'       => $attempt->id,
+            'quiz'             => [
+                'id'          => $attempt->quiz->id,
+                'title'       => $attempt->quiz->title,
+                'description' => $attempt->quiz->description,
+            ],
+            'status'           => $attempt->status,
+            'started_at'       => $attempt->started_at,
+            'submitted_at'     => $attempt->completed_at,
+            'answers'          => $answers,
+        ];
+
+        if ($isReviewed) {
+            $response['score']            = $attempt->score;
+            $response['total_points']     = $attempt->total_points;
+            $response['percentage']       = $attempt->total_points > 0
+                ? round(($attempt->score / $attempt->total_points) * 100, 2)
+                : 0;
+            $response['teacher_feedback'] = $attempt->teacher_feedback;
+            $response['reviewed_at']      = $attempt->reviewed_at;
+        } else {
+            $response['message'] = 'Your attempt is pending review by your teacher.';
+        }
+
+        return response()->json($response);
+    }
 }

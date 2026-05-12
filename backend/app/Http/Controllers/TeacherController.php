@@ -24,11 +24,11 @@ class TeacherController extends Controller
             ->get()
             ->map(function ($quiz) {
                 $attemptCount = QuizAttempt::where('quiz_id', $quiz->id)
-                    ->where('status', 'completed')
+                    ->where('status', QuizAttempt::STATUS_REVIEWED)
                     ->count();
 
                 $avgScore = QuizAttempt::where('quiz_id', $quiz->id)
-                    ->where('status', 'completed')
+                    ->where('status', QuizAttempt::STATUS_REVIEWED)
                     ->avg('score');
 
                 return [
@@ -53,21 +53,32 @@ class TeacherController extends Controller
                     'id'             => $class->id,
                     'name'           => $class->name,
                     'description'    => $class->description,
-                    'code'           => $class->code,
+                    'code'           => $class->class_code,
                     'students_count' => $class->students_count,
                     'quizzes_count'  => $class->quizzes_count,
                     'created_at'     => $class->created_at,
                 ];
             });
 
-        // Total students who took any of this teacher's quizzes
-        $totalStudents = QuizAttempt::whereIn(
-            'quiz_id',
-            Quiz::where('teacher_id', $teacher->id)->pluck('id')
-        )
-            ->where('status', 'completed')
+        // Total distinct students with reviewed attempts on this teacher's quizzes
+        $quizIds = Quiz::where('teacher_id', $teacher->id)->pluck('id');
+
+        $totalStudents = QuizAttempt::whereIn('quiz_id', $quizIds)
+            ->where('status', QuizAttempt::STATUS_REVIEWED)
             ->distinct('student_id')
             ->count('student_id');
+
+        // Manual review counts across all teacher's quizzes
+        $pendingReviewCount = QuizAttempt::whereIn('quiz_id', $quizIds)
+            ->whereIn('status', [
+                QuizAttempt::STATUS_SUBMITTED,
+                QuizAttempt::STATUS_UNDER_REVIEW,
+            ])
+            ->count();
+
+        $reviewedCount = QuizAttempt::whereIn('quiz_id', $quizIds)
+            ->where('status', QuizAttempt::STATUS_REVIEWED)
+            ->count();
 
         return response()->json([
             'teacher' => [
@@ -79,13 +90,15 @@ class TeacherController extends Controller
                 'email'           => $teacher->email,
                 'profile_picture' => $teacher->profile_picture,
             ],
-            'quizzes'           => $quizzes,
-            'classes'           => $classes,
-            'stats' => [
-                'total_quizzes'     => $quizzes->count(),
-                'published_quizzes' => $quizzes->where('is_published', true)->count(),
-                'total_students'    => $totalStudents,
-                'total_classes'     => $classes->count(),
+            'quizzes' => $quizzes,
+            'classes' => $classes,
+            'stats'   => [
+                'total_quizzes'        => $quizzes->count(),
+                'published_quizzes'    => $quizzes->where('is_published', true)->count(),
+                'total_students'       => $totalStudents,
+                'total_classes'        => $classes->count(),
+                'pending_review_count' => $pendingReviewCount,
+                'reviewed_count'       => $reviewedCount,
             ],
         ]);
     }
@@ -93,56 +106,52 @@ class TeacherController extends Controller
     // Get all student attempts for a specific quiz
     public function quizResults(Request $request, $quizId)
     {
-        $quiz = \App\Models\Quiz::where('id', $quizId)
+        $quiz = Quiz::where('id', $quizId)
             ->where('teacher_id', $request->user()->id)
             ->firstOrFail();
 
-        $attempts = \App\Models\QuizAttempt::where('quiz_id', $quizId)
-            ->where('status', 'completed')
+        $attempts = QuizAttempt::where('quiz_id', $quizId)
+            ->where('status', QuizAttempt::STATUS_REVIEWED)
             ->with('student')
             ->orderBy('completed_at', 'desc')
             ->get();
 
-        $results = $attempts->map(function ($attempt) use ($quiz) {
+        $results = $attempts->map(function ($attempt) {
             $percentage = $attempt->total_points > 0
                 ? round(($attempt->score / $attempt->total_points) * 100)
                 : 0;
 
             return [
-                'attempt_id'    => $attempt->id,
-                'student_id'    => $attempt->student->id,
-                'student_name'  => $attempt->student->name,
-                'student_first_name' => $attempt->student->first_name,
+                'attempt_id'             => $attempt->id,
+                'student_id'             => $attempt->student->id,
+                'student_name'           => $attempt->student->name,
+                'student_first_name'     => $attempt->student->first_name,
                 'student_middle_initial' => $attempt->student->middle_initial,
-                'student_surname' => $attempt->student->surname,
-                'student_email' => $attempt->student->email,
-                'score'         => $attempt->score,
-                'total_points'  => $attempt->total_points,
-                'percentage'    => $percentage,
-                'is_passed'     => $percentage >= 60,
-                'completed_at'  => $attempt->completed_at,
+                'student_surname'        => $attempt->student->surname,
+                'student_email'          => $attempt->student->email,
+                'score'                  => $attempt->score,
+                'total_points'           => $attempt->total_points,
+                'percentage'             => $percentage,
+                'is_passed'              => $percentage >= 60,
+                'completed_at'           => $attempt->completed_at,
             ];
         });
 
-        $passCount = $results->where('is_passed', true)->count();
-        $failCount = $results->where('is_passed', false)->count();
-        $averagePercentage = $results->count() > 0
-            ? round($results->avg('percentage'), 1)
-            : 0;
+        $passCount          = $results->where('is_passed', true)->count();
+        $failCount          = $results->where('is_passed', false)->count();
+        $averagePercentage  = $results->count() > 0 ? round($results->avg('percentage'), 1) : 0;
 
         return response()->json([
             'quiz' => [
                 'id'    => $quiz->id,
                 'title' => $quiz->title,
             ],
-            'total_attempts'      => $attempts->count(),
-            'average_score'       => $attempts->count() > 0
-                ? round($attempts->avg('score'), 1)
-                : 0,
-            'average_percentage'  => $averagePercentage,
-            'pass_count'          => $passCount,
-            'fail_count'          => $failCount,
-            'results'             => $results,
+            'total_attempts'     => $attempts->count(),
+            'average_score'      => $attempts->count() > 0 ? round($attempts->avg('score'), 1) : 0,
+            'average_percentage' => $averagePercentage,
+            'pass_count'         => $passCount,
+            'fail_count'         => $failCount,
+            'results'            => $results,
         ]);
     }
 
@@ -156,14 +165,12 @@ class TeacherController extends Controller
 
         $attempt = QuizAttempt::where('id', $attemptId)
             ->where('quiz_id', $quiz->id)
-            ->where('status', 'completed')
+            ->where('status', QuizAttempt::STATUS_REVIEWED)
             ->with('student')
             ->firstOrFail();
 
         $studentAnswers = StudentAnswer::where('attempt_id', $attemptId)
-            ->with(['question' => function ($q) {
-                $q->with('answerOptions');
-            }])
+            ->with(['question' => fn($q) => $q->with('answerOptions')])
             ->get();
 
         $percentage = $attempt->total_points > 0
@@ -173,22 +180,20 @@ class TeacherController extends Controller
         $questionResults = $studentAnswers->map(function ($answer) {
             $question = $answer->question;
             return [
-                'id'            => $question->id,
-                'question_text' => $question->question_text,
-                'question_type' => $question->question_type,
-                'points'        => $question->points,
-                'points_earned' => $answer->points_earned,
-                'is_correct'    => $answer->is_correct,
-                'answer_given'  => $answer->answer_given,
-                'answer_options' => $question->answerOptions->map(function ($opt) {
-                    return [
-                        'id'          => $opt->id,
-                        'option_text' => $opt->option_text,
-                        'is_correct'  => $opt->is_correct,
-                        'match_pair'  => $opt->match_pair,
-                        'order'       => $opt->order,
-                    ];
-                }),
+                'id'             => $question->id,
+                'question_text'  => $question->question_text,
+                'question_type'  => $question->question_type,
+                'points'         => $question->points,
+                'points_earned'  => $answer->points_earned,
+                'is_correct'     => $answer->is_correct,
+                'answer_given'   => $answer->answer_given,
+                'answer_options' => $question->answerOptions->map(fn($opt) => [
+                    'id'          => $opt->id,
+                    'option_text' => $opt->option_text,
+                    'is_correct'  => $opt->is_correct,
+                    'match_pair'  => $opt->match_pair,
+                    'order'       => $opt->order,
+                ]),
             ];
         });
 
@@ -205,13 +210,13 @@ class TeacherController extends Controller
                 'completed_at' => $attempt->completed_at,
             ],
             'student' => [
-                'id'            => $attempt->student->id,
-                'name'          => $attempt->student->name,
-                'full_name'     => $attempt->student->name,
-                'first_name'    => $attempt->student->first_name,
-                'middle_initial'=> $attempt->student->middle_initial,
-                'surname'       => $attempt->student->surname,
-                'email'         => $attempt->student->email,
+                'id'             => $attempt->student->id,
+                'name'           => $attempt->student->name,
+                'full_name'      => $attempt->student->name,
+                'first_name'     => $attempt->student->first_name,
+                'middle_initial' => $attempt->student->middle_initial,
+                'surname'        => $attempt->student->surname,
+                'email'          => $attempt->student->email,
             ],
             'question_results' => $questionResults,
         ]);
@@ -227,27 +232,27 @@ class TeacherController extends Controller
             ->firstOrFail();
 
         $attempts = QuizAttempt::where('quiz_id', $quiz->id)
-            ->where('status', 'completed')
+            ->where('status', QuizAttempt::STATUS_REVIEWED)
             ->get();
 
         $attemptCount = $attempts->count();
-        $passMark = 60;
+        $passMark     = 60;
 
-        $averageScore = $attemptCount > 0 ? round($attempts->avg('score'), 1) : 0;
-        $highestScore = $attemptCount > 0 ? $attempts->max('score') : 0;
-        $lowestScore = $attemptCount > 0 ? $attempts->min('score') : 0;
+        $averageScore  = $attemptCount > 0 ? round($attempts->avg('score'), 1) : 0;
+        $highestScore  = $attemptCount > 0 ? $attempts->max('score') : 0;
+        $lowestScore   = $attemptCount > 0 ? $attempts->min('score') : 0;
 
         $passedCount = 0;
         $percentages = [];
 
         foreach ($attempts as $attempt) {
-            $percentage = ($attempt->total_points ?? 0) > 0
+            $pct = ($attempt->total_points ?? 0) > 0
                 ? round(($attempt->score / $attempt->total_points) * 100, 1)
                 : 0;
 
-            $percentages[] = $percentage;
+            $percentages[] = $pct;
 
-            if ($percentage >= $passMark) {
+            if ($pct >= $passMark) {
                 $passedCount++;
             }
         }
@@ -258,11 +263,8 @@ class TeacherController extends Controller
 
         $standardDeviation = 0;
         if ($attemptCount > 0) {
-            $mean = array_sum($percentages) / count($percentages);
-            $variance = array_sum(array_map(function ($value) use ($mean) {
-                return pow($value - $mean, 2);
-            }, $percentages)) / count($percentages);
-
+            $mean     = array_sum($percentages) / count($percentages);
+            $variance = array_sum(array_map(fn($v) => pow($v - $mean, 2), $percentages)) / count($percentages);
             $standardDeviation = round(sqrt($variance), 1);
         }
 
@@ -274,27 +276,19 @@ class TeacherController extends Controller
                 ->get();
 
             $totalAnswered = $answerRows->count();
-            $correctCount = $answerRows->where('is_correct', true)->count();
+            $correctCount  = $answerRows->where('is_correct', true)->count();
+            $correctRate   = $totalAnswered > 0 ? round(($correctCount / $totalAnswered) * 100, 1) : 0;
 
-            $correctRate = $totalAnswered > 0
-                ? round(($correctCount / $totalAnswered) * 100, 1)
-                : 0;
-
-            $difficulty = 'Moderate';
-            if ($correctRate >= 80) {
-                $difficulty = 'Easy';
-            } elseif ($correctRate < 50) {
-                $difficulty = 'Hard';
-            }
+            $difficulty = $correctRate >= 80 ? 'Easy' : ($correctRate < 50 ? 'Hard' : 'Moderate');
 
             $difficultyAnalysis[] = [
-                'question_id' => $question->id,
+                'question_id'    => $question->id,
                 'question_label' => 'Q' . ($index + 1),
-                'question_text' => $question->question_text,
-                'correct_rate' => $correctRate,
-                'difficulty' => $difficulty,
-                'correct_count' => $correctCount,
-                'attempt_count' => $totalAnswered,
+                'question_text'  => $question->question_text,
+                'correct_rate'   => $correctRate,
+                'difficulty'     => $difficulty,
+                'correct_count'  => $correctCount,
+                'attempt_count'  => $totalAnswered,
             ];
         }
 
@@ -305,52 +299,40 @@ class TeacherController extends Controller
 
         $quizComparison = [];
 
-        foreach ($comparisonQuizzes as $comparisonQuiz) {
-            $comparisonAttempts = QuizAttempt::where('quiz_id', $comparisonQuiz->id)
-                ->where('status', 'completed')
+        foreach ($comparisonQuizzes as $cq) {
+            $cqAttempts = QuizAttempt::where('quiz_id', $cq->id)
+                ->where('status', QuizAttempt::STATUS_REVIEWED)
                 ->get();
 
-            $comparisonAttemptCount = $comparisonAttempts->count();
+            $cqCount   = $cqAttempts->count();
+            $cqAvg     = $cqCount > 0 ? round($cqAttempts->avg('score'), 1) : 0;
+            $cqPassed  = 0;
 
-            $comparisonAverage = $comparisonAttemptCount > 0
-                ? round($comparisonAttempts->avg('score'), 1)
-                : 0;
-
-            $comparisonPassed = 0;
-            foreach ($comparisonAttempts as $attempt) {
-                $percentage = ($attempt->total_points ?? 0) > 0
-                    ? (($attempt->score / $attempt->total_points) * 100)
-                    : 0;
-
-                if ($percentage >= $passMark) {
-                    $comparisonPassed++;
-                }
+            foreach ($cqAttempts as $a) {
+                $pct = ($a->total_points ?? 0) > 0 ? (($a->score / $a->total_points) * 100) : 0;
+                if ($pct >= $passMark) $cqPassed++;
             }
 
-            $comparisonPassRate = $comparisonAttemptCount > 0
-                ? round(($comparisonPassed / $comparisonAttemptCount) * 100, 1)
-                : 0;
-
             $quizComparison[] = [
-                'quiz_id' => $comparisonQuiz->id,
-                'quiz_title' => $comparisonQuiz->title,
-                'average_score' => $comparisonAverage,
-                'attempt_count' => $comparisonAttemptCount,
-                'pass_rate' => $comparisonPassRate,
+                'quiz_id'       => $cq->id,
+                'quiz_title'    => $cq->title,
+                'average_score' => $cqAvg,
+                'attempt_count' => $cqCount,
+                'pass_rate'     => $cqCount > 0 ? round(($cqPassed / $cqCount) * 100, 1) : 0,
             ];
         }
 
         return response()->json([
             'summary' => [
-                'average_score' => $averageScore,
-                'highest_score' => $highestScore,
-                'lowest_score' => $lowestScore,
-                'attempt_count' => $attemptCount,
-                'pass_rate' => $passRate,
+                'average_score'      => $averageScore,
+                'highest_score'      => $highestScore,
+                'lowest_score'       => $lowestScore,
+                'attempt_count'      => $attemptCount,
+                'pass_rate'          => $passRate,
                 'standard_deviation' => $standardDeviation,
             ],
             'difficulty_analysis' => $difficultyAnalysis,
-            'quiz_comparison' => $quizComparison,
+            'quiz_comparison'     => $quizComparison,
         ]);
     }
 
@@ -362,9 +344,8 @@ class TeacherController extends Controller
             ->where('teacher_id', $teacherId)
             ->firstOrFail();
 
-        // ===== GET RESULTS DATA (same logic as results export) =====
         $attempts = QuizAttempt::where('quiz_id', $quizId)
-            ->where('status', 'completed')
+            ->where('status', QuizAttempt::STATUS_REVIEWED)
             ->with('student')
             ->get();
 
@@ -374,45 +355,41 @@ class TeacherController extends Controller
                 : 0;
 
             return [
-                'rank' => $index + 1,
-                'student_id' => $attempt->student->id,
-                'surname' => $attempt->student->surname,
-                'first_name' => $attempt->student->first_name,
+                'rank'           => $index + 1,
+                'student_id'     => $attempt->student->id,
+                'surname'        => $attempt->student->surname,
+                'first_name'     => $attempt->student->first_name,
                 'middle_initial' => $attempt->student->middle_initial,
-                'gender' => $attempt->student->gender ?? '',
-                'grade_level' => $attempt->student->grade_level ?? '',
-                'section' => $attempt->student->section ?? '',
-                'score' => $attempt->score,
-                'total_points' => $attempt->total_points,
-                'percentage' => $percentage,
+                'gender'         => $attempt->student->gender ?? '',
+                'grade_level'    => $attempt->student->grade_level ?? '',
+                'section'        => $attempt->student->section ?? '',
+                'score'          => $attempt->score,
+                'total_points'   => $attempt->total_points,
+                'percentage'     => $percentage,
             ];
         });
 
-        // ===== GET ANALYTICS DATA (same structure as your export) =====
         $questions = $quiz->questions;
 
         $analytics = $questions->map(function ($question, $index) use ($attempts) {
-            $answers = StudentAnswer::where('question_id', $question->id)
+            $answers   = StudentAnswer::where('question_id', $question->id)
                 ->whereIn('attempt_id', $attempts->pluck('id'))
                 ->get();
 
-            $attempted = $answers->count();
-            $correct = $answers->where('is_correct', true)->count();
-
-            $correctRate = $attempted > 0
-                ? round(($correct / $attempted) * 100)
-                : 0;
+            $attempted   = $answers->count();
+            $correct     = $answers->where('is_correct', true)->count();
+            $correctRate = $attempted > 0 ? round(($correct / $attempted) * 100) : 0;
 
             return [
-                'order' => $index + 1,
-                'question_text' => $question->question_text,
-                'question_type' => $question->question_type,
-                'points' => $question->points,
+                'order'           => $index + 1,
+                'question_text'   => $question->question_text,
+                'question_type'   => $question->question_type,
+                'points'          => $question->points,
                 'attempted_count' => $attempted,
-                'correct_count' => $correct,
-                'correct_rate' => $correctRate,
-                'average_points' => 0, // keep as-is (your export expects it)
-                'difficulty' => $correctRate >= 80 ? 'Easy' : ($correctRate < 50 ? 'Hard' : 'Moderate'),
+                'correct_count'   => $correct,
+                'correct_rate'    => $correctRate,
+                'average_points'  => 0,
+                'difficulty'      => $correctRate >= 80 ? 'Easy' : ($correctRate < 50 ? 'Hard' : 'Moderate'),
             ];
         });
 
@@ -422,60 +399,42 @@ class TeacherController extends Controller
         );
     }
 
-
-        /**
-     * Export class quiz results to Excel.
-     * Returns all students in the class with their scores (0 if not taken).
-     */
     public function exportClassQuizResults(Request $request, $classId, $quizId)
     {
         $teacherId = $request->user()->id;
 
-        // Verify class belongs to teacher
-        $class = \App\Models\ClassRoom::where('id', $classId)
+        $class = ClassRoom::where('id', $classId)
             ->where('teacher_id', $teacherId)
             ->firstOrFail();
 
-        // Verify quiz belongs to teacher
-        $quiz = \App\Models\Quiz::where('id', $quizId)
+        $quiz = Quiz::where('id', $quizId)
             ->where('teacher_id', $teacherId)
             ->firstOrFail();
 
-        // Verify quiz is assigned to this class
         $isAssigned = $class->quizzes()->where('quiz_id', $quizId)->exists();
         if (!$isAssigned) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Quiz is not assigned to this class.',
-            ], 404);
+            return response()->json(['success' => false, 'message' => 'Quiz is not assigned to this class.'], 404);
         }
 
-        // Calculate total points
         $totalPoints = (float) $quiz->questions()->sum('points') ?: 0;
 
-        // Get all students in class with profiles
         $students = $class->students()
             ->with('studentProfile')
             ->orderBy('surname')
             ->orderBy('first_name')
             ->get();
 
-        // Get completed attempts for this quiz by these students
-        $attempts = \App\Models\QuizAttempt::where('quiz_id', $quizId)
+        $attempts = QuizAttempt::where('quiz_id', $quizId)
             ->whereIn('student_id', $students->pluck('id'))
-            ->where('status', 'completed')
+            ->where('status', QuizAttempt::STATUS_REVIEWED)
             ->get()
             ->keyBy('student_id');
 
-        // Build export data
         $exportData = $students->map(function ($student, $index) use ($attempts, $totalPoints) {
-            $attempt = $attempts->get($student->id);
-            $hasTaken = $attempt !== null;
-            $score = $hasTaken ? ($attempt->score ?? 0) : 0;
-
-            $percentage = $totalPoints > 0
-                ? round(($score / $totalPoints) * 100, 1)
-                : 0;
+            $attempt    = $attempts->get($student->id);
+            $hasTaken   = $attempt !== null;
+            $score      = $hasTaken ? ($attempt->score ?? 0) : 0;
+            $percentage = $totalPoints > 0 ? round(($score / $totalPoints) * 100, 1) : 0;
 
             return [
                 'rank'         => $index + 1,
@@ -496,7 +455,4 @@ class TeacherController extends Controller
             $filename
         );
     }
-
-
-
 }
