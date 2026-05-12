@@ -11,11 +11,12 @@ return new class extends Migration
         Schema::create('student_answer_reviews', function (Blueprint $table) {
             $table->id();
             $table->foreignId('student_answer_id')
-                  ->constrained('student_answers')
-                  ->onDelete('cascade');
+                ->constrained('student_answers')
+                ->onDelete('cascade');
             $table->foreignId('teacher_id')
-                  ->constrained('users')
-                  ->onDelete('cascade');
+                ->nullable()
+                ->constrained('users')
+                ->onDelete('cascade');
             $table->decimal('points_awarded', 5, 2)->nullable();
             $table->text('feedback')->nullable();
             $table->timestamp('reviewed_at')->nullable();

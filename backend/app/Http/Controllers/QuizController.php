@@ -160,37 +160,44 @@ class QuizController extends Controller
             ->where('is_published', true)
             ->firstOrFail();
 
-        // 'completed' no longer exists in the ENUM — check all terminal statuses
-        $terminalAttempt = QuizAttempt::where('student_id', $request->user()->id)
+        $studentId = $request->user()->id;
+
+        // ── Re-submission prevention ───────────────────────────────
+        // Block if ANY active attempt exists, regardless of status.
+        // in_progress  → 409 with resume data so the client can continue
+        // submitted    → 409 (awaiting teacher review)
+        // under_review → 409 (teacher is currently reviewing)
+        // reviewed     → 409 (already completed)
+        $existingAttempt = QuizAttempt::where('student_id', $studentId)
             ->where('quiz_id', $quizId)
-            ->whereIn('status', ['submitted', 'under_review', 'reviewed'])
+            ->whereIn('status', [
+                QuizAttempt::STATUS_IN_PROGRESS,
+                QuizAttempt::STATUS_SUBMITTED,
+                QuizAttempt::STATUS_UNDER_REVIEW,
+                QuizAttempt::STATUS_REVIEWED,
+            ])
             ->first();
 
-        if ($terminalAttempt) {
+        if ($existingAttempt) {
+            $statusMessages = [
+                QuizAttempt::STATUS_IN_PROGRESS  => 'You have an attempt in progress. Resume it instead of starting a new one.',
+                QuizAttempt::STATUS_SUBMITTED     => 'You have already submitted this quiz. It is awaiting teacher review.',
+                QuizAttempt::STATUS_UNDER_REVIEW  => 'Your submission is currently being reviewed by your teacher.',
+                QuizAttempt::STATUS_REVIEWED      => 'You have already completed this quiz.',
+            ];
+
             return response()->json([
-                'message' => 'You have already submitted this quiz.',
-                'attempt' => $terminalAttempt,
+                'message' => $statusMessages[$existingAttempt->status] ?? 'An attempt already exists for this quiz.',
+                'attempt' => $existingAttempt,
             ], 409);
         }
 
-        $inProgressAttempt = QuizAttempt::where('student_id', $request->user()->id)
-            ->where('quiz_id', $quizId)
-            ->where('status', 'in_progress')
-            ->first();
-
-        if ($inProgressAttempt) {
-            return response()->json([
-                'message' => 'Resuming existing attempt.',
-                'attempt' => $inProgressAttempt,
-            ]);
-        }
-
         $attempt = QuizAttempt::create([
-            'student_id'   => $request->user()->id,
+            'student_id'   => $studentId,
             'quiz_id'      => $quizId,
             'score'        => 0,
             'total_points' => $quiz->questions()->sum('points'),
-            'status'       => 'in_progress',
+            'status'       => QuizAttempt::STATUS_IN_PROGRESS,
             'started_at'   => now(),
         ]);
 
@@ -215,18 +222,35 @@ class QuizController extends Controller
             ], 422);
         }
 
-        $attempt = QuizAttempt::where('id', $request->attempt_id)
-            ->where('student_id', $request->user()->id)
-            ->where('quiz_id', $quizId)
-            ->where('status', 'in_progress')
-            ->firstOrFail();
-
-        // ── Determine grading_mode from class_quizzes ──────────────
-        // Find the class this student belongs to that has this quiz assigned.
+        // ── Re-submission guard ────────────────────────────────────
+        // The attempt must belong to this student, this quiz,
+        // AND be in_progress. Any other status means it was already
+        // submitted — return 409 instead of 404 for clarity.
         $studentId = $request->user()->id;
 
+        $existingAttempt = QuizAttempt::where('id', $request->attempt_id)
+            ->where('student_id', $studentId)
+            ->where('quiz_id', $quizId)
+            ->first();
+
+        if (!$existingAttempt) {
+            return response()->json([
+                'message' => 'Attempt not found.',
+            ], 404);
+        }
+
+        if ($existingAttempt->status !== QuizAttempt::STATUS_IN_PROGRESS) {
+            return response()->json([
+                'message' => 'This attempt has already been submitted and cannot be resubmitted.',
+                'status'  => $existingAttempt->status,
+            ], 409);
+        }
+
+        $attempt = $existingAttempt;
+
+        // ── Determine grading_mode from class_quizzes ──────────────
         $classQuiz = ClassRoom::whereHas('students', function ($q) use ($studentId) {
-            $q->where('student_id', $studentId);  // ← corrected from user_id
+                $q->where('student_id', $studentId);
             })
             ->whereHas('quizzes', function ($q) use ($quizId) {
                 $q->where('quiz_id', $quizId);
@@ -236,7 +260,6 @@ class QuizController extends Controller
             }])
             ->first();
 
-        // Default to automatic if quiz was not assigned via a class
         $gradingMode = 'automatic';
         if ($classQuiz && $classQuiz->quizzes->isNotEmpty()) {
             $gradingMode = $classQuiz->quizzes->first()->pivot->grading_mode ?? 'automatic';
@@ -332,7 +355,7 @@ class QuizController extends Controller
             $attempt->update([
                 'score'        => $totalScore,
                 'total_points' => $actualTotalPoints,
-                'status'       => 'reviewed',
+                'status'       => QuizAttempt::STATUS_REVIEWED,
                 'completed_at' => now(),
             ]);
 
@@ -372,6 +395,7 @@ class QuizController extends Controller
                 'score'            => $totalScore,
                 'total_points'     => $actualTotalPoints,
                 'percentage'       => $percentage,
+                'is_passed'        => $percentage >= 60,
                 'quiz_title'       => $quiz->title,
                 'question_results' => $questionResults,
             ]);
@@ -381,13 +405,13 @@ class QuizController extends Controller
         $attempt->update([
             'score'        => 0,
             'total_points' => $actualTotalPoints,
-            'status'       => 'submitted',
+            'status'       => QuizAttempt::STATUS_SUBMITTED,
             'completed_at' => now(),
         ]);
 
         $savedAnswers = StudentAnswer::where('attempt_id', $attempt->id)->get();
 
-        $reviewRows = $savedAnswers->map(function ($answer) use ($studentId) {
+        $reviewRows = $savedAnswers->map(function ($answer) {
             return [
                 'student_answer_id' => $answer->id,
                 'teacher_id'        => null,
@@ -404,7 +428,7 @@ class QuizController extends Controller
         return response()->json([
             'message'    => 'Quiz submitted. Your answers are pending teacher review.',
             'attempt_id' => $attempt->id,
-            'status'     => 'submitted',
+            'status'     => QuizAttempt::STATUS_SUBMITTED,
         ], 202);
     }
 }

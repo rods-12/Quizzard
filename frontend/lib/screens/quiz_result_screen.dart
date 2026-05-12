@@ -12,13 +12,61 @@ class QuizResultScreen extends StatelessWidget {
     final data = ModalRoute.of(context)!.settings.arguments
         as Map<String, dynamic>;
 
+    // ── Guard: if status is submitted or under_review, redirect to pending review ──
+    final status = data['status'] as String?;
+    if (status == 'submitted' || status == 'under_review') {
+      // Schedule redirect after build
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final attemptId = data['attempt_id'];
+        final quizTitle = data['quiz_title'] as String? ?? 'Quiz';
+        if (attemptId != null) {
+          Navigator.pushReplacementNamed(
+            context,
+            '/pending-review',
+            arguments: {
+              'attempt_id': int.parse(attemptId.toString()),
+              'quiz_title': quizTitle,
+            },
+          );
+        } else {
+          // Fallback: show not available message on dashboard
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            '/student-dashboard',
+            (route) => false,
+          );
+        }
+      });
+
+      // Show a brief loading screen while redirect happens
+      return const Scaffold(
+        backgroundColor: Color(0xFFF5F5F5),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(color: Color(0xFF6C63FF)),
+              SizedBox(height: 16),
+              Text(
+                'Results not yet available.',
+                style: TextStyle(
+                  color: Color(0xFF6B7080),
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // ── Normal reviewed result ──
     final score = int.parse(data['score'].toString());
     final totalPoints = int.parse(data['total_points'].toString());
     final percentage = int.parse(data['percentage'].toString());
     final quizTitle = data['quiz_title'] as String;
     final questionResults = data['question_results'] as List;
 
-    // Color based on percentage
     Color scoreColor;
     String scoreLabel;
     IconData scoreIcon;
@@ -167,12 +215,10 @@ class QuizResultScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   ...questionResults.asMap().entries.map((entry) {
                     final index = entry.key;
-                    final q =
-                        Map<String, dynamic>.from(entry.value);
+                    final q = Map<String, dynamic>.from(entry.value);
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Question number
                         Row(
                           children: [
                             Container(
@@ -208,8 +254,6 @@ class QuizResultScreen extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 10),
-
-                        // Result widget based on type
                         _buildResultWidget(q),
                         const SizedBox(height: 20),
                         if (index < questionResults.length - 1)
@@ -224,7 +268,8 @@ class QuizResultScreen extends StatelessWidget {
                     width: double.infinity,
                     height: 54,
                     child: ElevatedButton.icon(
-                      onPressed: () => Navigator.pushNamedAndRemoveUntil(
+                      onPressed: () =>
+                          Navigator.pushNamedAndRemoveUntil(
                         context,
                         '/student-dashboard',
                         (route) => false,
@@ -303,21 +348,13 @@ class QuizResultScreen extends StatelessWidget {
           studentAnswer: answerGiven,
         );
       case 'matching':
-        // Parse the JSON string back to Map
         Map<String, String> matches = {};
         try {
-          final decoded = answerGiven
-              .replaceAll('{', '')
-              .replaceAll('}', '')
-              .split(',');
-          // Use proper JSON decode
           final rawMap = Map<String, dynamic>.from(
-            (answerGiven.isNotEmpty
-                ? _parseJsonMap(answerGiven)
-                : {}),
+            (answerGiven.isNotEmpty ? _parseJsonMap(answerGiven) : {}),
           );
-          matches = rawMap
-              .map((key, value) => MapEntry(key, value.toString()));
+          matches =
+              rawMap.map((key, value) => MapEntry(key, value.toString()));
         } catch (e) {
           matches = {};
         }
@@ -332,7 +369,6 @@ class QuizResultScreen extends StatelessWidget {
 
   Map<String, dynamic> _parseJsonMap(String jsonString) {
     try {
-      // Simple JSON parser for flat key-value pairs
       final clean = jsonString
           .trim()
           .replaceAll('{', '')

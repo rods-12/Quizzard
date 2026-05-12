@@ -40,10 +40,10 @@ class Quiz extends Model
         );
     }
 
-    public function classQuizzes()
-    {
-        return $this->hasMany(ClassQuiz::class, 'quiz_id');
-    }
+    // public function classQuizzes()
+    // {
+    //     return $this->hasMany(ClassQuiz::class, 'quiz_id');
+    // }
 
     public function attempts()
     {

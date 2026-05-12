@@ -1,8 +1,9 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../services/auth_service.dart';
 
-// ─── THEME CONSTANTS (mirrored from dashboard) ────────────────────────────────
+// ─── THEME CONSTANTS ─────────────────────────────────────────────────────────
 class _AppTheme {
   static const Color primary = Color(0xFF6C63FF);
   static const Color primaryDark = Color(0xFF4B44CC);
@@ -29,6 +30,17 @@ class _AppTheme {
       );
 }
 
+// ─── Attempt status helpers ──────────────────────────────────────────────────
+bool _isAwaitingReview(Map<String, dynamic> quiz) {
+  final status = quiz['attempt_status'] as String?;
+  return status == 'submitted' || status == 'under_review';
+}
+
+bool _isReviewed(Map<String, dynamic> quiz) {
+  final status = quiz['attempt_status'] as String?;
+  return status == 'reviewed' || status == 'completed';
+}
+
 class StudentClassQuizzesScreen extends StatefulWidget {
   final int classId;
   final String className;
@@ -44,7 +56,8 @@ class StudentClassQuizzesScreen extends StatefulWidget {
       _StudentClassQuizzesScreenState();
 }
 
-class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
+class _StudentClassQuizzesScreenState
+    extends State<StudentClassQuizzesScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   bool _isLoading = true;
@@ -138,15 +151,20 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
                   color: _AppTheme.danger.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.error_outline_rounded, size: 48, color: _AppTheme.danger),
+                child: Icon(Icons.error_outline_rounded,
+                    size: 48, color: _AppTheme.danger),
               ),
               const SizedBox(height: 16),
-              Text(_errorMessage!, textAlign: TextAlign.center, style: const TextStyle(color: _AppTheme.textMid)),
+              Text(_errorMessage!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: _AppTheme.textMid)),
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _loadQuizzes,
-                style: ElevatedButton.styleFrom(backgroundColor: _AppTheme.primary),
-                child: const Text('Retry', style: TextStyle(color: Colors.white)),
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: _AppTheme.primary),
+                child: const Text('Retry',
+                    style: TextStyle(color: Colors.white)),
               ),
             ],
           ),
@@ -178,7 +196,6 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Back button + title
                   Row(
                     children: [
                       GestureDetector(
@@ -189,7 +206,10 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
                             color: Colors.white.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 18),
+                          child: const Icon(
+                              Icons.arrow_back_ios_new_rounded,
+                              color: Colors.white,
+                              size: 18),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -200,7 +220,7 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
                             color: Colors.white,
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
-                            letterSpacing: -0.3,  
+                            letterSpacing: -0.3,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -208,17 +228,18 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
                     ],
                   ),
                   const SizedBox(height: 16),
-
-                  // Stats row
                   Row(
                     children: [
                       _buildHeaderStat('${_quizzes.length}', 'Total'),
                       const SizedBox(width: 10),
-                      _buildHeaderStat('${_doneQuizzes.length}', 'Done'),
+                      _buildHeaderStat(
+                          '${_doneQuizzes.length}', 'Done'),
                       const SizedBox(width: 10),
-                      _buildHeaderStat('${_assignedQuizzes.length}', 'Assigned'),
+                      _buildHeaderStat(
+                          '${_assignedQuizzes.length}', 'Assigned'),
                       const SizedBox(width: 10),
-                      _buildHeaderStat('${_missingQuizzes.length}', 'Missing'),
+                      _buildHeaderStat(
+                          '${_missingQuizzes.length}', 'Missing'),
                     ],
                   ),
                 ],
@@ -226,7 +247,7 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
             ),
           ),
 
-          // ── Filter chips (TabBar style) ──
+          // ── Filter chips ──
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
@@ -236,11 +257,14 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
                   children: [
                     _buildFilterChip('all', 'All', _quizzes.length),
                     const SizedBox(width: 8),
-                    _buildFilterChip('assigned', 'Assigned', _assignedQuizzes.length),
+                    _buildFilterChip('assigned', 'Assigned',
+                        _assignedQuizzes.length),
                     const SizedBox(width: 8),
-                    _buildFilterChip('done', 'Done', _doneQuizzes.length),
+                    _buildFilterChip(
+                        'done', 'Done', _doneQuizzes.length),
                     const SizedBox(width: 8),
-                    _buildFilterChip('missing', 'Missing', _missingQuizzes.length),
+                    _buildFilterChip('missing', 'Missing',
+                        _missingQuizzes.length),
                   ],
                 ),
               ),
@@ -259,13 +283,27 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
                         children: [
                           Container(
                             padding: const EdgeInsets.all(24),
-                            decoration: BoxDecoration(color: _AppTheme.primaryLight, shape: BoxShape.circle),
-                            child: Icon(Icons.quiz_outlined, size: 48, color: _AppTheme.primary.withOpacity(0.5)),
+                            decoration: BoxDecoration(
+                                color: _AppTheme.primaryLight,
+                                shape: BoxShape.circle),
+                            child: Icon(Icons.quiz_outlined,
+                                size: 48,
+                                color: _AppTheme.primary
+                                    .withOpacity(0.5)),
                           ),
                           const SizedBox(height: 16),
-                          const Text('No quizzes yet.', style: TextStyle(color: _AppTheme.textMid, fontSize: 16, fontWeight: FontWeight.w500)),
+                          const Text('No quizzes yet.',
+                              style: TextStyle(
+                                  color: _AppTheme.textMid,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500)),
                           const SizedBox(height: 4),
-                          const Text("Your teacher hasn't assigned any quizzes yet.", textAlign: TextAlign.center, style: TextStyle(color: _AppTheme.textLight, fontSize: 13)),
+                          const Text(
+                              "Your teacher hasn't assigned any quizzes yet.",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  color: _AppTheme.textLight,
+                                  fontSize: 13)),
                         ],
                       ),
                     ),
@@ -305,11 +343,19 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
               children: [
                 Container(
                   padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(color: _AppTheme.primaryLight, shape: BoxShape.circle),
-                  child: Icon(Icons.search_off_rounded, size: 48, color: _AppTheme.primary.withOpacity(0.5)),
+                  decoration: BoxDecoration(
+                      color: _AppTheme.primaryLight,
+                      shape: BoxShape.circle),
+                  child: Icon(Icons.search_off_rounded,
+                      size: 48,
+                      color: _AppTheme.primary.withOpacity(0.5)),
                 ),
                 const SizedBox(height: 16),
-                const Text('No quizzes found.', style: TextStyle(color: _AppTheme.textMid, fontSize: 16, fontWeight: FontWeight.w500)),
+                const Text('No quizzes found.',
+                    style: TextStyle(
+                        color: _AppTheme.textMid,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500)),
               ],
             ),
           ),
@@ -321,7 +367,8 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
       padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
       sliver: SliverList(
         delegate: SliverChildBuilderDelegate(
-          (context, index) => _buildQuizCard(Map<String, dynamic>.from(quizzes[index])),
+          (context, index) => _buildQuizCard(
+              Map<String, dynamic>.from(quizzes[index])),
           childCount: quizzes.length,
         ),
       ),
@@ -339,8 +386,14 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
         ),
         child: Column(
           children: [
-            Text(value, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
-            Text(label, style: const TextStyle(color: Colors.white70, fontSize: 11)),
+            Text(value,
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18)),
+            Text(label,
+                style: const TextStyle(
+                    color: Colors.white70, fontSize: 11)),
           ],
         ),
       ),
@@ -353,20 +406,25 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
     final isSelected = _tabController.index == index;
 
     return GestureDetector(
-      onTap: () {
-        setState(() {
-          _tabController.index = index;
-        });
-      },
+      onTap: () => setState(() => _tabController.index = index),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        padding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
           color: isSelected ? _AppTheme.primary : Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isSelected ? _AppTheme.primary : Colors.grey.shade300),
+          border: Border.all(
+              color: isSelected
+                  ? _AppTheme.primary
+                  : Colors.grey.shade300),
           boxShadow: isSelected
-              ? [BoxShadow(color: _AppTheme.primary.withOpacity(0.25), blurRadius: 8, offset: const Offset(0, 2))]
+              ? [
+                  BoxShadow(
+                      color: _AppTheme.primary.withOpacity(0.25),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2))
+                ]
               : [],
         ),
         child: Row(
@@ -376,15 +434,20 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
               label,
               style: TextStyle(
                 color: isSelected ? Colors.white : _AppTheme.textMid,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                fontWeight: isSelected
+                    ? FontWeight.bold
+                    : FontWeight.normal,
                 fontSize: 12,
               ),
             ),
             const SizedBox(width: 4),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 5, vertical: 1),
               decoration: BoxDecoration(
-                color: isSelected ? Colors.white.withOpacity(0.25) : _AppTheme.primaryLight,
+                color: isSelected
+                    ? Colors.white.withOpacity(0.25)
+                    : _AppTheme.primaryLight,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
@@ -392,7 +455,9 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.bold,
-                  color: isSelected ? Colors.white : _AppTheme.primary,
+                  color: isSelected
+                      ? Colors.white
+                      : _AppTheme.primary,
                 ),
               ),
             ),
@@ -404,29 +469,104 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
 
   Widget _buildQuizCard(Map<String, dynamic> quiz) {
     final alreadyTaken = quiz['already_taken'] == true;
+    final awaitingReview = _isAwaitingReview(quiz);
+    final reviewed = _isReviewed(quiz);
+    final attemptStatus = quiz['attempt_status'] as String?;
+    final attemptId = quiz['attempt_id'];
+
     final dueDate = quiz['due_date'] != null
         ? DateTime.tryParse(quiz['due_date'])
         : null;
-    final isPastDue = dueDate != null && dueDate.isBefore(DateTime.now()) && !alreadyTaken;
+    final isPastDue = dueDate != null &&
+        dueDate.isBefore(DateTime.now()) &&
+        !alreadyTaken;
+
+    // Icon
+    IconData cardIcon;
+    Color iconBg;
+    Color iconColor;
+
+    if (awaitingReview) {
+      cardIcon = attemptStatus == 'under_review'
+          ? Icons.rate_review_rounded
+          : Icons.hourglass_top_rounded;
+      iconBg = _AppTheme.warning.withOpacity(0.1);
+      iconColor = _AppTheme.warning;
+    } else if (alreadyTaken) {
+      cardIcon = Icons.check_circle_rounded;
+      iconBg = _AppTheme.success.withOpacity(0.1);
+      iconColor = _AppTheme.success;
+    } else if (isPastDue) {
+      cardIcon = Icons.warning_rounded;
+      iconBg = _AppTheme.danger.withOpacity(0.1);
+      iconColor = _AppTheme.danger;
+    } else {
+      cardIcon = Icons.quiz_rounded;
+      iconBg = _AppTheme.primaryLight;
+      iconColor = _AppTheme.primary;
+    }
+
+    // Badge
+    String badgeText;
+    Color badgeTextColor;
+    Color badgeBg;
+    Color badgeBorder;
+
+    if (awaitingReview) {
+      badgeText = attemptStatus == 'under_review'
+          ? '🔍 Under Review'
+          : '⏳ Awaiting Review';
+      badgeTextColor = _AppTheme.warning;
+      badgeBg = _AppTheme.warning.withOpacity(0.1);
+      badgeBorder = _AppTheme.warning.withOpacity(0.3);
+    } else if (alreadyTaken) {
+      badgeText = '✓ Done';
+      badgeTextColor = _AppTheme.success;
+      badgeBg = _AppTheme.success.withOpacity(0.1);
+      badgeBorder = _AppTheme.success.withOpacity(0.3);
+    } else if (isPastDue) {
+      badgeText = 'Past Due';
+      badgeTextColor = _AppTheme.danger;
+      badgeBg = _AppTheme.danger.withOpacity(0.1);
+      badgeBorder = _AppTheme.danger.withOpacity(0.3);
+    } else {
+      badgeText = 'Pending';
+      badgeTextColor = _AppTheme.primary;
+      badgeBg = _AppTheme.primaryLight;
+      badgeBorder = _AppTheme.primary.withOpacity(0.3);
+    }
+
+    // Tap behavior
+    VoidCallback? onTap;
+    if (awaitingReview && attemptId != null) {
+      onTap = () => Navigator.pushNamed(
+            context,
+            '/pending-review',
+            arguments: {
+              'attempt_id': int.parse(attemptId.toString()),
+              'quiz_title': quiz['title'],
+            },
+          );
+    } else if (!alreadyTaken && !isPastDue) {
+      onTap = () async {
+        await Navigator.pushNamed(
+          context,
+          '/quiz-taking',
+          arguments: {
+            'quiz_id': quiz['id'],
+            'quiz_title': quiz['title'],
+          },
+        );
+        _loadQuizzes();
+      };
+    }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: _AppTheme.cardDecoration,
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: (alreadyTaken || isPastDue)
-            ? null
-            : () async {
-                await Navigator.pushNamed(
-                  context,
-                  '/quiz-taking',
-                  arguments: {
-                    'quiz_id': quiz['id'],
-                    'quiz_title': quiz['title'],
-                  },
-                );
-                _loadQuizzes();
-              },
+        onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -439,26 +579,11 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: alreadyTaken
-                          ? _AppTheme.success.withOpacity(0.1)
-                          : isPastDue
-                              ? _AppTheme.danger.withOpacity(0.1)
-                              : _AppTheme.primaryLight,
+                      color: iconBg,
                       borderRadius: BorderRadius.circular(13),
                     ),
-                    child: Icon(
-                      alreadyTaken
-                          ? Icons.check_circle_rounded
-                          : isPastDue
-                              ? Icons.warning_rounded
-                              : Icons.quiz_rounded,
-                      color: alreadyTaken
-                          ? _AppTheme.success
-                          : isPastDue
-                              ? _AppTheme.danger
-                              : _AppTheme.primary,
-                      size: 26,
-                    ),
+                    child:
+                        Icon(cardIcon, color: iconColor, size: 26),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -467,51 +592,40 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
                       children: [
                         Text(
                           quiz['title'],
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: _AppTheme.textDark),
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: _AppTheme.textDark),
                         ),
-                        if (quiz['description'] != null && (quiz['description'] as String).isNotEmpty) ...[
+                        if (quiz['description'] != null &&
+                            (quiz['description'] as String)
+                                .isNotEmpty) ...[
                           const SizedBox(height: 4),
                           Text(
                             quiz['description'],
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 12, color: _AppTheme.textMid),
+                            style: const TextStyle(
+                                fontSize: 12,
+                                color: _AppTheme.textMid),
                           ),
                         ],
                       ],
                     ),
                   ),
                   const SizedBox(width: 8),
-                  // Status badge
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
-                      color: alreadyTaken
-                          ? _AppTheme.success.withOpacity(0.1)
-                          : isPastDue
-                              ? _AppTheme.danger.withOpacity(0.1)
-                              : _AppTheme.primaryLight,
+                      color: badgeBg,
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: alreadyTaken
-                            ? _AppTheme.success.withOpacity(0.3)
-                            : isPastDue
-                                ? _AppTheme.danger.withOpacity(0.3)
-                                : _AppTheme.primary.withOpacity(0.3),
-                      ),
+                      border: Border.all(color: badgeBorder),
                     ),
                     child: Text(
-                      alreadyTaken
-                          ? '✓ Done'
-                          : isPastDue
-                              ? 'Past Due'
-                              : 'Pending',
+                      badgeText,
                       style: TextStyle(
-                        color: alreadyTaken
-                            ? _AppTheme.success
-                            : isPastDue
-                                ? _AppTheme.danger
-                                : _AppTheme.primary,
+                        color: badgeTextColor,
                         fontWeight: FontWeight.bold,
                         fontSize: 11,
                       ),
@@ -527,7 +641,8 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
               // Meta row
               Row(
                 children: [
-                  _buildMeta(Icons.help_outline_rounded, '${quiz['questions_count']} questions'),
+                  _buildMeta(Icons.help_outline_rounded,
+                      '${quiz['questions_count']} questions'),
                   const Spacer(),
                   if (dueDate != null)
                     _buildMeta(
@@ -536,29 +651,31 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
                       color: _getDueDateColor(dueDate, alreadyTaken),
                     )
                   else
-                    _buildMeta(Icons.calendar_today_outlined, 'No deadline', color: _AppTheme.textLight),
+                    _buildMeta(
+                        Icons.calendar_today_outlined, 'No deadline',
+                        color: _AppTheme.textLight),
                 ],
               ),
 
-              // Score badge for completed quizzes
-              if (alreadyTaken) ...[
+              // Score / pending indicator
+              if (reviewed && quiz['score'] != null) ...[
                 const SizedBox(height: 10),
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 8, horizontal: 12),
                   decoration: BoxDecoration(
-                    color: _getScoreColor(quiz['score'], quiz['total_points'])
+                    color: _getScoreColor(
+                            quiz['score'], quiz['total_points'])
                         .withOpacity(0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
-                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        Icons.emoji_events,
-                        size: 16,
-                        color: _getScoreColor(quiz['score'], quiz['total_points']),
-                      ),
+                      Icon(Icons.emoji_events,
+                          size: 16,
+                          color: _getScoreColor(
+                              quiz['score'], quiz['total_points'])),
                       const SizedBox(width: 6),
                       Text(
                         'Score: ${quiz['score']} / ${quiz['total_points']}',
@@ -572,6 +689,34 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
                     ],
                   ),
                 ),
+              ] else if (awaitingReview) ...[
+                const SizedBox(height: 10),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 8, horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: _AppTheme.warning.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                        color: _AppTheme.warning.withOpacity(0.25)),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.lock_clock_rounded,
+                          size: 16, color: _AppTheme.warning),
+                      SizedBox(width: 6),
+                      Text(
+                        'Score hidden — pending teacher review',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: _AppTheme.warning,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
 
               const SizedBox(height: 12),
@@ -579,25 +724,15 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
                 width: double.infinity,
                 height: 44,
                 child: ElevatedButton(
-                  onPressed: (alreadyTaken || isPastDue)
-                      ? null
-                      : () async {
-                          await Navigator.pushNamed(
-                            context,
-                            '/quiz-taking',
-                            arguments: {
-                              'quiz_id': quiz['id'],
-                              'quiz_title': quiz['title'],
-                            },
-                          );
-                          _loadQuizzes();
-                        },
+                  onPressed: onTap,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: alreadyTaken
-                        ? Colors.grey.shade300
-                        : isPastDue
-                            ? _AppTheme.danger.withOpacity(0.15)
-                            : _AppTheme.primary,
+                    backgroundColor: awaitingReview
+                        ? _AppTheme.warning.withOpacity(0.15)
+                        : alreadyTaken
+                            ? Colors.grey.shade300
+                            : isPastDue
+                                ? _AppTheme.danger.withOpacity(0.15)
+                                : _AppTheme.primary,
                     disabledBackgroundColor: alreadyTaken
                         ? Colors.grey.shade200
                         : _AppTheme.danger.withOpacity(0.1),
@@ -605,17 +740,21 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
                         borderRadius: BorderRadius.circular(12)),
                   ),
                   child: Text(
-                    alreadyTaken
-                        ? 'Already Completed'
-                        : isPastDue
-                            ? 'Past Due'
-                            : 'Take Quiz',
+                    awaitingReview
+                        ? 'View Submission'
+                        : alreadyTaken
+                            ? 'Already Completed'
+                            : isPastDue
+                                ? 'Past Due'
+                                : 'Take Quiz',
                     style: TextStyle(
-                      color: alreadyTaken
-                          ? _AppTheme.textLight
-                          : isPastDue
-                              ? _AppTheme.danger
-                              : Colors.white,
+                      color: awaitingReview
+                          ? _AppTheme.warning
+                          : alreadyTaken
+                              ? _AppTheme.textLight
+                              : isPastDue
+                                  ? _AppTheme.danger
+                                  : Colors.white,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -634,7 +773,9 @@ class _StudentClassQuizzesScreenState extends State<StudentClassQuizzesScreen>
       children: [
         Icon(icon, size: 14, color: color ?? _AppTheme.textLight),
         const SizedBox(width: 5),
-        Text(label, style: TextStyle(fontSize: 12, color: color ?? _AppTheme.textMid)),
+        Text(label,
+            style: TextStyle(
+                fontSize: 12, color: color ?? _AppTheme.textMid)),
       ],
     );
   }

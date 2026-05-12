@@ -287,6 +287,8 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
     }
   }
 
+  // ── Assign existing quiz ────────────────────────────────────────────────────
+
   Future<void> _assignQuiz() async {
     final result = await AuthService.authGet('/quizzes');
     if (!result['success']) return;
@@ -354,31 +356,59 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
 
     if (selectedQuiz == null || !mounted) return;
 
+    // ── Due date + grading mode dialog ──
     DateTime? selectedDueDate;
+    String selectedGradingMode = 'automatic';
 
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) {
         return StatefulBuilder(
-          builder: (context, setState) => AlertDialog(
+          builder: (context, setDialogState) => AlertDialog(
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16)),
-            title: const Text('Set Due Date (Optional)'),
+            title: const Text('Quiz Settings'),
             content: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // ── Grading mode ──
                 const Text(
-                    'You can set a deadline for this quiz or skip it.'),
-                const SizedBox(height: 16),
+                  'Grading Mode',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                    color: Color(0xFF333333),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                _GradingModeSelector(
+                  value: selectedGradingMode,
+                  onChanged: (v) =>
+                      setDialogState(() => selectedGradingMode = v),
+                ),
+                const SizedBox(height: 20),
+                // ── Due date ──
+                const Text(
+                  'Due Date (Optional)',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                    color: Color(0xFF333333),
+                  ),
+                ),
+                const SizedBox(height: 8),
                 if (selectedDueDate != null)
-                  Text(
-                    'Due: ${selectedDueDate!.toLocal().toString().substring(0, 16)}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF4CAF50),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Text(
+                      'Due: ${selectedDueDate!.toLocal().toString().substring(0, 16)}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF4CAF50),
+                      ),
                     ),
                   ),
-                const SizedBox(height: 8),
                 OutlinedButton.icon(
                   icon: const Icon(Icons.calendar_today),
                   label: Text(selectedDueDate == null
@@ -386,12 +416,15 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                       : 'Change Due Date'),
                   onPressed: () async {
                     final picked = await _pickDueDate();
-                    if (picked != null) setState(() => selectedDueDate = picked);
+                    if (picked != null) {
+                      setDialogState(() => selectedDueDate = picked);
+                    }
                   },
                 ),
                 if (selectedDueDate != null)
                   TextButton(
-                    onPressed: () => setState(() => selectedDueDate = null),
+                    onPressed: () =>
+                        setDialogState(() => selectedDueDate = null),
                     child: const Text('Clear',
                         style: TextStyle(color: Colors.red)),
                   ),
@@ -402,13 +435,12 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                 onPressed: () => Navigator.pop(context, false),
                 child: const Text('Cancel'),
               ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('Skip'),
-              ),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: const Text('Assign'),
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF4CAF50)),
+                child: const Text('Assign',
+                    style: TextStyle(color: Colors.white)),
               ),
             ],
           ),
@@ -418,7 +450,10 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
 
     if (confirmed != true) return;
 
-    final body = <String, dynamic>{'quiz_id': selectedQuiz['id']};
+    final body = <String, dynamic>{
+      'quiz_id': selectedQuiz['id'],
+      'grading_mode': selectedGradingMode,
+    };
     if (selectedDueDate != null) {
       body['due_date'] = selectedDueDate!.toIso8601String();
     }
@@ -609,6 +644,8 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
     );
   }
 
+  // ── Create new quiz then assign ─────────────────────────────────────────────
+
   Future<void> _createAndAssignQuiz() async {
     final nameController = TextEditingController();
     final descController = TextEditingController();
@@ -691,9 +728,58 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
     }
 
     final newQuizId = createResult['data']['data']['id'];
+
+    // ── Grading mode dialog for new quiz ──
+    String selectedGradingMode = 'automatic';
+
+    if (!mounted) return;
+    final gradingConfirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) => AlertDialog(
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16)),
+            title: const Text('Grading Mode'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Choose how student answers will be graded.'),
+                const SizedBox(height: 16),
+                _GradingModeSelector(
+                  value: selectedGradingMode,
+                  onChanged: (v) =>
+                      setDialogState(() => selectedGradingMode = v),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF4CAF50)),
+                child: const Text('Assign',
+                    style: TextStyle(color: Colors.white)),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (gradingConfirmed != true) return;
+
     final assignResult = await AuthService.authPost(
       '/classes/${widget.classId}/assign-quiz',
-      {'quiz_id': newQuizId},
+      {
+        'quiz_id': newQuizId,
+        'grading_mode': selectedGradingMode,
+      },
     );
 
     if (!mounted) return;
@@ -929,7 +1015,6 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
     final totalQuizzes = summary['total_quizzes'] ?? 0;
     final classAverage =
         (summary['class_average_percentage'] ?? 0).toDouble();
-    final studentsWithAttempts = summary['students_with_attempts'] ?? 0;
 
     return RefreshIndicator(
       onRefresh: _loadStudentPerformance,
@@ -941,44 +1026,38 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
             // ── Summary cards ──
             Padding(
               padding: const EdgeInsets.all(16),
-              child: Column(
+              child: Row(
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildSummaryCard(
-                          'Total Students',
-                          totalStudents.toString(),
-                          Icons.people,
-                          const Color(0xFF6C63FF),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _buildSummaryCard(
-                          'Total Quizzes',
-                          totalQuizzes.toString(),
-                          Icons.quiz,
-                          const Color(0xFF4CAF50),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _buildSummaryCard(
-                          'Class Average',
-                          '${classAverage.toStringAsFixed(1)}%',
-                          Icons.percent,
-                          classAverage >= 75
-                              ? const Color(0xFF4CAF50)
-                              : classAverage >= 50
-                                  ? Colors.orange
-                                  : Colors.red,
-                        ),
-                      ),
-                    ],
+                  Expanded(
+                    child: _buildSummaryCard(
+                      'Total Students',
+                      totalStudents.toString(),
+                      Icons.people,
+                      const Color(0xFF6C63FF),
+                    ),
                   ),
-                  // const SizedBox(height: 12),
-                  
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildSummaryCard(
+                      'Total Quizzes',
+                      totalQuizzes.toString(),
+                      Icons.quiz,
+                      const Color(0xFF4CAF50),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildSummaryCard(
+                      'Class Average',
+                      '${classAverage.toStringAsFixed(1)}%',
+                      Icons.percent,
+                      classAverage >= 75
+                          ? const Color(0xFF4CAF50)
+                          : classAverage >= 50
+                              ? Colors.orange
+                              : Colors.red,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -1240,12 +1319,13 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
 
   Widget _buildQuizCard(Map<String, dynamic> quiz) {
     final dueDate = quiz['pivot']?['due_date'];
-    final parsedDue =
-        dueDate != null ? DateTime.tryParse(dueDate) : null;
-    final isOverdue =
-        parsedDue != null && parsedDue.isBefore(DateTime.now());
-    final dueDateColor =
-        isOverdue ? Colors.red : Colors.orange.shade700;
+    final parsedDue = dueDate != null ? DateTime.tryParse(dueDate) : null;
+    final isOverdue = parsedDue != null && parsedDue.isBefore(DateTime.now());
+    final dueDateColor = isOverdue ? Colors.red : Colors.orange.shade700;
+
+    final gradingMode = quiz['pivot']?['grading_mode'] ?? 'automatic';
+    final isManual = gradingMode == 'manual';
+    final hasAttempts = (quiz['class_attempts_count'] ?? 0) > 0;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -1276,12 +1356,10 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      color:
-                          const Color(0xFF4CAF50).withOpacity(0.1),
+                      color: const Color(0xFF4CAF50).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.quiz,
-                        color: Color(0xFF4CAF50)),
+                    child: const Icon(Icons.quiz, color: Color(0xFF4CAF50)),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -1297,39 +1375,37 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                           ),
                         ),
                         const SizedBox(height: 4),
-                        Row(
+                        // ── Status badges row ──
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 4,
                           children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: quiz['is_published'] == true
-                                    ? Colors.green.withOpacity(0.1)
-                                    : Colors.grey.withOpacity(0.1),
-                                borderRadius:
-                                    BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                quiz['is_published'] == true
-                                    ? 'Published'
-                                    : 'Draft',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: quiz['is_published'] == true
-                                      ? Colors.green
-                                      : Colors.grey,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
+                            // Published / Draft badge
+                            _buildBadge(
+                              label: quiz['is_published'] == true
+                                  ? 'Published'
+                                  : 'Draft',
+                              color: quiz['is_published'] == true
+                                  ? Colors.green
+                                  : Colors.grey,
                             ),
-                            const SizedBox(width: 8),
-                            Text(
-                              '${quiz['questions_count'] ?? 0} questions',
-                              style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey.shade600),
+                            // Grading mode badge
+                            _buildBadge(
+                              label: isManual ? 'Manual' : 'Auto',
+                              color: isManual
+                                  ? const Color(0xFF6C63FF)
+                                  : const Color(0xFF4CAF50),
+                              icon: isManual
+                                  ? Icons.rate_review_outlined
+                                  : Icons.bolt,
                             ),
                           ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${quiz['questions_count'] ?? 0} questions',
+                          style: TextStyle(
+                              fontSize: 12, color: Colors.grey.shade600),
                         ),
                         const SizedBox(height: 4),
                         if (parsedDue != null)
@@ -1372,12 +1448,44 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
               ),
               const Divider(height: 20),
               Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
+                  // ── Lock indicator when attempts exist ──
+                  if (hasAttempts)
+                    Tooltip(
+                      message: isManual
+                          ? 'Grading mode locked — attempts exist'
+                          : 'Has attempts',
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.lock_outline,
+                            size: 14,
+                            color: Colors.orange.shade700,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            isManual
+                                ? 'Locked · Manual'
+                                : 'Has attempts',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.orange.shade700,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    const SizedBox.shrink(),
+
+                  // ── Actions menu ──
                   PopupMenuButton<String>(
                     icon: const Icon(Icons.more_vert, color: Colors.grey),
                     onSelected: (value) {
-                      if (value == 'view_results')_viewClassQuizResults(quiz);
+                      if (value == 'view_results') _viewClassQuizResults(quiz);
                       if (value == 'edit_due') _editDueDate(quiz);
                       if (value == 'remove') _unassignQuiz(quiz);
                     },
@@ -1404,7 +1512,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                           ],
                         ),
                       ),
-                      if ((quiz['class_attempts_count'] ?? 0) == 0)
+                      if (!hasAttempts)
                         const PopupMenuItem(
                           value: 'remove',
                           child: Row(
@@ -1419,23 +1527,6 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                         ),
                     ],
                   ),
-                  if ((quiz['class_attempts_count'] ?? 0) > 0)
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.lock_outline,
-                            size: 14, color: Colors.orange.shade700),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Has attempts',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.orange.shade700,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
                 ],
               ),
             ],
@@ -1448,6 +1539,37 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
   // ─────────────────────────────────────────────────────────────────────────────
   // Reusable small widgets
   // ─────────────────────────────────────────────────────────────────────────────
+
+  Widget _buildBadge({
+    required String label,
+    required Color color,
+    IconData? icon,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 11, color: color),
+            const SizedBox(width: 3),
+          ],
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: color,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildSummaryCard(
       String label, String value, IconData icon, Color color) {
@@ -1535,6 +1657,108 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
           fontWeight: fontWeight ?? FontWeight.normal,
         ),
         overflow: TextOverflow.ellipsis,
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Grading Mode Selector Widget
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _GradingModeSelector extends StatelessWidget {
+  final String value;
+  final ValueChanged<String> onChanged;
+
+  const _GradingModeSelector({
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: _ModeOption(
+            label: 'Automatic',
+            description: 'Instant scoring',
+            icon: Icons.bolt,
+            color: const Color(0xFF4CAF50),
+            selected: value == 'automatic',
+            onTap: () => onChanged('automatic'),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _ModeOption(
+            label: 'Manual',
+            description: 'Teacher reviews',
+            icon: Icons.rate_review_outlined,
+            color: const Color(0xFF6C63FF),
+            selected: value == 'manual',
+            onTap: () => onChanged('manual'),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ModeOption extends StatelessWidget {
+  final String label;
+  final String description;
+  final IconData icon;
+  final Color color;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _ModeOption({
+    required this.label,
+    required this.description,
+    required this.icon,
+    required this.color,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: selected ? color.withOpacity(0.1) : Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: selected ? color : Colors.grey.shade300,
+            width: selected ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: selected ? color : Colors.grey, size: 22),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                color: selected ? color : Colors.grey.shade600,
+              ),
+            ),
+            Text(
+              description,
+              style: TextStyle(
+                fontSize: 10,
+                color: selected ? color.withOpacity(0.8) : Colors.grey.shade500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }

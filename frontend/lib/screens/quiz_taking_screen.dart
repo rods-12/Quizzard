@@ -76,7 +76,7 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
 
   @override
   void dispose() {
-    _dotsScrollController.dispose(); // <-- don't forget to dispose
+    _dotsScrollController.dispose();
     super.dispose();
   }
 
@@ -97,18 +97,16 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
   void _scrollToCurrentDot() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_dotsScrollController.hasClients) return;
-      
+
       final viewportWidth = _dotsScrollController.position.viewportDimension;
       final maxScroll = _dotsScrollController.position.maxScrollExtent;
-      
-      // Find the center position of the current dot
-      // Dot width varies (32 or 36) + margin 8, so we estimate 44
+
       const double estimatedDotWidth = 44.0;
-      
-      final double targetOffset = (_currentIndex * estimatedDotWidth) 
-          - (viewportWidth / 2) 
-          + (estimatedDotWidth / 2);
-      
+
+      final double targetOffset = (_currentIndex * estimatedDotWidth) -
+          (viewportWidth / 2) +
+          (estimatedDotWidth / 2);
+
       _dotsScrollController.animateTo(
         targetOffset.clamp(0.0, maxScroll),
         duration: const Duration(milliseconds: 300),
@@ -126,7 +124,6 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
   }
 
   Future<void> _confirmSubmit() async {
-    // Count unanswered questions
     final unanswered = _questions.where((q) => !_isAnswered(q['id'])).length;
 
     final confirm = await showDialog<bool>(
@@ -214,15 +211,32 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
 
     setState(() => _isSubmitting = false);
 
+    if (!mounted) return;
+
     if (result['success']) {
-      if (!mounted) return;
-      Navigator.pushReplacementNamed(
-        context,
-        '/quiz-result',
-        arguments: result['data'],
-      );
+      final data = result['data'] as Map<String, dynamic>;
+      final status = data['status'] as String? ?? '';
+
+      // Manual grading mode — go to pending review screen
+      if (status == 'submitted' || status == 'under_review') {
+        final attemptId = data['attempt_id'] ?? _attemptId;
+        Navigator.pushReplacementNamed(
+          context,
+          '/pending-review',
+          arguments: {
+            'attempt_id': int.parse(attemptId.toString()),
+            'quiz_title': widget.quizTitle,
+          },
+        );
+      } else {
+        // Automatic grading — go to result screen as before
+        Navigator.pushReplacementNamed(
+          context,
+          '/quiz-result',
+          arguments: data,
+        );
+      }
     } else {
-      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(result['message']),
@@ -329,7 +343,6 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
                 ],
               ),
               const SizedBox(height: 8),
-              // Progress bar
               ClipRRect(
                 borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(
@@ -376,8 +389,9 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
                               color: isCurrent || isAnswered
                                   ? Colors.white
                                   : Colors.grey.shade700,
-                              fontWeight:
-                                  isCurrent ? FontWeight.bold : FontWeight.w500,
+                              fontWeight: isCurrent
+                                  ? FontWeight.bold
+                                  : FontWeight.w500,
                               fontSize: isCurrent ? 14 : 12,
                             ),
                           ),
@@ -405,7 +419,6 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              // Previous button
               if (_currentIndex > 0)
                 Expanded(
                   child: OutlinedButton.icon(
@@ -423,7 +436,6 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
                 ),
               if (_currentIndex > 0) const SizedBox(width: 12),
 
-              // Next / Submit button
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: _isSubmitting
@@ -437,7 +449,9 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
                         : Icons.check_circle,
                   ),
                   label: Text(
-                    _currentIndex < totalQuestions - 1 ? 'Next' : 'Submit Quiz',
+                    _currentIndex < totalQuestions - 1
+                        ? 'Next'
+                        : 'Submit Quiz',
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: (_currentIndex < totalQuestions - 1)
@@ -463,28 +477,28 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
     switch (qType) {
       case 'multiple_choice':
         return MultipleChoiceWidget(
-          key: ValueKey(questionId), // <-- add this
+          key: ValueKey(questionId),
           question: question,
           selectedAnswerId: _answers[questionId] as int?,
           onAnswerSelected: (id) => setState(() => _answers[questionId] = id),
         );
       case 'true_false':
         return TrueFalseWidget(
-          key: ValueKey(questionId), // <-- add this
+          key: ValueKey(questionId),
           question: question,
           selectedAnswerId: _answers[questionId] as int?,
           onAnswerSelected: (id) => setState(() => _answers[questionId] = id),
         );
       case 'identification':
         return IdentificationWidget(
-          key: ValueKey(questionId), // <-- add this
+          key: ValueKey(questionId),
           question: question,
           currentAnswer: _answers[questionId] as String? ?? '',
           onAnswerChanged: (val) => setState(() => _answers[questionId] = val),
         );
       case 'matching':
         return MatchingWidget(
-          key: ValueKey(questionId), // <-- add this
+          key: ValueKey(questionId),
           question: question,
           currentAnswers: _answers[questionId] as Map<String, String>?,
           onAnswerChanged: (matches) =>
