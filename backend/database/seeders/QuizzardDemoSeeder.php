@@ -321,8 +321,12 @@ class QuizzardDemoSeeder extends Seeder
 
             foreach ($picked as $quizId) {
                 $classQuizRows[] = [
-                    'class_id' => $classId,
-                    'quiz_id'  => $quizId,
+                    'class_id'     => $classId,
+                    'quiz_id'      => $quizId,
+                    'grading_mode' => rand(0, 2) === 0 ? 'manual' : 'automatic', // ~33% manual
+                    'assigned_at'  => $now,
+                    'created_at'   => $now,
+                    'updated_at'   => $now,
                 ];
             }
         }
@@ -345,6 +349,7 @@ class QuizzardDemoSeeder extends Seeder
 
         $classStudents = DB::table('class_students')->get()->groupBy('class_id');
         $classQuizzes  = DB::table('class_quizzes')->get()->groupBy('class_id');
+        $classQuizGradingMode = DB::table('class_quizzes')->get()->groupBy('class_id')->map(fn($rows) => $rows->pluck('grading_mode', 'quiz_id')->toArray())->toArray();
 
         foreach ($classroomIds as $classId) {
             $studentsInClass = isset($classStudents[$classId])
@@ -360,13 +365,22 @@ class QuizzardDemoSeeder extends Seeder
                 foreach ($studentsInClass as $studentId) {
                     if (rand(0, 1) === 1) {
                         $status = rand(0, 1) === 1 ? 'reviewed' : 'submitted';
+                        $gradingMode = $classQuizGradingMode[$classId][$quizId] ?? 'automatic';
+                        if ($gradingMode === 'manual') {
+                            // Manual: random between submitted, under_review, reviewed
+                            $status = ['submitted', 'under_review', 'reviewed'][rand(0, 2)];
+                        } else {
+                            // Automatic: always reviewed
+                            $status = 'reviewed';
+                        }
                         $attemptRows[] = [
                             'quiz_id'          => $quizId,
                             'student_id'       => $studentId,
-                            'score'            => rand(0, $totalPoints),
+                            'score'            => $status === 'reviewed' ? rand(0, $totalPoints) : 0,
                             'total_points'     => $totalPoints,
                             'status'           => $status,
                             'reviewed_at'      => $status === 'reviewed' ? $now : null,
+                            'reviewed_by'      => null,
                             'teacher_feedback' => $status === 'reviewed' ? 'Great job on this quiz!' : null,
                             'started_at'       => $now,
                             'completed_at'     => $now,
