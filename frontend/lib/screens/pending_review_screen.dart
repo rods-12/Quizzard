@@ -162,9 +162,10 @@ class _PendingReviewScreenState extends State<PendingReviewScreen> {
       );
     }
 
-    final attempt = _attemptData!['attempt'] as Map<String, dynamic>;
+    
+    final attempt = _attemptData!['attempt'] != null? Map<String, dynamic>.from(_attemptData!['attempt']): <String, dynamic>{};
     final answers = _attemptData!['answers'] as List? ?? [];
-    final status = attempt['status'] as String;
+    final status = attempt['status'] as String? ?? 'submitted';
 
     return RefreshIndicator(
       onRefresh: _loadAttempt,

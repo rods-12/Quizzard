@@ -287,6 +287,94 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
     }
   }
 
+
+  Future<void> _editGradingMode(Map<String, dynamic> quiz) async {
+    final currentMode = quiz['pivot']?['grading_mode'] ?? 'automatic';
+    String selectedMode = currentMode;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: const Text('Edit Grading Mode'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Change how student answers are graded for this class.'),
+                const SizedBox(height: 16),
+                _GradingModeSelector(
+                  value: selectedMode,
+                  onChanged: (v) => setDialogState(() => selectedMode = v),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF4CAF50)),
+                child: const Text('Save', style: TextStyle(color: Colors.white)),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (confirmed != true) return;
+    if (selectedMode == currentMode) return;
+
+    final result = await AuthService.authPatch(
+      '/classes/${widget.classId}/quizzes/${quiz['id']}/grading-mode',
+      {'grading_mode': selectedMode},
+    );
+
+    if (!mounted) return;
+
+    if (result['success'] == true) {
+      _loadClassDetail();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Grading mode updated to ${selectedMode == 'manual' ? 'Manual' : 'Automatic'}!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message'] ?? 'Failed to update grading mode'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+
+
+  void _goToReviewSubmissions(Map<String, dynamic> quiz) async {
+    await Navigator.pushNamed(
+      context,
+      '/manual-review-students',
+      arguments: {
+        'class_id': widget.classId,
+        'class_name': widget.className,
+        'quiz_id': quiz['id'],
+        'quiz_title': quiz['title'],
+      },
+    );
+    _loadClassDetail();
+  }
+
+
+
+
   // ── Assign existing quiz ────────────────────────────────────────────────────
 
   Future<void> _assignQuiz() async {
@@ -1487,6 +1575,8 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                     onSelected: (value) {
                       if (value == 'view_results') _viewClassQuizResults(quiz);
                       if (value == 'edit_due') _editDueDate(quiz);
+                      if (value == 'edit_grading_mode') _editGradingMode(quiz);
+                      if (value == 'review_submissions') _goToReviewSubmissions(quiz); 
                       if (value == 'remove') _unassignQuiz(quiz);
                     },
                     itemBuilder: (context) => [
@@ -1512,6 +1602,28 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                           ],
                         ),
                       ),
+                      const PopupMenuItem(
+                        value: 'edit_grading_mode',
+                        child: Row(
+                          children: [
+                            Icon(Icons.tune, size: 18, color: Color(0xFF6C63FF)),
+                            SizedBox(width: 8),
+                            Text('Edit Grading Mode'),
+                          ],
+                        ),
+                      ),
+                      if (isManual)
+                        const PopupMenuItem(
+                          value: 'review_submissions',
+                          child: Row(
+                            children: [
+                              Icon(Icons.rate_review_outlined, size: 18, color: Color(0xFF6C63FF)),
+                              SizedBox(width: 8),
+                              Text('Review Submissions',
+                                  style: TextStyle(color: Color(0xFF6C63FF))),
+                            ],
+                          ),
+                        ),
                       if (!hasAttempts)
                         const PopupMenuItem(
                           value: 'remove',
@@ -1527,6 +1639,10 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                         ),
                     ],
                   ),
+                 
+
+
+
                 ],
               ),
             ],

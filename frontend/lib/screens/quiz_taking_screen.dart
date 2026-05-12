@@ -172,7 +172,6 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
 
   Future<void> _submitQuiz() async {
     setState(() => _isSubmitting = true);
-
     // Build answers list for API
     final answersList = [];
     for (var question in _questions) {
@@ -210,26 +209,28 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
     );
 
     setState(() => _isSubmitting = false);
+    print('DEBUG full result: $result');
+    print('DEBUG submit result: ${result['data']}');
 
     if (!mounted) return;
 
-    if (result['success']) {
-      final data = result['data'] as Map<String, dynamic>;
-      final status = data['status'] as String? ?? '';
+    final isManualPending = result['success'] == false &&
+    (result['message'] as String? ?? '').toLowerCase().contains('pending');
 
-      // Manual grading mode — go to pending review screen
-      if (status == 'submitted' || status == 'under_review') {
-        final attemptId = data['attempt_id'] ?? _attemptId;
+    if (result['success'] == true || isManualPending) {
+      final data = result['data'] != null ? Map<String, dynamic>.from(result['data']) : null;
+      final status = data?['status'] as String? ?? '';
+
+      if (isManualPending || status == 'submitted' || status == 'under_review') {
         Navigator.pushReplacementNamed(
           context,
           '/pending-review',
           arguments: {
-            'attempt_id': int.parse(attemptId.toString()),
+            'attempt_id': _attemptId,
             'quiz_title': widget.quizTitle,
           },
         );
       } else {
-        // Automatic grading — go to result screen as before
         Navigator.pushReplacementNamed(
           context,
           '/quiz-result',

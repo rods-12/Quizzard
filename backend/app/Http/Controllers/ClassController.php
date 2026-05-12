@@ -255,6 +255,44 @@ class ClassController extends Controller
         ]);
     }
 
+
+    public function updateGradingMode(Request $request, $classId, $quizId)
+    {
+        $class = ClassRoom::where('id', $classId)
+            ->where('teacher_id', $request->user()->id)
+            ->firstOrFail();
+
+        $validator = Validator::make($request->all(), [
+            'grading_mode' => 'required|string|in:automatic,manual',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        $assigned = $class->quizzes()->where('quiz_id', $quizId)->exists();
+
+        if (!$assigned) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Quiz is not assigned to this class.',
+            ], 404);
+        }
+
+        $class->quizzes()->updateExistingPivot($quizId, [
+            'grading_mode' => $request->grading_mode,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Grading mode updated successfully.',
+            'grading_mode' => $request->grading_mode,
+        ]);
+    }
+
     // Unassign a quiz from a class
     public function unassignQuiz(Request $request, $classId, $quizId)
     {

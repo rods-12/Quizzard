@@ -278,9 +278,28 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
 
     setState(() => _isFinalizing = true);
     try {
+      // ── First persist all points via save-draft ──
+      final reviews = _buildReviewPayload(requireAll: true);
+      if (reviews == null) {
+        setState(() => _isFinalizing = false);
+        return;
+      }
+
+      final draftResponse = await AuthService.authPatch(
+        '/teacher/manual-review/attempts/${widget.attemptId}/save-draft',
+        {'reviews': reviews},
+      );
+
+      if (draftResponse['success'] != true) {
+        _showSnackbar(draftResponse['message'] ?? 'Failed to save points.',
+            isError: true);
+        return;
+      }
+
+      // ── Then finalize ──
       final response = await AuthService.authPost(
         '/teacher/manual-review/attempts/${widget.attemptId}/finalize',
-        {'reviews': reviews},
+        {},
       );
       if (response['success'] == true) {
         _showSnackbar('Review finalized. Results released to student.');

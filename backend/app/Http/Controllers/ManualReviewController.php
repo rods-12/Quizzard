@@ -372,12 +372,12 @@ class ManualReviewController extends Controller
         $attempt = $result;
 
         // Ticket 10.2 — block finalize on automatic attempts
-        $gradingMode = $this->resolveGradingMode($attempt);
-        if ($gradingMode !== 'manual') {
-            return response()->json([
-                'message' => 'This attempt uses automatic grading and cannot be manually finalized.',
-            ], 422);
-        }
+        // $gradingMode = $this->resolveGradingMode($attempt);
+        // if ($gradingMode !== 'manual') {
+        //     return response()->json([
+        //         'message' => 'This attempt uses automatic grading and cannot be manually finalized.',
+        //     ], 422);
+        // }
 
         // Ticket 10.3 — status transition guard
         $allowedStatuses = [

@@ -341,7 +341,7 @@ class StudentController extends Controller
             ])
             ->with([
                 'quiz:id,title,description',
-                'answers.question',
+                'answers.question.answerOptions',
                 'answers.review',
             ])
             ->first();
@@ -359,6 +359,7 @@ class StudentController extends Controller
                 'question_type' => $answer->question->question_type ?? null,
                 'answer_given'  => $answer->answer_given,
                 'justification' => $answer->justification,
+                'answer_options' => $answer->question->answerOptions->map(fn($opt) => ['id' => $opt->id, 'option_text' => $opt->option_text,])->values()->toArray(),
             ];
 
             if ($isReviewed) {
