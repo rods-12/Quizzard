@@ -11,41 +11,35 @@ class QuestionFactory extends Factory
     {
         return [
             'quiz_id'       => Quiz::factory(),
-            'type'          => fake()->randomElement(['multiple_choice', 'true_false', 'identification', 'matching']),
+            'question_type' => fake()->randomElement(['multiple_choice', 'true_false', 'identification', 'matching']),
             'question_text' => fake()->sentence() . '?',
-            'points'        => fake()->numberBetween(1, 5),
-            'order'         => 1,
+            'media_path'    => null,
+            'media_type'    => null,
             'image_path'    => null,
             'video_path'    => null,
             'audio_path'    => null,
+            'points'        => fake()->numberBetween(1, 5),
+            'order'         => 1,
         ];
     }
 
     public function multipleChoice(): static
     {
-        return $this->state(fn(array $attributes) => [
-            'type' => 'multiple_choice',
-        ]);
+        return $this->state(fn(array $a) => ['question_type' => 'multiple_choice']);
     }
 
     public function trueFalse(): static
     {
-        return $this->state(fn(array $attributes) => [
-            'type' => 'true_false',
-        ]);
+        return $this->state(fn(array $a) => ['question_type' => 'true_false']);
     }
 
     public function identification(): static
     {
-        return $this->state(fn(array $attributes) => [
-            'type' => 'identification',
-        ]);
+        return $this->state(fn(array $a) => ['question_type' => 'identification']);
     }
 
     public function matching(): static
     {
-        return $this->state(fn(array $attributes) => [
-            'type' => 'matching',
-        ]);
+        return $this->state(fn(array $a) => ['question_type' => 'matching']);
     }
 }

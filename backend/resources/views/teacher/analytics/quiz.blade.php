@@ -1,99 +1,78 @@
 @extends('teacher.layouts.app')
 
 @section('content')
-<div class="space-y-8">
 
-    {{-- ============================================================ --}}
-    {{-- QUIZ METADATA HEADER                                         --}}
-    {{-- ============================================================ --}}
-    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-green-700 via-green-600 to-emerald-600 px-6 py-8 text-white shadow-lg sm:px-10 sm:py-10">
-        <div class="pointer-events-none absolute inset-0">
-            <div class="absolute -right-10 -top-10 h-64 w-64 rounded-full bg-white/10 blur-3xl"></div>
-            <div class="absolute bottom-0 left-10 h-40 w-40 rounded-full bg-emerald-400/20 blur-2xl"></div>
-        </div>
+    {{-- Page Header --}}
+    <div style="margin-bottom:28px;">
+        <a href="{{ route('teacher.reports.quizzes') }}"
+           style="display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-3); text-decoration:none; margin-bottom:14px;"
+           onmouseenter="this.style.color='var(--accent)'" onmouseleave="this.style.color='var(--text-3)'">
+            <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M17 10a.75.75 0 01-.75.75H5.56l3.22 3.22a.75.75 0 11-1.06 1.06l-4.5-4.5a.75.75 0 010-1.06l4.5-4.5a.75.75 0 111.06 1.06L5.56 9.25h10.69A.75.75 0 0117 10z" clip-rule="evenodd" />
+            </svg>
+            Back to Quizzes
+        </a>
+        <p style="font-size:10.5px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--accent); margin-bottom:6px;">Quiz Analytics</p>
+        <h1 style="font-size:24px; font-weight:700; color:var(--text); letter-spacing:-0.03em; line-height:1.2; margin-bottom:6px;">{{ $quiz->title }}</h1>
+        @if ($quiz->description)
+            <p style="font-size:13px; color:var(--text-2);">{{ $quiz->description }}</p>
+        @else
+            <p style="font-size:13px; color:var(--text-2);">Analytics and performance data for this quiz.</p>
+        @endif
 
-        <div class="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-            <div class="max-w-3xl">
-                <div class="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-900/40 px-3 py-1.5 text-xs font-medium uppercase tracking-widest text-emerald-100 backdrop-blur-md">
-                    <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
-                    Quiz Analytics
-                </div>
-                <h2 class="mt-5 text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                    {{ $quiz->title }}
-                </h2>
-                @if ($quiz->description)
-                    <p class="mt-3 max-w-2xl text-base leading-relaxed text-emerald-100">
-                        {{ $quiz->description }}
-                    </p>
-                @endif
-
-                <div class="mt-5 flex flex-wrap gap-3 text-sm text-emerald-100">
-                    <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-900/40 px-3 py-1 text-xs font-medium backdrop-blur-md border border-emerald-400/20">
-                        {{ $questionCount }} {{ Str::plural('Question', $questionCount) }}
-                    </span>
-                    <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-900/40 px-3 py-1 text-xs font-medium backdrop-blur-md border border-emerald-400/20">
-                        {{ $totalPoints }} Total Points
-                    </span>
-                    <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-900/40 px-3 py-1 text-xs font-medium backdrop-blur-md border border-emerald-400/20">
-                        Created {{ $quiz->created_at->format('M d, Y') }}
-                    </span>
-                    @if ($quiz->is_published)
-                        <span class="inline-flex items-center gap-1.5 rounded-full bg-green-300/20 px-3 py-1 text-xs font-semibold text-green-100 border border-green-300/30">
-                            ● Published
-                        </span>
-                    @else
-                        <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-300/20 px-3 py-1 text-xs font-semibold text-amber-100 border border-amber-300/30">
-                            ● Unpublished
-                        </span>
-                    @endif
-                </div>
-            </div>
-
-            <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-                <a href="{{ route('teacher.reports.quizzes') }}"
-                    class="inline-flex items-center justify-center rounded-lg bg-white/20 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-white/30 border border-white/20">
-                    ← Back to Quizzes
-                </a>
-            </div>
+        {{-- Meta chips --}}
+        <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:12px;">
+            <span class="chip num">{{ $questionCount }} {{ Str::plural('Question', $questionCount) }}</span>
+            <span class="chip num">{{ $totalPoints }} Total Points</span>
+            <span class="chip">Created {{ $quiz->created_at->format('M d, Y') }}</span>
+            @if ($quiz->is_published)
+                <span class="badge badge-green">Published</span>
+            @else
+                <span class="badge badge-amber">Unpublished</span>
+            @endif
         </div>
     </div>
 
     {{-- ============================================================ --}}
-    {{-- A. SUMMARY CARDS                                             --}}
+    {{-- A. PERFORMANCE SUMMARY                                       --}}
     {{-- ============================================================ --}}
-    <div class="overflow-hidden rounded-[2rem] border border-emerald-100 bg-white shadow-sm ring-1 ring-emerald-900/5">
-        <div class="border-b border-emerald-100 bg-emerald-50/50 px-6 py-5 sm:px-8">
-            <h3 class="text-lg font-bold text-gray-900">Performance Summary</h3>
-            <p class="mt-1 text-sm text-gray-500">Based on {{ $totalAttempts }} reviewed {{ Str::plural('attempt', $totalAttempts) }}. Only reviewed attempts are counted.</p>
+    <div class="card" style="overflow:hidden; margin-bottom:16px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; padding:18px 22px; border-bottom:1px solid var(--border);">
+            <div>
+                <p style="font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent); margin-bottom:4px;">Overview</p>
+                <h2 style="font-size:14px; font-weight:700; color:var(--text); margin-bottom:2px;">Performance Summary</h2>
+                <p style="font-size:12px; color:var(--text-2);">Based on <span class="num">{{ $totalAttempts }}</span> reviewed {{ Str::plural('attempt', $totalAttempts) }}. Only reviewed attempts are counted.</p>
+            </div>
         </div>
 
         @if ($totalAttempts === 0)
-            <div class="px-6 py-16 sm:px-8 text-center">
-                <svg class="mx-auto mb-4 h-10 w-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 17v-2a4 4 0 014-4h0a4 4 0 014 4v2M7 17v-2a6 6 0 016-6h0a6 6 0 016 6v2M3 21h18"/>
-                </svg>
-                <p class="text-sm font-medium text-gray-400">No reviewed attempts yet.</p>
-                <p class="mt-1 text-xs text-gray-300">Summary will appear once at least one attempt has been graded.</p>
+            <div style="padding:64px 24px; text-align:center;">
+                <div style="display:inline-flex; align-items:center; justify-content:center; width:52px; height:52px; border-radius:14px; background:var(--accent-bg); margin-bottom:16px;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 17v-2a4 4 0 014-4h0a4 4 0 014 4v2M7 17v-2a6 6 0 016-6h0a6 6 0 016 6v2M3 21h18"/>
+                    </svg>
+                </div>
+                <p style="font-size:14px; font-weight:700; color:var(--text); margin-bottom:6px;">No reviewed attempts yet</p>
+                <p style="font-size:12px; color:var(--text-2);">Summary will appear once at least one attempt has been graded.</p>
             </div>
         @else
-            <div class="grid grid-cols-2 gap-px bg-emerald-100 sm:grid-cols-3 lg:grid-cols-7">
-                @php
-                    $cards = [
-                        ['label' => 'Total Attempts',  'value' => $totalAttempts,                            'suffix' => ''],
-                        ['label' => 'Avg Score',        'value' => number_format($avgScore, 2),               'suffix' => ' pts'],
-                        ['label' => 'Avg Percentage',   'value' => number_format($avgPct, 2),                 'suffix' => '%'],
-                        ['label' => 'Highest Score',    'value' => number_format($summary->highest_score, 2), 'suffix' => ' pts'],
-                        ['label' => 'Lowest Score',     'value' => number_format($summary->lowest_score, 2),  'suffix' => ' pts'],
-                        ['label' => 'Pass Rate',        'value' => number_format($passRate, 2),               'suffix' => '%', 'color' => 'text-emerald-600'],
-                        ['label' => 'Fail Rate',        'value' => number_format($failRate, 2),               'suffix' => '%', 'color' => 'text-red-500'],
-                    ];
-                @endphp
-
+            @php
+                $cards = [
+                    ['label' => 'Total Attempts', 'value' => $totalAttempts,                            'suffix' => '',     'color' => 'var(--text)'],
+                    ['label' => 'Avg Score',       'value' => number_format($avgScore, 2),               'suffix' => ' pts', 'color' => 'var(--text)'],
+                    ['label' => 'Avg Percentage',  'value' => number_format($avgPct, 2),                 'suffix' => '%',    'color' => 'var(--text)'],
+                    ['label' => 'Highest Score',   'value' => number_format($summary->highest_score, 2), 'suffix' => ' pts', 'color' => 'var(--accent)'],
+                    ['label' => 'Lowest Score',    'value' => number_format($summary->lowest_score, 2),  'suffix' => ' pts', 'color' => 'var(--danger)'],
+                    ['label' => 'Pass Rate',       'value' => number_format($passRate, 2),               'suffix' => '%',    'color' => 'var(--accent)'],
+                    ['label' => 'Fail Rate',       'value' => number_format($failRate, 2),               'suffix' => '%',    'color' => 'var(--danger)'],
+                ];
+            @endphp
+            <div class="summary-grid">
                 @foreach ($cards as $card)
-                    <div class="bg-white px-5 py-6 text-center">
-                        <p class="text-xs font-medium uppercase tracking-wider text-gray-500">{{ $card['label'] }}</p>
-                        <p class="mt-2 text-2xl font-bold {{ $card['color'] ?? 'text-gray-900' }}">
-                            {{ $card['value'] }}<span class="text-base font-medium text-gray-400">{{ $card['suffix'] }}</span>
+                    <div style="padding:20px 18px; text-align:center; border-right:1px solid var(--border); border-bottom:1px solid var(--border);">
+                        <p style="font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-3); margin-bottom:8px;">{{ $card['label'] }}</p>
+                        <p style="font-size:22px; font-weight:700; color:{{ $card['color'] }}; line-height:1;" class="num">
+                            {{ $card['value'] }}<span style="font-size:13px; font-weight:500; color:var(--text-3);">{{ $card['suffix'] }}</span>
                         </p>
                     </div>
                 @endforeach
@@ -105,48 +84,52 @@
     {{-- B & C. TOP / LOWEST PERFORMING STUDENTS                      --}}
     {{-- ============================================================ --}}
     @if ($totalAttempts > 0)
-        <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div class="performers-grid" style="margin-bottom:16px;">
 
             {{-- Top 10 --}}
-            <div class="overflow-hidden rounded-[2rem] border border-emerald-100 bg-white shadow-sm ring-1 ring-emerald-900/5">
-                <div class="border-b border-emerald-100 bg-emerald-50/50 px-6 py-5 sm:px-8">
-                    <h3 class="text-lg font-bold text-gray-900">Top 10 Performers</h3>
-                    <p class="mt-1 text-sm text-gray-500">Highest scoring reviewed attempts.</p>
+            <div class="card" style="overflow:hidden;">
+                <div style="padding:18px 22px; border-bottom:1px solid var(--border);">
+                    <p style="font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent); margin-bottom:4px;">Rankings</p>
+                    <h2 style="font-size:14px; font-weight:700; color:var(--text); margin-bottom:2px;">Top 10 Performers</h2>
+                    <p style="font-size:12px; color:var(--text-2);">Highest scoring reviewed attempts.</p>
                 </div>
                 @if ($topPerformers->isEmpty())
-                    <div class="px-6 py-12 text-center">
-                        <p class="text-sm text-gray-400">No performer data available.</p>
+                    <div style="padding:40px 24px; text-align:center;">
+                        <p style="font-size:13px; color:var(--text-3);">No performer data available.</p>
                     </div>
                 @else
-                    <div class="overflow-x-auto">
-                        <table id="topTable" class="min-w-full divide-y divide-emerald-100">
-                            <thead class="bg-gray-50/50">
-                                <tr>
+                    <div style="overflow-x:auto;">
+                        <table id="topTable" style="width:100%; border-collapse:collapse;">
+                            <thead>
+                                <tr style="border-bottom:1px solid var(--border);">
                                     @foreach (['Rank', 'Student', 'Score', 'Percentage', 'Reviewed'] as $i => $col)
                                         <th onclick="sortTable('topTable', {{ $i }})"
-                                            class="cursor-pointer whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 hover:bg-slate-100">
-                                            {{ $col }} <span class="sort-icon">↕</span>
+                                            style="padding:10px {{ $i === 0 ? '22px' : '14px' }}; text-align:left; font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-3); cursor:pointer; white-space:nowrap; user-select:none;"
+                                            onmouseenter="this.style.color='var(--text-2)'" onmouseleave="this.style.color='var(--text-3)'">
+                                            {{ $col }} <span class="sort-icon" style="font-size:9px; margin-left:2px;">↕</span>
                                         </th>
                                     @endforeach
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-emerald-50 bg-white">
+                            <tbody>
                                 @foreach ($topPerformers as $i => $row)
-                                    <tr class="transition-colors duration-150 hover:bg-emerald-50/50">
-                                        <td class="whitespace-nowrap px-4 py-3 text-sm font-semibold text-gray-500">
-                                            {{ $i + 1 }}
+                                    <tr class="divider"
+                                        onmouseenter="this.style.background='rgba(255,255,255,0.018)'"
+                                        onmouseleave="this.style.background='transparent'">
+                                        <td style="padding:11px 22px; white-space:nowrap;">
+                                            <span class="num" style="font-size:12px; font-weight:700; color:var(--accent);">{{ $i + 1 }}</span>
                                         </td>
-                                        <td class="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-900">
+                                        <td style="padding:11px 14px; white-space:nowrap; font-size:13px; font-weight:600; color:var(--text);">
                                             {{ $row->name }}
                                         </td>
-                                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
-                                            {{ $row->score }} / {{ $row->total_points }}
+                                        <td style="padding:11px 14px; white-space:nowrap;" data-value="{{ $row->score }}">
+                                            <span class="num" style="font-size:13px; color:var(--text);">{{ $row->score }}</span>
+                                            <span style="font-size:12px; color:var(--text-3);">/ {{ $row->total_points }}</span>
                                         </td>
-                                        <td class="whitespace-nowrap px-4 py-3 text-sm font-semibold text-emerald-600"
-                                            data-value="{{ $row->percentage }}">
-                                            {{ number_format($row->percentage, 2) }}%
+                                        <td style="padding:11px 14px; white-space:nowrap;" data-value="{{ $row->percentage }}">
+                                            <span class="badge badge-green num">{{ number_format($row->percentage, 2) }}%</span>
                                         </td>
-                                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
+                                        <td style="padding:11px 14px; white-space:nowrap; font-size:12px; color:var(--text-3);">
                                             {{ $row->reviewed_at ? \Carbon\Carbon::parse($row->reviewed_at)->format('M d, Y') : '—' }}
                                         </td>
                                     </tr>
@@ -158,45 +141,49 @@
             </div>
 
             {{-- Bottom 10 --}}
-            <div class="overflow-hidden rounded-[2rem] border border-red-100 bg-white shadow-sm ring-1 ring-red-900/5">
-                <div class="border-b border-red-100 bg-red-50/50 px-6 py-5 sm:px-8">
-                    <h3 class="text-lg font-bold text-gray-900">Lowest 10 Performers</h3>
-                    <p class="mt-1 text-sm text-gray-500">Students who may need additional support.</p>
+            <div class="card" style="overflow:hidden;">
+                <div style="padding:18px 22px; border-bottom:1px solid var(--border);">
+                    <p style="font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--danger); margin-bottom:4px;">Needs Support</p>
+                    <h2 style="font-size:14px; font-weight:700; color:var(--text); margin-bottom:2px;">Lowest 10 Performers</h2>
+                    <p style="font-size:12px; color:var(--text-2);">Students who may need additional support.</p>
                 </div>
                 @if ($lowestPerformers->isEmpty())
-                    <div class="px-6 py-12 text-center">
-                        <p class="text-sm text-gray-400">No performer data available.</p>
+                    <div style="padding:40px 24px; text-align:center;">
+                        <p style="font-size:13px; color:var(--text-3);">No performer data available.</p>
                     </div>
                 @else
-                    <div class="overflow-x-auto">
-                        <table id="bottomTable" class="min-w-full divide-y divide-red-100">
-                            <thead class="bg-gray-50/50">
-                                <tr>
+                    <div style="overflow-x:auto;">
+                        <table id="bottomTable" style="width:100%; border-collapse:collapse;">
+                            <thead>
+                                <tr style="border-bottom:1px solid var(--border);">
                                     @foreach (['Rank', 'Student', 'Score', 'Percentage', 'Reviewed'] as $i => $col)
                                         <th onclick="sortTable('bottomTable', {{ $i }})"
-                                            class="cursor-pointer whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 hover:bg-slate-100">
-                                            {{ $col }} <span class="sort-icon">↕</span>
+                                            style="padding:10px {{ $i === 0 ? '22px' : '14px' }}; text-align:left; font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-3); cursor:pointer; white-space:nowrap; user-select:none;"
+                                            onmouseenter="this.style.color='var(--text-2)'" onmouseleave="this.style.color='var(--text-3)'">
+                                            {{ $col }} <span class="sort-icon" style="font-size:9px; margin-left:2px;">↕</span>
                                         </th>
                                     @endforeach
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-red-50 bg-white">
+                            <tbody>
                                 @foreach ($lowestPerformers as $i => $row)
-                                    <tr class="transition-colors duration-150 hover:bg-red-50/50">
-                                        <td class="whitespace-nowrap px-4 py-3 text-sm font-semibold text-gray-500">
-                                            {{ $i + 1 }}
+                                    <tr class="divider"
+                                        onmouseenter="this.style.background='rgba(255,255,255,0.018)'"
+                                        onmouseleave="this.style.background='transparent'">
+                                        <td style="padding:11px 22px; white-space:nowrap;">
+                                            <span class="num" style="font-size:12px; font-weight:700; color:var(--danger);">{{ $i + 1 }}</span>
                                         </td>
-                                        <td class="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-900">
+                                        <td style="padding:11px 14px; white-space:nowrap; font-size:13px; font-weight:600; color:var(--text);">
                                             {{ $row->name }}
                                         </td>
-                                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
-                                            {{ $row->score }} / {{ $row->total_points }}
+                                        <td style="padding:11px 14px; white-space:nowrap;" data-value="{{ $row->score }}">
+                                            <span class="num" style="font-size:13px; color:var(--text);">{{ $row->score }}</span>
+                                            <span style="font-size:12px; color:var(--text-3);">/ {{ $row->total_points }}</span>
                                         </td>
-                                        <td class="whitespace-nowrap px-4 py-3 text-sm font-semibold text-red-500"
-                                            data-value="{{ $row->percentage }}">
-                                            {{ number_format($row->percentage, 2) }}%
+                                        <td style="padding:11px 14px; white-space:nowrap;" data-value="{{ $row->percentage }}">
+                                            <span class="badge badge-rose num">{{ number_format($row->percentage, 2) }}%</span>
                                         </td>
-                                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
+                                        <td style="padding:11px 14px; white-space:nowrap; font-size:12px; color:var(--text-3);">
                                             {{ $row->reviewed_at ? \Carbon\Carbon::parse($row->reviewed_at)->format('M d, Y') : '—' }}
                                         </td>
                                     </tr>
@@ -214,37 +201,41 @@
     {{-- D & E. CHARTS: SCORE DISTRIBUTION + PASS VS FAIL             --}}
     {{-- ============================================================ --}}
     @if ($totalAttempts > 0)
-        @php
-            $allZero = array_sum(array_values($distribution)) === 0;
-        @endphp
-        <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        @php $allZero = array_sum(array_values($distribution)) === 0; @endphp
+        <div class="performers-grid" style="margin-bottom:16px;">
 
-            {{-- D: Score Distribution Bar --}}
-            <div class="overflow-hidden rounded-[2rem] border border-emerald-100 bg-white shadow-sm ring-1 ring-emerald-900/5">
-                <div class="border-b border-emerald-100 bg-emerald-50/50 px-6 py-5 sm:px-8">
-                    <h3 class="text-lg font-bold text-gray-900">Score Distribution</h3>
-                    <p class="mt-1 text-sm text-gray-500">Number of students per score range (%).</p>
+            {{-- D: Score Distribution --}}
+            <div class="card" style="overflow:hidden;">
+                <div style="padding:18px 22px; border-bottom:1px solid var(--border);">
+                    <p style="font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent); margin-bottom:4px;">Distribution</p>
+                    <h2 style="font-size:14px; font-weight:700; color:var(--text); margin-bottom:2px;">Score Distribution</h2>
+                    <p style="font-size:12px; color:var(--text-2);">Number of students per score range (%).</p>
                 </div>
-                <div class="px-6 py-6 sm:px-8">
+                <div style="padding:22px;">
                     @if ($allZero)
-                        <p class="py-8 text-center text-sm text-gray-400">No distribution data to display.</p>
+                        <div style="padding:40px 0; text-align:center;">
+                            <p style="font-size:13px; color:var(--text-3);">No distribution data to display.</p>
+                        </div>
                     @else
                         <canvas id="distributionChart" height="220"></canvas>
                     @endif
                 </div>
             </div>
 
-            {{-- E: Pass vs Fail Doughnut --}}
-            <div class="overflow-hidden rounded-[2rem] border border-emerald-100 bg-white shadow-sm ring-1 ring-emerald-900/5">
-                <div class="border-b border-emerald-100 bg-emerald-50/50 px-6 py-5 sm:px-8">
-                    <h3 class="text-lg font-bold text-gray-900">Pass vs Fail</h3>
-                    <p class="mt-1 text-sm text-gray-500">Based on 60% passing threshold.</p>
+            {{-- E: Pass vs Fail --}}
+            <div class="card" style="overflow:hidden;">
+                <div style="padding:18px 22px; border-bottom:1px solid var(--border);">
+                    <p style="font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent); margin-bottom:4px;">Outcome</p>
+                    <h2 style="font-size:14px; font-weight:700; color:var(--text); margin-bottom:2px;">Pass vs Fail</h2>
+                    <p style="font-size:12px; color:var(--text-2);">Based on 60% passing threshold.</p>
                 </div>
-                <div class="flex items-center justify-center px-6 py-6 sm:px-8">
+                <div style="display:flex; align-items:center; justify-content:center; padding:22px;">
                     @if ((int) $summary->passed_count === 0 && (int) $summary->failed_count === 0)
-                        <p class="py-8 text-center text-sm text-gray-400">No pass/fail data to display.</p>
+                        <div style="padding:40px 0; text-align:center;">
+                            <p style="font-size:13px; color:var(--text-3);">No pass/fail data to display.</p>
+                        </div>
                     @else
-                        <div style="max-width: 280px; width: 100%;">
+                        <div style="max-width:260px; width:100%;">
                             <canvas id="passFailChart"></canvas>
                         </div>
                     @endif
@@ -257,96 +248,101 @@
     {{-- ============================================================ --}}
     {{-- F. QUESTION ANALYTICS                                        --}}
     {{-- ============================================================ --}}
-    <div class="overflow-hidden rounded-[2rem] border border-emerald-100 bg-white shadow-sm ring-1 ring-emerald-900/5">
-        <div class="border-b border-emerald-100 bg-emerald-50/50 px-6 py-5 sm:px-8">
-            <h3 class="text-lg font-bold text-gray-900">Question Analytics</h3>
-            <p class="mt-1 text-sm text-gray-500">
-                Correct rate, difficulty, and average earned points per question.
-                Only reviewed attempts are counted.
-            </p>
+    <div class="card" style="overflow:hidden;">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; padding:18px 22px; border-bottom:1px solid var(--border);">
+            <div>
+                <p style="font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent); margin-bottom:4px;">Per Question</p>
+                <h2 style="font-size:14px; font-weight:700; color:var(--text); margin-bottom:2px;">Question Analytics</h2>
+                <p style="font-size:12px; color:var(--text-2);">Correct rate, difficulty, and average earned points per question. Only reviewed attempts are counted.</p>
+            </div>
         </div>
 
         @if ($questionCount === 0)
-            <div class="px-6 py-16 text-center">
-                <svg class="mx-auto mb-4 h-10 w-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                <p class="text-sm font-medium text-gray-400">This quiz has no questions yet.</p>
+            <div style="padding:64px 24px; text-align:center;">
+                <div style="display:inline-flex; align-items:center; justify-content:center; width:52px; height:52px; border-radius:14px; background:var(--accent-bg); margin-bottom:16px;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <p style="font-size:14px; font-weight:700; color:var(--text); margin-bottom:6px;">No questions yet</p>
+                <p style="font-size:12px; color:var(--text-2);">This quiz has no questions added yet.</p>
             </div>
         @elseif ($questions->isEmpty())
-            <div class="px-6 py-16 text-center">
-                <p class="text-sm text-gray-400">No questions found for this quiz.</p>
+            <div style="padding:64px 24px; text-align:center;">
+                <p style="font-size:13px; color:var(--text-3);">No questions found for this quiz.</p>
             </div>
         @else
-            <div class="overflow-x-auto">
-                <table id="questionsTable" class="min-w-full divide-y divide-emerald-100">
-                    <thead class="bg-gray-50/50">
-                        <tr>
+            <div style="overflow-x:auto;">
+                <table id="questionsTable" style="width:100%; border-collapse:collapse; min-width:700px;">
+                    <thead>
+                        <tr style="border-bottom:1px solid var(--border);">
                             <th onclick="sortTable('questionsTable', 0)"
-                                class="cursor-pointer whitespace-nowrap px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 hover:bg-slate-100 sm:px-8">
-                                # <span class="sort-icon">↕</span>
-                            </th>
-                            <th class="whitespace-nowrap px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
-                                Question
-                            </th>
+                                style="padding:11px 22px; text-align:left; font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-3); cursor:pointer; white-space:nowrap; user-select:none;"
+                                onmouseenter="this.style.color='var(--text-2)'" onmouseleave="this.style.color='var(--text-3)'"># <span class="sort-icon" style="font-size:9px;">↕</span></th>
+                            <th style="padding:11px 14px; text-align:left; font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-3); white-space:nowrap;">Question</th>
                             <th onclick="sortTable('questionsTable', 2)"
-                                class="cursor-pointer whitespace-nowrap px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 hover:bg-slate-100">
-                                Type <span class="sort-icon">↕</span>
-                            </th>
+                                style="padding:11px 14px; text-align:left; font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-3); cursor:pointer; white-space:nowrap; user-select:none;"
+                                onmouseenter="this.style.color='var(--text-2)'" onmouseleave="this.style.color='var(--text-3)'">Type <span class="sort-icon" style="font-size:9px;">↕</span></th>
                             <th onclick="sortTable('questionsTable', 3)"
-                                class="cursor-pointer whitespace-nowrap px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 hover:bg-slate-100">
-                                Correct Rate <span class="sort-icon">↕</span>
-                            </th>
+                                style="padding:11px 14px; text-align:left; font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-3); cursor:pointer; white-space:nowrap; user-select:none;"
+                                onmouseenter="this.style.color='var(--text-2)'" onmouseleave="this.style.color='var(--text-3)'">Correct Rate <span class="sort-icon" style="font-size:9px;">↕</span></th>
                             <th onclick="sortTable('questionsTable', 4)"
-                                class="cursor-pointer whitespace-nowrap px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 hover:bg-slate-100">
-                                Incorrect Rate <span class="sort-icon">↕</span>
-                            </th>
+                                style="padding:11px 14px; text-align:left; font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-3); cursor:pointer; white-space:nowrap; user-select:none;"
+                                onmouseenter="this.style.color='var(--text-2)'" onmouseleave="this.style.color='var(--text-3)'">Incorrect Rate <span class="sort-icon" style="font-size:9px;">↕</span></th>
                             <th onclick="sortTable('questionsTable', 5)"
-                                class="cursor-pointer whitespace-nowrap px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 hover:bg-slate-100">
-                                Avg Points <span class="sort-icon">↕</span>
-                            </th>
+                                style="padding:11px 14px; text-align:left; font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-3); cursor:pointer; white-space:nowrap; user-select:none;"
+                                onmouseenter="this.style.color='var(--text-2)'" onmouseleave="this.style.color='var(--text-3)'">Avg Points <span class="sort-icon" style="font-size:9px;">↕</span></th>
                             <th onclick="sortTable('questionsTable', 6)"
-                                class="cursor-pointer whitespace-nowrap px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 hover:bg-slate-100">
-                                Difficulty <span class="sort-icon">↕</span>
-                            </th>
+                                style="padding:11px 14px; text-align:left; font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-3); cursor:pointer; white-space:nowrap; user-select:none;"
+                                onmouseenter="this.style.color='var(--text-2)'" onmouseleave="this.style.color='var(--text-3)'">Difficulty <span class="sort-icon" style="font-size:9px;">↕</span></th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-emerald-50 bg-white">
+                    <tbody>
                         @foreach ($questions as $i => $q)
-                            <tr class="transition-colors duration-150 hover:bg-emerald-50/50">
-                                <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500 sm:px-8">
-                                    {{ $i + 1 }}
+                            <tr class="divider"
+                                onmouseenter="this.style.background='rgba(255,255,255,0.018)'"
+                                onmouseleave="this.style.background='transparent'">
+                                <td style="padding:12px 22px; white-space:nowrap;">
+                                    <span class="num" style="font-size:12px; color:var(--text-3);">{{ $i + 1 }}</span>
                                 </td>
-                                <td class="px-6 py-4 text-sm text-gray-900">
+                                <td style="padding:12px 14px; font-size:13px; color:var(--text-2); max-width:300px;">
                                     {{ Str::limit($q->question_text, 100) }}
                                 </td>
-                                <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                                    {{ ucfirst(str_replace('_', ' ', $q->question_type)) }}
+                                <td style="padding:12px 14px; white-space:nowrap;">
+                                    <span class="chip">{{ ucfirst(str_replace('_', ' ', $q->question_type)) }}</span>
                                 </td>
-                                <td class="whitespace-nowrap px-6 py-4 text-sm font-semibold text-emerald-600"
-                                    data-value="{{ $q->correct_rate ?? -1 }}">
-                                    {{ $q->correct_rate !== null ? number_format($q->correct_rate, 2).'%' : 'N/A' }}
+                                <td style="padding:12px 14px; white-space:nowrap;" data-value="{{ $q->correct_rate ?? -1 }}">
+                                    @if ($q->correct_rate !== null)
+                                        <span class="num" style="font-size:13px; font-weight:600; color:var(--accent);">{{ number_format($q->correct_rate, 2) }}%</span>
+                                    @else
+                                        <span style="font-size:12px; color:var(--text-3);">N/A</span>
+                                    @endif
                                 </td>
-                                <td class="whitespace-nowrap px-6 py-4 text-sm font-semibold text-red-500"
-                                    data-value="{{ $q->incorrect_rate ?? -1 }}">
-                                    {{ $q->incorrect_rate !== null ? number_format($q->incorrect_rate, 2).'%' : 'N/A' }}
+                                <td style="padding:12px 14px; white-space:nowrap;" data-value="{{ $q->incorrect_rate ?? -1 }}">
+                                    @if ($q->incorrect_rate !== null)
+                                        <span class="num" style="font-size:13px; font-weight:600; color:var(--danger);">{{ number_format($q->incorrect_rate, 2) }}%</span>
+                                    @else
+                                        <span style="font-size:12px; color:var(--text-3);">N/A</span>
+                                    @endif
                                 </td>
-                                <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-600"
-                                    data-value="{{ $q->avg_points ?? -1 }}">
-                                    {{ $q->avg_points !== null ? number_format($q->avg_points, 2).' / '.$q->points : 'N/A' }}
+                                <td style="padding:12px 14px; white-space:nowrap;" data-value="{{ $q->avg_points ?? -1 }}">
+                                    @if ($q->avg_points !== null)
+                                        <span class="num" style="font-size:13px; color:var(--text);">{{ number_format($q->avg_points, 2) }}</span>
+                                        <span style="font-size:12px; color:var(--text-3);">/ {{ $q->points }}</span>
+                                    @else
+                                        <span style="font-size:12px; color:var(--text-3);">N/A</span>
+                                    @endif
                                 </td>
-                                <td class="whitespace-nowrap px-6 py-4">
-                                    @php
-                                        $badge = match($q->difficulty) {
-                                            'Easy'     => 'bg-emerald-100 text-emerald-700 ring-emerald-600/20',
-                                            'Moderate' => 'bg-amber-100 text-amber-700 ring-amber-500/20',
-                                            'Hard'     => 'bg-red-100 text-red-700 ring-red-600/20',
-                                            default    => 'bg-gray-100 text-gray-500 ring-gray-400/20',
-                                        };
-                                    @endphp
-                                    <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold ring-1 ring-inset {{ $badge }}">
-                                        {{ $q->difficulty }}
-                                    </span>
+                                <td style="padding:12px 14px; white-space:nowrap;" data-value="{{ $q->difficulty }}">
+                                    @if ($q->difficulty === 'Easy')
+                                        <span class="badge badge-green">Easy</span>
+                                    @elseif ($q->difficulty === 'Moderate')
+                                        <span class="badge badge-amber">Moderate</span>
+                                    @elseif ($q->difficulty === 'Hard')
+                                        <span class="badge badge-rose">Hard</span>
+                                    @else
+                                        <span class="badge badge-slate">{{ $q->difficulty }}</span>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach
@@ -355,8 +351,6 @@
             </div>
         @endif
     </div>
-
-</div>
 
 @push('charts')
 <script>
@@ -373,22 +367,39 @@
                     label: 'Students',
                     data: {!! json_encode(array_values($distribution)) !!},
                     backgroundColor: [
-                        'rgba(239,68,68,0.7)',
-                        'rgba(249,115,22,0.7)',
-                        'rgba(234,179,8,0.7)',
-                        'rgba(34,197,94,0.7)',
-                        'rgba(16,185,129,0.7)',
+                        'rgba(248,113,113,0.75)',
+                        'rgba(251,191,36,0.75)',
+                        'rgba(251,191,36,0.75)',
+                        'rgba(74,222,128,0.75)',
+                        'rgba(74,222,128,0.85)',
                     ],
+                    borderColor: [
+                        'rgba(248,113,113,1)',
+                        'rgba(251,191,36,1)',
+                        'rgba(251,191,36,1)',
+                        'rgba(74,222,128,1)',
+                        'rgba(74,222,128,1)',
+                    ],
+                    borderWidth: 1,
                     borderRadius: 6,
                     borderSkipped: false,
                 }]
             },
             options: {
                 responsive: true,
-                plugins: { legend: { display: false } },
+                plugins: {
+                    legend: { display: false },
+                },
                 scales: {
-                    y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0 } },
-                    x: { grid: { display: false } }
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1, precision: 0, color: 'rgba(146,152,176,0.8)' },
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                    },
+                    x: {
+                        ticks: { color: 'rgba(146,152,176,0.8)' },
+                        grid: { display: false },
+                    }
                 }
             }
         });
@@ -406,15 +417,18 @@
                 labels: ['Passed', 'Failed'],
                 datasets: [{
                     data: [{{ (int) $summary->passed_count }}, {{ (int) $summary->failed_count }}],
-                    backgroundColor: ['rgba(16,185,129,0.8)', 'rgba(239,68,68,0.8)'],
+                    backgroundColor: ['rgba(74,222,128,0.8)', 'rgba(248,113,113,0.8)'],
+                    borderColor: ['#4ade80', '#f87171'],
                     borderWidth: 2,
-                    borderColor: ['#10b981', '#ef4444'],
                 }]
             },
             options: {
                 responsive: true,
                 plugins: {
-                    legend: { position: 'bottom' },
+                    legend: {
+                        position: 'bottom',
+                        labels: { color: 'rgba(146,152,176,0.9)', padding: 16, font: { size: 12 } }
+                    },
                     tooltip: {
                         callbacks: {
                             label: ctx => ` ${ctx.label}: ${ctx.parsed} (${((ctx.parsed / {{ $totalAttempts }}) * 100).toFixed(1)}%)`
@@ -461,5 +475,21 @@
     }
 </script>
 @endpush
+
+<style>
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+    }
+    .performers-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+    @media (max-width: 900px) {
+        .summary-grid { grid-template-columns: repeat(2, 1fr); }
+        .performers-grid { grid-template-columns: 1fr; }
+    }
+</style>
 
 @endsection
