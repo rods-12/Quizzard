@@ -180,8 +180,105 @@ class _ManualReviewStudentsScreenState
     );
   }
 
+
+//card for seeded data without the necessary data like the attempt id
+  Widget _buildSeededCard(Map<String, dynamic> attempt) {
+    final studentName = _displayName(attempt);
+    final email = attempt['email'] ?? '';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: _T.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _T.warning.withOpacity(0.4), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Seeded banner ──
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: _T.warning.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.science_outlined, size: 14, color: _T.warning),
+                  const SizedBox(width: 6),
+                  const Text(
+                    'Seeded data — not a real submission',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: _T.warning,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // ── Student info ──
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 22,
+                  backgroundColor: Colors.grey.shade100,
+                  child: Text(
+                    studentName.isNotEmpty ? studentName[0].toUpperCase() : '?',
+                    style: TextStyle(
+                      color: _T.textLight,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      studentName.isNotEmpty ? studentName : 'Test Data',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                        color: _T.textMid,
+                      ),
+                    ),
+                    Text(
+                      email.isNotEmpty ? email : 'No email provided',
+                      style: const TextStyle(fontSize: 12, color: _T.textLight),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+
   Widget _buildAttemptCard(Map<String, dynamic> attempt) {
+    
     final attemptId = attempt['attempt_id'];
+    // If no attempt_id, render the seeded card instead
+    if (attemptId == null) return _buildSeededCard(attempt);  
+
+
     final status = attempt['status'] ?? 'submitted';
     final studentName = _displayName(attempt);
     final email = attempt['email'] ?? '';
