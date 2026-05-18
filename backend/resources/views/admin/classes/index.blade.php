@@ -7,129 +7,32 @@
 @section('content')
 <div class="space-y-6">
 
-@if($isSuperAdmin)
-{{-- ================================================================ --}}
-{{-- SUPERADMIN THEME                                                  --}}
-{{-- ================================================================ --}}
-
-    {{-- Hero --}}
-    <div class="relative overflow-hidden rounded-2xl p-7 text-white"
-         style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%); border: 1px solid rgba(99,102,241,0.3);">
-        <div class="absolute -top-12 -right-12 h-40 w-40 rounded-full" style="background: radial-gradient(circle, rgba(99,102,241,0.2), transparent 70%);"></div>
-        <div class="absolute -bottom-10 -left-10 h-32 w-32 rounded-full" style="background: radial-gradient(circle, rgba(139,92,246,0.15), transparent 70%);"></div>
-        <div class="relative z-10">
-            <p class="text-xs font-semibold uppercase tracking-widest" style="color:#a5b4fc;">SuperAdmin Panel</p>
-            <h1 class="mt-1.5 text-3xl font-bold text-white sm:text-4xl">Classes Management</h1>
-            <p class="mt-2 max-w-2xl text-sm" style="color:#c7d2fe;">
-                Create, view, update, and manage all classes across the platform.
-            </p>
-        </div>
-    </div>
-
-    {{-- Widgets --}}
-    <div id="classWidgets" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <div class="rounded-xl p-5 shadow-sm" style="background:#161b27;border:1px solid rgba(255,255,255,0.06);">
-            <p class="text-sm font-medium" style="color:#475569;">Active Teachers</p>
-            <h2 id="activeTeachersCount" class="mt-2 text-3xl font-bold text-white">{{ $activeTeachers }}</h2>
-        </div>
-        <div class="rounded-xl p-5 shadow-sm" style="background:#161b27;border:1px solid rgba(255,255,255,0.06);">
-            <p class="text-sm font-medium" style="color:#475569;">Total Students</p>
-            <h2 id="studentsCount" class="mt-2 text-3xl font-bold text-white">{{ $studentsCount }}</h2>
-        </div>
-        <div class="rounded-xl p-5 shadow-sm" style="background:#161b27;border:1px solid rgba(255,255,255,0.06);">
-            <p class="text-sm font-medium" style="color:#475569;">Classes</p>
-            <h2 id="classesCount" class="mt-2 text-3xl font-bold text-white">{{ $classesCount }}</h2>
-        </div>
-        <div class="rounded-xl p-5 shadow-sm" style="background:#161b27;border:1px solid rgba(255,255,255,0.06);">
-            <p class="text-sm font-medium" style="color:#475569;">Total Enrollments</p>
-            <h2 class="mt-2 text-3xl font-bold text-white">{{ $totalEnrollments }}</h2>
-        </div>
-    </div>
-
-    {{-- Controls --}}
-    <div class="rounded-2xl p-6 shadow-lg" style="background:#161b27;border:1px solid rgba(255,255,255,0.06);">
-        <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-            <div class="flex w-full flex-col gap-3 sm:flex-row xl:w-auto xl:flex-1">
-                <div class="w-full xl:max-w-3xl">
-                    <input
-                        type="text"
-                        id="searchInput"
-                        placeholder="Search by class title or teacher..."
-                        class="w-full rounded-lg border px-4 py-2.5 text-sm outline-none transition"
-                        style="background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.08);color:#e2e8f0;"
-                    >
-                </div>
-                <div class="w-full sm:w-48">
-                    <select
-                    id="sortFilter"
-                    class="sa-select w-full rounded-lg border px-4 py-2.5 text-sm outline-none transition"
-                >
-                        <option value="latest">Latest</option>
-                        <option value="oldest">Oldest</option>
-                    </select>
-                </div>
-            </div>
-            <div class="flex w-full flex-col gap-3 sm:flex-row xl:w-auto">
-                <button
-                    type="button"
-                    id="btnCreateClass"
-                    class="inline-flex items-center justify-center rounded-lg px-5 py-2.5 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60"
-                    style="background:#6366f1;"
-                    onmouseover="this.style.background='#4f46e5';"
-                    onmouseout="this.style.background='#6366f1';">
-                    <span class="flex items-center justify-center gap-2">
-                        <span class="spinner hidden h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
-                        <span>Create Class</span>
-                    </span>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    {{-- Table --}}
-    <div class="rounded-2xl overflow-hidden" style="background:#161b27;border:1px solid rgba(255,255,255,0.06);">
-        <div class="overflow-x-auto">
-            <div id="classesTableWrapper" style="background:#0f1117;">
-                @include('admin.classes.partials.table', ['classes' => $classes])
-            </div>
-        </div>
-    </div>
-
-@else
-{{-- ================================================================ --}}
-{{-- ADMIN THEME — 100% original, zero changes                        --}}
-{{-- ================================================================ --}}
-
     <!-- Hero -->
-    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 p-6 md:p-8 text-white shadow-lg">
-        <div class="relative z-10">
-            <h1 class="text-2xl md:text-3xl font-bold">Classes Management</h1>
-            <p class="mt-2 text-sm md:text-base text-white/90">
-                Create, view, update, and manage all classes across the platform.
-            </p>
-        </div>
-        <div class="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/10"></div>
-        <div class="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-white/10"></div>
+    <div class="rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-blue-900 p-6 text-white shadow-xl">
+        <h1 class="text-2xl md:text-3xl font-bold">Classes Management</h1>
+        <p class="mt-2 text-sm md:text-base text-white/90">
+            Create, view, update, and manage all classes across the platform.
+        </p>
     </div>
 
     <!-- Widgets -->
     <div id="classWidgets" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <div class="rounded-2xl bg-white p-5 shadow-sm border border-slate-200">
+        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
             <p class="text-sm font-medium text-slate-500">Active Teachers</p>
             <h2 id="activeTeachersCount" class="mt-2 text-3xl font-bold text-slate-800">{{ $activeTeachers }}</h2>
         </div>
 
-        <div class="rounded-2xl bg-white p-5 shadow-sm border border-slate-200">
+        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
             <p class="text-sm font-medium text-slate-500">Total Students</p>
             <h2 id="studentsCount" class="mt-2 text-3xl font-bold text-slate-800">{{ $studentsCount }}</h2>
         </div>
 
-        <div class="rounded-2xl bg-white p-5 shadow-sm border border-slate-200">
+        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
             <p class="text-sm font-medium text-slate-500">Classes</p>
             <h2 id="classesCount" class="mt-2 text-3xl font-bold text-slate-800">{{ $classesCount }}</h2>
         </div>
 
-        <div class="rounded-2xl bg-white p-5 shadow-sm border border-slate-200">
+        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
             <p class="text-sm font-medium text-slate-500">Total Enrollments</p>
             <h2 class="mt-2 text-3xl font-bold text-slate-800">{{ $totalEnrollments }}</h2>
         </div>
@@ -144,14 +47,14 @@
                         type="text"
                         id="searchInput"
                         placeholder="Search by class title or teacher..."
-                        class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm shadow-sm outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
+                        class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                     >
                 </div>
 
                 <div class="w-full sm:w-48">
                     <select
                         id="sortFilter"
-                        class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm shadow-sm outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
+                        class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                     >
                         <option value="latest">Latest</option>
                         <option value="oldest">Oldest</option>
@@ -175,15 +78,13 @@
     </div>
 
     <!-- Table -->
-    <div class="rounded-2xl bg-white shadow-sm border border-slate-200 overflow-hidden">
+    <div class="overflow-hidden rounded-2xl border border-slate-200">
         <div class="overflow-x-auto">
             <div id="classesTableWrapper">
                 @include('admin.classes.partials.table', ['classes' => $classes])
             </div>
         </div>
     </div>
-
-@endif
 
 </div>
 
@@ -192,19 +93,11 @@
 @include('admin.classes.modals.edit')
 @include('admin.classes.modals.delete')
 
-<div id="pageLoadingOverlay" class="fixed inset-0 z-[99999] hidden items-center justify-center bg-black/80 backdrop-blur-sm">
-    <div style="background:#0f172a; border:1px solid #334155; box-shadow:0 25px 50px rgba(0,0,0,.45);"
-         class="flex min-w-[340px] flex-col items-center justify-center rounded-3xl px-10 py-10 text-white">
-        <svg class="h-20 w-20 animate-spin" viewBox="0 0 50 50" aria-hidden="true">
-            <circle cx="25" cy="25" r="20" fill="none" stroke="#334155" stroke-width="6"></circle>
-            <path d="M25 5a20 20 0 0 1 20 20" fill="none" stroke="#60a5fa" stroke-width="6" stroke-linecap="round"></path>
-        </svg>
-        <div class="mt-6 text-xl font-bold tracking-[0.25em] text-white">
-            LOADING
-        </div>
-        <div class="mt-3 text-sm text-slate-300">
-            Opening class details...
-        </div>
+<!-- Page Loading Overlay -->
+<div id="pageLoadingOverlay" class="fixed inset-0 z-[99999] hidden items-center justify-center bg-slate-950/55 backdrop-blur-sm">
+    <div class="flex min-w-[300px] flex-col items-center justify-center rounded-3xl bg-white px-8 py-7 shadow-2xl ring-1 ring-slate-200">
+        <div class="h-12 w-12 animate-spin rounded-full border-4 border-blue-200 border-t-blue-700"></div>
+        <p class="mt-5 text-sm font-semibold text-slate-700">Opening class details...</p>
     </div>
 </div>
 

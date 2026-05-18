@@ -1,171 +1,170 @@
 @extends('teacher.layouts.app')
 
 @section('content')
-    <div class="space-y-8">
 
-        {{-- Header --}}
-        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-green-700 via-green-600 to-emerald-600 px-6 py-8 text-white shadow-lg sm:px-10 sm:py-10">
-            <div class="pointer-events-none absolute inset-0">
-                <div class="absolute -right-10 -top-10 h-64 w-64 rounded-full bg-white/10 blur-3xl"></div>
-                <div class="absolute bottom-0 left-10 h-40 w-40 rounded-full bg-emerald-400/20 blur-2xl"></div>
-            </div>
+    {{-- Page Header --}}
+    <div style="margin-bottom:28px;">
+        <a href="{{ route('teacher.reports.quizzes') }}"
+           style="display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-3); text-decoration:none; margin-bottom:14px;"
+           onmouseenter="this.style.color='var(--accent)'" onmouseleave="this.style.color='var(--text-3)'">
+            <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M17 10a.75.75 0 01-.75.75H5.56l3.22 3.22a.75.75 0 11-1.06 1.06l-4.5-4.5a.75.75 0 010-1.06l4.5-4.5a.75.75 0 111.06 1.06L5.56 9.25h10.69A.75.75 0 0117 10z" clip-rule="evenodd" />
+            </svg>
+            Back to Quizzes
+        </a>
+        <p style="font-size:10.5px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--accent); margin-bottom:6px;">Quiz Report</p>
+        <h1 style="font-size:24px; font-weight:700; color:var(--text); letter-spacing:-0.03em; line-height:1.2; margin-bottom:6px;">{{ $quiz->title }}</h1>
+        <p style="font-size:13px; color:var(--text-2);">Answer Key — correct answers for all questions.</p>
+    </div>
 
-            <div class="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-                <div class="max-w-3xl">
-                    <div class="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-900/40 px-3 py-1.5 text-xs font-medium uppercase tracking-widest text-emerald-100 backdrop-blur-md">
-                        <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
-                        Quiz Report
-                    </div>
-                    <h2 class="mt-5 text-3xl font-bold tracking-tight text-white sm:text-4xl">{{ $quiz->title }}</h2>
-                    <p class="mt-3 text-base leading-relaxed text-emerald-100">Answer Key - Correct answers for all questions.</p>
-                </div>
+    {{-- Action Bar --}}
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:24px; flex-wrap:wrap;">
+        <a href="{{ route('teacher.reports.quiz.answers.export.docx', $quiz->id) }}"
+           class="btn btn-secondary btn-sm" style="display:inline-flex; align-items:center; gap:6px;">
+            <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M10 2a.75.75 0 01.75.75v7.19l2.22-2.22a.75.75 0 111.06 1.06l-3.5 3.5a.75.75 0 01-1.06 0l-3.5-3.5a.75.75 0 111.06-1.06l2.22 2.22V2.75A.75.75 0 0110 2zm-5.25 11a.75.75 0 01.75.75v.5c0 .69.56 1.25 1.25 1.25h6.5c.69 0 1.25-.56 1.25-1.25v-.5a.75.75 0 011.5 0v.5A2.75 2.75 0 0113.25 17h-6.5A2.75 2.75 0 014 14.25v-.5a.75.75 0 01.75-.75z" clip-rule="evenodd" />
+            </svg>
+            Export DOCX
+        </a>
+        <a href="{{ route('teacher.reports.quiz.answers.export.pdf', $quiz->id) }}"
+           class="btn btn-sm" style="display:inline-flex; align-items:center; gap:6px; background:var(--danger); color:#fff; border-color:var(--danger);"
+           onmouseenter="this.style.opacity='0.85'" onmouseleave="this.style.opacity='1'">
+            <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M10 2a.75.75 0 01.75.75v7.19l2.22-2.22a.75.75 0 111.06 1.06l-3.5 3.5a.75.75 0 01-1.06 0l-3.5-3.5a.75.75 0 111.06-1.06l2.22 2.22V2.75A.75.75 0 0110 2zm-5.25 11a.75.75 0 01.75.75v.5c0 .69.56 1.25 1.25 1.25h6.5c.69 0 1.25-.56 1.25-1.25v-.5a.75.75 0 011.5 0v.5A2.75 2.75 0 0113.25 17h-6.5A2.75 2.75 0 014 14.25v-.5a.75.75 0 01.75-.75z" clip-rule="evenodd" />
+            </svg>
+            Export PDF
+        </a>
+    </div>
 
-                <div class="flex flex-wrap items-center gap-3">
-                    <a href="{{ route('teacher.reports.quizzes') }}"
-                        class="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur-md transition hover:bg-white/20 focus:outline-none focus:ring-4 focus:ring-white/20">
-                        <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                            <path fill-rule="evenodd" d="M17 10a.75.75 0 01-.75.75H5.56l3.22 3.22a.75.75 0 11-1.06 1.06l-4.5-4.5a.75.75 0 010-1.06l4.5-4.5a.75.75 0 111.06 1.06L5.56 9.25h10.69A.75.75 0 0117 10z" clip-rule="evenodd" />
-                        </svg>
-                        Back
-                    </a>
-                    <a href="{{ route('teacher.reports.quiz.answers.export.docx', $quiz->id) }}"
-                        class="inline-flex items-center gap-2 rounded-2xl bg-white px-4 py-2.5 text-sm font-bold text-blue-700 shadow-md transition hover:-translate-y-0.5 hover:bg-blue-50 focus:outline-none focus:ring-4 focus:ring-white/20">
-                        <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                            <path fill-rule="evenodd" d="M10 2a.75.75 0 01.75.75v7.19l2.22-2.22a.75.75 0 111.06 1.06l-3.5 3.5a.75.75 0 01-1.06 0l-3.5-3.5a.75.75 0 111.06-1.06l2.22 2.22V2.75A.75.75 0 0110 2zm-5.25 11a.75.75 0 01.75.75v.5c0 .69.56 1.25 1.25 1.25h6.5c.69 0 1.25-.56 1.25-1.25v-.5a.75.75 0 011.5 0v.5A2.75 2.75 0 0113.25 17h-6.5A2.75 2.75 0 014 14.25v-.5a.75.75 0 01.75-.75z" clip-rule="evenodd" />
-                        </svg>
-                        Export DOCX
-                    </a>
-                    <a href="{{ route('teacher.reports.quiz.answers.export.pdf', $quiz->id) }}"
-                        class="inline-flex items-center gap-2 rounded-2xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white shadow-md transition hover:-translate-y-0.5 hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-red-300/40">
-                        <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                            <path fill-rule="evenodd" d="M10 2a.75.75 0 01.75.75v7.19l2.22-2.22a.75.75 0 111.06 1.06l-3.5 3.5a.75.75 0 01-1.06 0l-3.5-3.5a.75.75 0 111.06-1.06l2.22 2.22V2.75A.75.75 0 0110 2zm-5.25 11a.75.75 0 01.75.75v.5c0 .69.56 1.25 1.25 1.25h6.5c.69 0 1.25-.56 1.25-1.25v-.5a.75.75 0 011.5 0v.5A2.75 2.75 0 0113.25 17h-6.5A2.75 2.75 0 014 14.25v-.5a.75.75 0 01.75-.75z" clip-rule="evenodd" />
-                        </svg>
-                        Export PDF
-                    </a>
-                </div>
-            </div>
+    {{-- Answer Key Card --}}
+    <div class="card" style="overflow:hidden;">
+
+        {{-- Card Header --}}
+        <div style="padding:24px 28px; border-bottom:1px solid var(--border); text-align:center;">
+            <p style="font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent); margin-bottom:8px;">Answer Key View</p>
+            <h2 style="font-size:20px; font-weight:700; color:var(--text); letter-spacing:-0.02em; margin-bottom:4px;">{{ $quiz->title }}</h2>
+            <p style="font-size:12px; color:var(--text-3); font-style:italic; margin-bottom:0;">Answer Key</p>
+            @if ($quiz->description)
+                <p style="font-size:13px; color:var(--text-2); max-width:560px; margin:10px auto 0; line-height:1.6;">{{ $quiz->description }}</p>
+            @endif
         </div>
 
-        {{-- Answer Key --}}
-        <div class="mx-auto max-w-5xl overflow-hidden rounded-[2rem] border border-emerald-100 bg-white shadow-sm ring-1 ring-emerald-900/5">
+        {{-- Questions List --}}
+        <div style="padding:24px 28px; display:flex; flex-direction:column; gap:14px;">
 
-            {{-- Doc-style Header --}}
-            <div class="border-b border-emerald-100 bg-emerald-50/50 px-8 py-8 text-center sm:px-10">
-                <div class="inline-flex items-center gap-2 rounded-md bg-emerald-100/80 px-2.5 py-1 text-xs font-semibold text-emerald-800">
-                    <span class="h-1.5 w-1.5 rounded-full bg-emerald-600"></span>
-                    Answer Key View
-                </div>
-                <h1 class="mt-4 text-2xl font-bold text-slate-900 sm:text-3xl">{{ $quiz->title }}</h1>
-                <p class="mt-2 text-sm italic text-slate-500">Answer Key</p>
-                @if ($quiz->description)
-                    <p class="mx-auto mt-3 max-w-2xl text-sm leading-6 text-slate-600">{{ $quiz->description }}</p>
-                @endif
-            </div>
+            @forelse ($quiz->questions->sortBy('order') as $index => $question)
 
-            <div class="px-6 py-8 sm:px-8 sm:py-10">
-                <div class="space-y-6">
-                    @forelse ($quiz->questions->sortBy('order') as $index => $question)
-                        <div class="rounded-3xl border border-slate-200 bg-white px-5 py-6 shadow-sm shadow-slate-200/40 transition hover:border-emerald-200 hover:shadow-md sm:px-6">
+                <div style="background:var(--surface-2); border:1px solid var(--border-md); border-radius:var(--radius); padding:20px 22px; transition:border-color 0.15s;"
+                     onmouseenter="this.style.borderColor='rgba(74,222,128,0.18)'"
+                     onmouseleave="this.style.borderColor='var(--border-md)'">
 
-                            {{-- Question Text --}}
-                            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                                <div class="max-w-3xl">
-                                    <div class="flex flex-wrap items-start gap-3">
-                                        <span class="inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-emerald-100 px-2 text-sm font-bold text-emerald-700">
-                                            {{ $index + 1 }}
-                                        </span>
-                                        <div class="space-y-2">
-                                            <p class="text-base font-semibold leading-7 text-slate-800">
-                                                {{ $question->question_text }}
-                                            </p>
-                                            <span class="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-                                                {{ $question->points }} {{ $question->points == 1 ? 'pt' : 'pts' }}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {{-- Media --}}
-                            <div class="mt-5 space-y-3">
-                                @if ($question->image_path)
-                                    <img src="{{ asset('storage/' . $question->image_path) }}"
-                                        class="max-h-56 rounded-2xl border border-slate-200 bg-slate-50"
-                                        alt="Question Image">
-                                @endif
-                                @if ($question->audio_path)
-                                    <audio controls style="width: min(360px, 100%);">
-                                        <source src="{{ asset('storage/' . $question->audio_path) }}">
-                                    </audio>
-                                @endif
-                                @if ($question->video_path)
-                                    <video controls class="max-h-56 rounded-2xl border border-slate-200 bg-slate-50"
-                                        style="width: min(420px, 100%);">
-                                        <source src="{{ asset('storage/' . $question->video_path) }}">
-                                    </video>
-                                @endif
-                            </div>
-
-                            {{-- Answer by Type --}}
-                            <div class="mt-6">
-                                @if ($question->question_type === 'multiple_choice')
-                                    @php $correct = $question->answerOptions->firstWhere('is_correct', true); @endphp
-                                    <div class="inline-flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
-                                        {{ $correct?->option_text ?? 'N/A' }}
-                                    </div>
-
-                                @elseif ($question->question_type === 'true_false')
-                                    @php $correct = $question->answerOptions->firstWhere('is_correct', true); @endphp
-                                    <div class="inline-flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
-                                        {{ $correct?->option_text ?? 'N/A' }}
-                                    </div>
-
-                                @elseif ($question->question_type === 'identification')
-                                    @php $correct = $question->answerOptions->first(); @endphp
-                                    <div class="inline-flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
-                                        {{ $correct?->option_text ?? 'N/A' }}
-                                    </div>
-
-                                @elseif ($question->question_type === 'matching')
-                                    <div class="overflow-x-auto rounded-2xl border border-slate-200">
-                                        <table class="min-w-full text-sm">
-                                            <thead class="bg-slate-50">
-                                                <tr>
-                                                    <th class="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 border-b border-slate-200">
-                                                        Premise
-                                                    </th>
-                                                    <th class="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 border-b border-slate-200">
-                                                        Correct Match
-                                                    </th>
-                                                </tr>
-                                            </thead>
-                                            <tbody class="divide-y divide-slate-100 bg-white">
-                                                @foreach ($question->answerOptions->sortBy('order') as $pair)
-                                                    <tr class="hover:bg-emerald-50/50">
-                                                        <td class="px-4 py-3 text-slate-700">{{ $pair->option_text }}</td>
-                                                        <td class="px-4 py-3 font-medium text-emerald-700">{{ $pair->match_pair }}</td>
-                                                    </tr>
-                                                @endforeach
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                @endif
-                            </div>
+                    {{-- Question Header --}}
+                    <div style="display:flex; align-items:flex-start; gap:14px; margin-bottom:16px;">
+                        <span style="flex-shrink:0; display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:50%; background:var(--accent-bg); font-size:12px; font-weight:700; color:var(--accent);" class="num">
+                            {{ $index + 1 }}
+                        </span>
+                        <div style="flex:1;">
+                            <p style="font-size:14px; font-weight:600; color:var(--text); line-height:1.6; margin-bottom:8px;">
+                                {{ $question->question_text }}
+                            </p>
+                            <span class="chip num">{{ $question->points }} {{ $question->points == 1 ? 'pt' : 'pts' }}</span>
                         </div>
-                    @empty
-                        <div class="px-6 py-16 text-center">
-                            <div class="mx-auto max-w-md">
-                                <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50">
-                                    <svg class="h-8 w-8 text-emerald-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                        <path d="M4.75 3A2.75 2.75 0 002 5.75v8.5A2.75 2.75 0 004.75 17h10.5A2.75 2.75 0 0018 14.25v-8.5A2.75 2.75 0 0015.25 3H4.75zm0 1.5h10.5c.69 0 1.25.56 1.25 1.25v8.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-8.5c0-.69.56-1.25 1.25-1.25z" />
-                                    </svg>
-                                </div>
-                                <p class="mt-5 text-sm text-slate-500">No questions found for this quiz.</p>
-                            </div>
+                    </div>
+
+                    {{-- Media --}}
+                    @if ($question->image_path || $question->audio_path || $question->video_path)
+                        <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:16px; padding-left:42px;">
+                            @if ($question->image_path)
+                                <img src="{{ asset('storage/' . $question->image_path) }}"
+                                     style="max-height:200px; max-width:340px; object-fit:contain; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--surface-3);"
+                                     alt="Question Image">
+                            @endif
+                            @if ($question->audio_path)
+                                <audio controls style="width:min(340px,100%); border-radius:var(--radius-sm);">
+                                    <source src="{{ asset('storage/' . $question->audio_path) }}">
+                                </audio>
+                            @endif
+                            @if ($question->video_path)
+                                <video controls style="max-height:220px; max-width:340px; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--surface-3);">
+                                    <source src="{{ asset('storage/' . $question->video_path) }}">
+                                </video>
+                            @endif
                         </div>
-                    @endforelse
+                    @endif
+
+                    {{-- Answer by Type --}}
+                    <div style="padding-left:42px;">
+
+                        @if ($question->question_type === 'multiple_choice')
+                            @php $correct = $question->answerOptions->firstWhere('is_correct', true); @endphp
+                            <div style="display:inline-flex; align-items:center; gap:8px; background:var(--accent-bg); border:1px solid rgba(74,222,128,0.2); border-radius:var(--radius-sm); padding:10px 16px;">
+                                <svg width="14" height="14" viewBox="0 0 20 20" fill="var(--accent)" aria-hidden="true">
+                                    <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" />
+                                </svg>
+                                <span style="font-size:13px; font-weight:600; color:var(--accent);">{{ $correct?->option_text ?? 'N/A' }}</span>
+                            </div>
+
+                        @elseif ($question->question_type === 'true_false')
+                            @php $correct = $question->answerOptions->firstWhere('is_correct', true); @endphp
+                            <div style="display:inline-flex; align-items:center; gap:8px; background:var(--accent-bg); border:1px solid rgba(74,222,128,0.2); border-radius:var(--radius-sm); padding:10px 16px;">
+                                <svg width="14" height="14" viewBox="0 0 20 20" fill="var(--accent)" aria-hidden="true">
+                                    <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" />
+                                </svg>
+                                <span style="font-size:13px; font-weight:600; color:var(--accent);">{{ $correct?->option_text ?? 'N/A' }}</span>
+                            </div>
+
+                        @elseif ($question->question_type === 'identification')
+                            @php $correct = $question->answerOptions->first(); @endphp
+                            <div style="display:inline-flex; align-items:center; gap:8px; background:var(--accent-bg); border:1px solid rgba(74,222,128,0.2); border-radius:var(--radius-sm); padding:10px 16px;">
+                                <svg width="14" height="14" viewBox="0 0 20 20" fill="var(--accent)" aria-hidden="true">
+                                    <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" />
+                                </svg>
+                                <span style="font-size:13px; font-weight:600; color:var(--accent);">{{ $correct?->option_text ?? 'N/A' }}</span>
+                            </div>
+
+                        @elseif ($question->question_type === 'matching')
+                            <div style="overflow-x:auto; border-radius:var(--radius-sm); border:1px solid var(--border);">
+                                <table style="width:100%; border-collapse:collapse; min-width:320px;">
+                                    <thead>
+                                        <tr style="border-bottom:1px solid var(--border); background:var(--surface-3);">
+                                            <th style="padding:10px 16px; text-align:left; font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-3); white-space:nowrap;">
+                                                Premise
+                                            </th>
+                                            <th style="padding:10px 16px; text-align:left; font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-3); white-space:nowrap;">
+                                                Correct Match
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($question->answerOptions->sortBy('order') as $pair)
+                                            <tr class="divider"
+                                                onmouseenter="this.style.background='rgba(255,255,255,0.018)'"
+                                                onmouseleave="this.style.background='transparent'">
+                                                <td style="padding:10px 16px; font-size:13px; color:var(--text-2);">{{ $pair->option_text }}</td>
+                                                <td style="padding:10px 16px; font-size:13px; font-weight:600; color:var(--accent);">{{ $pair->match_pair }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @endif
+
+                    </div>
                 </div>
-            </div>
+
+            @empty
+                <div style="padding:64px 24px; text-align:center;">
+                    <div style="display:inline-flex; align-items:center; justify-content:center; width:52px; height:52px; border-radius:14px; background:var(--accent-bg); margin-bottom:16px;">
+                        <svg width="24" height="24" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M2 5.75A2.75 2.75 0 014.75 3h10.5A2.75 2.75 0 0118 5.75v8.5A2.75 2.75 0 0115.25 17H4.75A2.75 2.75 0 012 14.25v-8.5zm2.75-1.25A1.25 1.25 0 003.5 5.75v8.5c0 .69.56 1.25 1.25 1.25h6.5c.69 0 1.25-.56 1.25-1.25v-8.5c0-.69-.56-1.25-1.25-1.25H4.75z" fill="var(--accent)"/>
+                        </svg>
+                    </div>
+                    <p style="font-size:14px; font-weight:700; color:var(--text); margin-bottom:6px;">No questions found</p>
+                    <p style="font-size:12px; color:var(--text-2);">No questions have been added to this quiz yet.</p>
+                </div>
+            @endforelse
+
         </div>
     </div>
+
 @endsection

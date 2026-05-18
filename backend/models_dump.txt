@@ -1,0 +1,268 @@
+﻿
+
+========================================
+FILE: app\Models\User.php
+========================================
+
+<?php
+
+namespace App\Models;
+
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Laravel\Sanctum\HasApiTokens;
+
+class User extends Authenticatable
+{
+    use HasApiTokens, HasFactory, Notifiable;
+
+    protected $fillable = [
+        'name',
+        'first_name',
+        'middle_initial',
+        'surname',
+        'email',
+        'password',
+        'role',
+        'status',
+        'failed_login_attempts',
+        'locked_until',
+        'profile_picture',
+        'profile_image',
+        'bio',
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password'          => 'hashed',
+            'locked_until'      => 'datetime',
+        ];
+    }
+
+    public function getNameAttribute($value)
+    {
+        $first = trim((string) $this->first_name);
+        $middle = trim((string) $this->middle_initial);
+        $last = trim((string) $this->surname);
+
+        if ($first !== '' || $last !== '') {
+            $middleFormatted = $middle !== ''
+                ? ' ' . strtoupper(substr($middle, 0, 1)) . '.'
+                : '';
+
+            return trim("{$first}{$middleFormatted} {$last}");
+        }
+
+        return $value;
+    }
+
+    public function getProfileImageUrlAttribute(): string
+    {
+        if ($this->profile_image) {
+            return asset('storage/' . $this->profile_image);
+        }
+        return asset('images/default-avatar.png');
+    }
+
+    public function studentProfile()
+    {
+        return $this->hasOne(StudentProfile::class);
+    }
+}
+
+========================================
+FILE: app\Models\QuizAttempt.php
+========================================
+
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+
+class QuizAttempt extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'student_id',
+        'quiz_id',
+        'score',
+        'total_points',
+        'status',
+        'started_at',
+        'completed_at',
+    ];
+
+    protected $casts = [
+        'started_at'   => 'datetime',
+        'completed_at' => 'datetime',
+    ];
+
+    // Attempt belongs to a student
+    public function student()
+    {
+        return $this->belongsTo(User::class, 'student_id');
+    }
+
+    // Attempt belongs to a quiz
+    public function quiz()
+    {
+        return $this->belongsTo(Quiz::class);
+    }
+}
+
+========================================
+FILE: app\Models\Quiz.php
+========================================
+
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Quiz extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'teacher_id',
+        'title',
+        'description',
+        'is_published',
+        'cover_image',
+    ];
+
+    protected $casts = [
+        'is_published' => 'boolean',
+    ];
+
+    public function teacher()
+    {
+        return $this->belongsTo(User::class, 'teacher_id');
+    }
+
+    public function questions()
+    {
+        return $this->hasMany(Question::class)->orderBy('order');
+    }
+
+    public function classes()
+    {
+        return $this->belongsToMany(
+            ClassRoom::class,
+            'class_quizzes',
+            'quiz_id',
+            'class_id'
+        );
+    }
+
+    public function attempts()
+    {
+        return $this->hasMany(QuizAttempt::class);
+    }
+}
+
+========================================
+FILE: app\Models\ClassRoom.php
+========================================
+
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
+
+class ClassRoom extends Model
+{
+    use HasFactory;
+
+    protected $table = 'classes';
+
+    protected $fillable = [
+        'teacher_id',
+        'name',
+        'description',
+        'class_code',
+    ];
+
+    // Auto-generate class code when creating
+    protected static function booted()
+    {
+        static::creating(function ($class) {
+            if (empty($class->class_code)) {
+                do {
+                    $code = strtoupper(Str::random(6));
+                } while (self::where('class_code', $code)->exists());
+                $class->class_code = $code;
+            }
+        });
+    }
+
+    public function teacher()
+    {
+        return $this->belongsTo(User::class, 'teacher_id');
+    }
+
+    public function students()
+    {
+        return $this->belongsToMany(User::class, 'class_students', 'class_id', 'student_id')
+            ->withPivot('joined_at')
+            ->withTimestamps();
+    }
+
+    public function quizzes()
+    {
+        return $this->belongsToMany(Quiz::class, 'class_quizzes', 'class_id', 'quiz_id')
+            ->withPivot('assigned_at')
+            ->withTimestamps();
+    }
+}
+
+========================================
+FILE: app\Models\StudentProfile.php
+========================================
+
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class StudentProfile extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'user_id',
+        'student_id',
+        'gender',
+        'date_of_birth',
+        'contact_number',
+        'grade_level',
+        'section',
+    ];
+
+    protected $casts = [
+        'date_of_birth' => 'date',
+    ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+}

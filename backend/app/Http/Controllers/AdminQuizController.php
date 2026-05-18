@@ -241,7 +241,6 @@ if ($request->get('export') === 'excel' && $tab === 'results') {
                 $row['rank'] = $index + 1;
                 return $row;
             });
-
             return Excel::download(
                 new QuizResultsExport($exportRows, $quiz->title),
                 'quiz-results-report.xlsx'
