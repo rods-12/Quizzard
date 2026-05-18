@@ -16,7 +16,7 @@ class AdminDashboardController extends Controller
         $type = $request->input('type', 'teacher');
 $search = trim($request->input('search', ''));
 $filterBy = $request->input('filter_by', 'all');
-$status = $request->input('status', 'all');
+$status = $request->input('status', 'pending');
 $viewUserId = $request->input('view_user');
 
         $allowedTypes = ['teacher', 'student'];

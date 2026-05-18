@@ -1,0 +1,3592 @@
+===== C:\Users\hp\Desktop\Quizzard\frontend\lib\screens\quiz_results_screen.dart =====
+import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
+
+class QuizResultsScreen extends StatefulWidget {
+  final int quizId;
+  final String quizTitle;
+
+  const QuizResultsScreen({
+    super.key,
+    required this.quizId,
+    required this.quizTitle,
+  });
+
+  @override
+  State<QuizResultsScreen> createState() => _QuizResultsScreenState();
+}
+
+class _QuizResultsScreenState extends State<QuizResultsScreen> {
+  static const Color _green = Color(0xFF4CAF50);
+  static const double _passPercentage = 60;
+
+  bool _isLoading = true;
+  String? _errorMessage;
+  Map<String, dynamic>? _data;
+
+  final TextEditingController _searchController = TextEditingController();
+
+  String _selectedFilter = 'highest';
+  List<Map<String, dynamic>> _allResults = [];
+  List<Map<String, dynamic>> _visibleResults = [];
+
+  final List<Map<String, String>> _filterOptions = const [
+    {'value': 'highest', 'label': 'Highest Score'},
+    {'value': 'lowest', 'label': 'Lowest Score'},
+    {'value': 'newest', 'label': 'Newest'},
+    {'value': 'oldest', 'label': 'Oldest'},
+    {'value': 'passed', 'label': 'Passed Only'},
+    {'value': 'failed', 'label': 'Failed Only'},
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(_applySearchAndFilter);
+    _loadResults();
+  }
+
+  @override
+  void dispose() {
+    _searchController.removeListener(_applySearchAndFilter);
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadResults() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    final result = await AuthService.authGet(
+      '/teacher/quizzes/${widget.quizId}/results',
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = false;
+
+      if (result['success']) {
+        _data = Map<String, dynamic>.from(result['data']);
+        _allResults = List<Map<String, dynamic>>.from(
+          (_data!['results'] as List).map((e) => Map<String, dynamic>.from(e)),
+        );
+        _applySearchAndFilter();
+      } else {
+        _errorMessage = result['message'];
+      }
+    });
+  }
+
+  void _applySearchAndFilter() {
+    if (_data == null) return;
+
+    final query = _searchController.text.trim().toLowerCase();
+
+    List<Map<String, dynamic>> working = _allResults.map((item) {
+      final percentage = _toInt(item['percentage']);
+      final score = _toNum(item['score']);
+      final totalPoints = _toNum(item['total_points']);
+      final completedAt = DateTime.tryParse(item['completed_at']?.toString() ?? '');
+
+      return {
+        ...item,
+        'percentage': percentage,
+        'score': score,
+        'total_points': totalPoints,
+        'is_passed': percentage >= _passPercentage,
+        'completed_at_dt': completedAt,
+      };
+    }).toList();
+
+    if (query.isNotEmpty) {
+      working = working.where((item) {
+        final studentName = (item['student_name'] ?? '').toString().toLowerCase();
+        final studentEmail = (item['student_email'] ?? '').toString().toLowerCase();
+        return studentName.contains(query) || studentEmail.contains(query);
+      }).toList();
+    }
+
+    switch (_selectedFilter) {
+      case 'lowest':
+        working.sort((a, b) => _compareResultsAscending(a, b));
+        break;
+      case 'newest':
+        working.sort((a, b) => _compareDatesDesc(a, b));
+        break;
+      case 'oldest':
+        working.sort((a, b) => _compareDatesAsc(a, b));
+        break;
+      case 'passed':
+        working = working.where((item) => item['is_passed'] == true).toList();
+        working.sort((a, b) => _compareResultsDescending(a, b));
+        break;
+      case 'failed':
+        working = working.where((item) => item['is_passed'] == false).toList();
+        working.sort((a, b) => _compareResultsDescending(a, b));
+        break;
+      case 'highest':
+      default:
+        working.sort((a, b) => _compareResultsDescending(a, b));
+        break;
+    }
+
+    for (int i = 0; i < working.length; i++) {
+      working[i]['rank'] = i + 1;
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _visibleResults = working;
+    });
+  }
+
+  int _compareResultsDescending(Map<String, dynamic> a, Map<String, dynamic> b) {
+    final percentageCompare = _toInt(b['percentage']).compareTo(_toInt(a['percentage']));
+    if (percentageCompare != 0) return percentageCompare;
+
+    final scoreCompare = _toNum(b['score']).compareTo(_toNum(a['score']));
+    if (scoreCompare != 0) return scoreCompare;
+
+    final totalPointsCompare = _toNum(b['total_points']).compareTo(_toNum(a['total_points']));
+    if (totalPointsCompare != 0) return totalPointsCompare;
+
+    return _compareDatesAsc(a, b);
+  }
+
+  int _compareResultsAscending(Map<String, dynamic> a, Map<String, dynamic> b) {
+    final percentageCompare = _toInt(a['percentage']).compareTo(_toInt(b['percentage']));
+    if (percentageCompare != 0) return percentageCompare;
+
+    final scoreCompare = _toNum(a['score']).compareTo(_toNum(b['score']));
+    if (scoreCompare != 0) return scoreCompare;
+
+    final totalPointsCompare = _toNum(a['total_points']).compareTo(_toNum(b['total_points']));
+    if (totalPointsCompare != 0) return totalPointsCompare;
+
+    return _compareDatesAsc(a, b);
+  }
+
+  int _compareDatesDesc(Map<String, dynamic> a, Map<String, dynamic> b) {
+    final aDate = a['completed_at_dt'] as DateTime?;
+    final bDate = b['completed_at_dt'] as DateTime?;
+    if (aDate == null && bDate == null) return 0;
+    if (aDate == null) return 1;
+    if (bDate == null) return -1;
+    return bDate.compareTo(aDate);
+  }
+
+  int _compareDatesAsc(Map<String, dynamic> a, Map<String, dynamic> b) {
+    final aDate = a['completed_at_dt'] as DateTime?;
+    final bDate = b['completed_at_dt'] as DateTime?;
+    if (aDate == null && bDate == null) return 0;
+    if (aDate == null) return 1;
+    if (bDate == null) return -1;
+    return aDate.compareTo(bDate);
+  }
+
+  int _toInt(dynamic value) {
+    if (value is int) return value;
+    if (value is double) return value.round();
+    return int.tryParse(value.toString()) ?? 0;
+  }
+
+  num _toNum(dynamic value) {
+    if (value is num) return value;
+    return num.tryParse(value.toString()) ?? 0;
+  }
+
+  int _getPassCount() {
+    return _visibleResults.where((e) => e['is_passed'] == true).length;
+  }
+
+  int _getFailCount() {
+    return _visibleResults.where((e) => e['is_passed'] == false).length;
+  }
+
+  Color _getScoreColor(int percentage) {
+    if (percentage >= 80) return Colors.green;
+    if (percentage >= 60) return Colors.orange;
+    return Colors.red;
+  }
+
+  Color _getMedalColor(int rank) {
+    switch (rank) {
+      case 1:
+        return const Color(0xFFFFD700);
+      case 2:
+        return const Color(0xFFC0C0C0);
+      case 3:
+        return const Color(0xFFCD7F32);
+      default:
+        return _green;
+    }
+  }
+
+  IconData _getMedalIcon(int rank) {
+    switch (rank) {
+      case 1:
+      case 2:
+      case 3:
+        return Icons.workspace_premium;
+      default:
+        return Icons.emoji_events_outlined;
+    }
+  }
+
+  String _getRankLabel(int rank) {
+    switch (rank) {
+      case 1:
+        return '1st';
+      case 2:
+        return '2nd';
+      case 3:
+        return '3rd';
+      default:
+        return '#$rank';
+    }
+  }
+
+  String _safeInitial(String? name) {
+    if (name == null || name.trim().isEmpty) return '?';
+    return name.trim()[0].toUpperCase();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F5F5),
+      appBar: AppBar(
+        title: Text(
+          widget.quizTitle,
+          style: const TextStyle(fontSize: 16),
+        ),
+        backgroundColor: _green,
+        foregroundColor: Colors.white,
+      ),
+      body: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: _green),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 60, color: Colors.red),
+              const SizedBox(height: 16),
+              Text(
+                _errorMessage!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.red),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _loadResults,
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final totalAttempts = _toInt(_data!['total_attempts']);
+    final averagePercentage = (_data!['average_percentage'] ?? 0).toString();
+    final passCount = _data!['pass_count'] ?? _getPassCount();
+    final failCount = _data!['fail_count'] ?? _getFailCount();
+
+    return RefreshIndicator(
+      onRefresh: _loadResults,
+      color: _green,
+      child: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
+            decoration: const BoxDecoration(
+              color: _green,
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(24),
+                bottomRight: Radius.circular(24),
+              ),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildStat(
+                        label: 'Total Students',
+                        value: totalAttempts.toString(),
+                        icon: Icons.people,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _buildStat(
+                        label: 'Average',
+                        value: '$averagePercentage%',
+                        icon: Icons.bar_chart,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildStat(
+                        label: 'Passed',
+                        value: passCount.toString(),
+                        icon: Icons.check_circle,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _buildStat(
+                        label: 'Failed',
+                        value: failCount.toString(),
+                        icon: Icons.cancel,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Column(
+              children: [
+                TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Search student name or email...',
+                    prefixIcon: const Icon(Icons.search, color: _green),
+                    suffixIcon: _searchController.text.isEmpty
+                        ? null
+                        : IconButton(
+                            onPressed: () {
+                              _searchController.clear();
+                            },
+                            icon: const Icon(Icons.clear),
+                          ),
+                    filled: true,
+                    fillColor: Colors.white,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: const BorderSide(color: _green, width: 1.5),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    const Icon(Icons.filter_list, color: _green, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: Colors.grey.shade300),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: _selectedFilter,
+                            isExpanded: true,
+                            icon: const Icon(Icons.keyboard_arrow_down),
+                            items: _filterOptions.map((option) {
+                              return DropdownMenuItem<String>(
+                                value: option['value'],
+                                child: Text(option['label']!),
+                              );
+                            }).toList(),
+                            onChanged: (value) {
+                              if (value == null) return;
+                              setState(() {
+                                _selectedFilter = value;
+                              });
+                              _applySearchAndFilter();
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          Expanded(
+            child: _visibleResults.isEmpty
+                ? _buildEmptyState()
+                : ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    itemCount: _visibleResults.length,
+                    itemBuilder: (context, index) {
+                      final result = _visibleResults[index];
+                      final percentage = _toInt(result['percentage']);
+                      final scoreColor = _getScoreColor(percentage);
+                      final rank = _toInt(result['rank']);
+                      final medalColor = _getMedalColor(rank);
+                      final isPassed = result['is_passed'] == true;
+
+                      return GestureDetector(
+                        onTap: () => Navigator.pushNamed(
+                          context,
+                          '/student-attempt-detail',
+                          arguments: {
+                            'quiz_id': widget.quizId,
+                            'quiz_title': widget.quizTitle,
+                            'attempt_id': result['attempt_id'],
+                            'student_name': result['student_name'],
+                          },
+                        ),
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: rank <= 3 ? medalColor.withOpacity(0.08) : Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: rank <= 3 ? medalColor.withOpacity(0.45) : Colors.transparent,
+                              width: 1.2,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Column(
+                                children: [
+                                  Container(
+                                    width: 52,
+                                    height: 52,
+                                    decoration: BoxDecoration(
+                                      color: medalColor.withOpacity(0.14),
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: medalColor.withOpacity(0.45),
+                                      ),
+                                    ),
+                                    child: Icon(
+                                      _getMedalIcon(rank),
+                                      color: medalColor,
+                                      size: 26,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: medalColor,
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Text(
+                                      _getRankLabel(rank),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(width: 12),
+
+                              CircleAvatar(
+                                backgroundColor: _green.withOpacity(0.1),
+                                child: Text(
+                                  _safeInitial(result['student_name']?.toString()),
+                                  style: const TextStyle(
+                                    color: _green,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      result['student_name']?.toString() ?? 'Unknown Student',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15,
+                                        color: Color(0xFF333333),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      result['student_email']?.toString() ?? 'No email',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Wrap(
+                                      spacing: 8,
+                                      runSpacing: 6,
+                                      children: [
+                                        _buildStatusChip(
+                                          label: isPassed ? 'Pass' : 'Fail',
+                                          color: isPassed ? Colors.green : Colors.red,
+                                          icon: isPassed ? Icons.check_circle : Icons.cancel,
+                                        ),
+                                        _buildStatusChip(
+                                          label: 'Completed ${_formatDate(result['completed_at']?.toString())}',
+                                          color: Colors.blueGrey,
+                                          icon: Icons.calendar_today,
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              const SizedBox(width: 8),
+
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: scoreColor.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
+                                        color: scoreColor.withOpacity(0.3),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      '$percentage%',
+                                      style: TextStyle(
+                                        color: scoreColor,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    '${result['score']}/${result['total_points']} pts',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.grey.shade500,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  const Icon(Icons.chevron_right, color: Colors.grey),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    final hasQuery = _searchController.text.trim().isNotEmpty;
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              hasQuery ? Icons.search_off : Icons.inbox,
+              size: 60,
+              color: Colors.grey,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              hasQuery
+                  ? 'No students matched your search or filter.'
+                  : 'No students have taken this quiz yet.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.grey),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusChip({
+    required String label,
+    required Color color,
+    required IconData icon,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.10),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withOpacity(0.20)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStat({
+    required String label,
+    required String value,
+    required IconData icon,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: Colors.white70, size: 20),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            label,
+            style: const TextStyle(color: Colors.white70, fontSize: 12),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatDate(String? dateString) {
+    if (dateString == null) return 'N/A';
+    try {
+      final date = DateTime.parse(dateString).toLocal();
+      final mm = date.month.toString().padLeft(2, '0');
+      final dd = date.day.toString().padLeft(2, '0');
+      final yyyy = date.year.toString();
+      return '$mm/$dd/$yyyy';
+    } catch (e) {
+      return 'N/A';
+    }
+  }
+}
+
+
+===== C:\Users\hp\Desktop\Quizzard\frontend\lib\screens\quiz_result_screen.dart =====
+import 'package:flutter/material.dart';
+import '../widgets/multiple_choice_result_widget.dart';
+import '../widgets/true_false_result_widget.dart';
+import '../widgets/identification_result_widget.dart';
+import '../widgets/matching_result_widget.dart';
+
+class QuizResultScreen extends StatelessWidget {
+  const QuizResultScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final data = ModalRoute.of(context)!.settings.arguments
+        as Map<String, dynamic>;
+
+    final score = int.parse(data['score'].toString());
+    final totalPoints = int.parse(data['total_points'].toString());
+    final percentage = int.parse(data['percentage'].toString());
+    final quizTitle = data['quiz_title'] as String;
+    final questionResults = data['question_results'] as List;
+
+    // Color based on percentage
+    Color scoreColor;
+    String scoreLabel;
+    IconData scoreIcon;
+    if (percentage >= 80) {
+      scoreColor = Colors.green;
+      scoreLabel = 'Excellent!';
+      scoreIcon = Icons.emoji_events;
+    } else if (percentage >= 60) {
+      scoreColor = Colors.orange;
+      scoreLabel = 'Good Job!';
+      scoreIcon = Icons.thumb_up;
+    } else {
+      scoreColor = Colors.red;
+      scoreLabel = 'Keep Practicing!';
+      scoreIcon = Icons.refresh;
+    }
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F5F5),
+      appBar: AppBar(
+        title: const Text('Quiz Results'),
+        backgroundColor: const Color(0xFF6C63FF),
+        foregroundColor: Colors.white,
+        automaticallyImplyLeading: false,
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // Score header
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(30),
+              decoration: const BoxDecoration(
+                color: Color(0xFF6C63FF),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(30),
+                  bottomRight: Radius.circular(30),
+                ),
+              ),
+              child: Column(
+                children: [
+                  Icon(scoreIcon, color: Colors.white, size: 60),
+                  const SizedBox(height: 12),
+                  Text(
+                    scoreLabel,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    quizTitle,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Score circle
+                  Container(
+                    width: 140,
+                    height: 140,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '$percentage%',
+                          style: TextStyle(
+                            fontSize: 36,
+                            fontWeight: FontWeight.bold,
+                            color: scoreColor,
+                          ),
+                        ),
+                        Text(
+                          '$score / $totalPoints pts',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Stats row
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildStat(
+                        label: 'Correct',
+                        value: questionResults
+                            .where((q) => q['is_correct'] == true)
+                            .length
+                            .toString(),
+                        color: Colors.green,
+                      ),
+                      _buildStat(
+                        label: 'Wrong',
+                        value: questionResults
+                            .where((q) => q['is_correct'] == false)
+                            .length
+                            .toString(),
+                        color: Colors.red,
+                      ),
+                      _buildStat(
+                        label: 'Total',
+                        value: questionResults.length.toString(),
+                        color: Colors.white,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            // Question results
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Question Review',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF333333),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ...questionResults.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final q =
+                        Map<String, dynamic>.from(entry.value);
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Question number
+                        Row(
+                          children: [
+                            Container(
+                              width: 28,
+                              height: 28,
+                              decoration: BoxDecoration(
+                                color: q['is_correct'] == true
+                                    ? Colors.green
+                                    : Colors.red,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Center(
+                                child: Text(
+                                  '${index + 1}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '${q['points_earned']}/${q['points']} pts',
+                              style: TextStyle(
+                                color: q['is_correct'] == true
+                                    ? Colors.green
+                                    : Colors.red,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+
+                        // Result widget based on type
+                        _buildResultWidget(q),
+                        const SizedBox(height: 20),
+                        if (index < questionResults.length - 1)
+                          const Divider(height: 20),
+                      ],
+                    );
+                  }),
+                  const SizedBox(height: 20),
+
+                  // Back to dashboard button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 54,
+                    child: ElevatedButton.icon(
+                      onPressed: () => Navigator.pushNamedAndRemoveUntil(
+                        context,
+                        '/student-dashboard',
+                        (route) => false,
+                      ),
+                      icon: const Icon(Icons.home, color: Colors.white),
+                      label: const Text(
+                        'Back to Dashboard',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF6C63FF),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStat({
+    required String label,
+    required String value,
+    required Color color,
+  }) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            color: color,
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white70,
+            fontSize: 13,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildResultWidget(Map<String, dynamic> question) {
+    final qType = question['question_type'] as String;
+    final answerGiven = question['answer_given'] as String;
+
+    switch (qType) {
+      case 'multiple_choice':
+        return MultipleChoiceResultWidget(
+          question: question,
+          selectedAnswerId: int.tryParse(answerGiven),
+        );
+      case 'true_false':
+        return TrueFalseResultWidget(
+          question: question,
+          selectedAnswerId: int.tryParse(answerGiven),
+        );
+      case 'identification':
+        return IdentificationResultWidget(
+          question: question,
+          studentAnswer: answerGiven,
+        );
+      case 'matching':
+        // Parse the JSON string back to Map
+        Map<String, String> matches = {};
+        try {
+          final decoded = answerGiven
+              .replaceAll('{', '')
+              .replaceAll('}', '')
+              .split(',');
+          // Use proper JSON decode
+          final rawMap = Map<String, dynamic>.from(
+            (answerGiven.isNotEmpty
+                ? _parseJsonMap(answerGiven)
+                : {}),
+          );
+          matches = rawMap
+              .map((key, value) => MapEntry(key, value.toString()));
+        } catch (e) {
+          matches = {};
+        }
+        return MatchingResultWidget(
+          question: question,
+          studentAnswers: matches,
+        );
+      default:
+        return const SizedBox();
+    }
+  }
+
+  Map<String, dynamic> _parseJsonMap(String jsonString) {
+    try {
+      // Simple JSON parser for flat key-value pairs
+      final clean = jsonString
+          .trim()
+          .replaceAll('{', '')
+          .replaceAll('}', '');
+      final pairs = clean.split('","');
+      final result = <String, dynamic>{};
+      for (var pair in pairs) {
+        final parts = pair.replaceAll('"', '').split(':');
+        if (parts.length >= 2) {
+          final key = parts[0].trim();
+          final value = parts.sublist(1).join(':').trim();
+          result[key] = value;
+        }
+      }
+      return result;
+    } catch (e) {
+      return {};
+    }
+  }
+}
+
+
+===== C:\Users\hp\Desktop\Quizzard\frontend\lib\screens\quiz_taking_screen.dart =====
+import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
+import '../widgets/multiple_choice_widget.dart';
+import '../widgets/true_false_widget.dart';
+import '../widgets/identification_widget.dart';
+import '../widgets/matching_widget.dart';
+
+class QuizTakingScreen extends StatefulWidget {
+  final int quizId;
+  final String quizTitle;
+
+  const QuizTakingScreen({
+    super.key,
+    required this.quizId,
+    required this.quizTitle,
+  });
+
+  @override
+  State<QuizTakingScreen> createState() => _QuizTakingScreenState();
+}
+
+class _QuizTakingScreenState extends State<QuizTakingScreen> {
+  bool _isLoading = true;
+  bool _isSubmitting = false;
+  String? _errorMessage;
+  List<dynamic> _questions = [];
+  int _currentIndex = 0;
+  int? _attemptId;
+
+  // Store answers for each question
+  // key = question id, value = answer
+  final Map<int, dynamic> _answers = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadQuiz();
+  }
+
+  Future<void> _loadQuiz() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    // Start attempt
+    final attemptResult = await AuthService.authPost(
+      '/quizzes/${widget.quizId}/start',
+      {},
+    );
+
+    if (!attemptResult['success'] &&
+        attemptResult['message'] != 'Resuming existing attempt.') {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = attemptResult['message'];
+      });
+      return;
+    }
+
+    _attemptId = int.parse(attemptResult['data']['attempt']['id'].toString());
+
+    // Load quiz questions
+    final quizResult =
+        await AuthService.authGet('/quizzes/${widget.quizId}');
+
+    setState(() {
+      _isLoading = false;
+      if (quizResult['success']) {
+        _questions =
+            quizResult['data']['data']['questions'] as List;
+      } else {
+        _errorMessage = quizResult['message'];
+      }
+    });
+  }
+
+  void _goToNext() {
+    if (_currentIndex < _questions.length - 1) {
+      setState(() => _currentIndex++);
+    }
+  }
+
+  void _goToPrevious() {
+    if (_currentIndex > 0) {
+      setState(() => _currentIndex--);
+    }
+  }
+
+  bool _isAnswered(int questionId) {
+    final answer = _answers[questionId];
+    if (answer == null) return false;
+    if (answer is String) return answer.trim().isNotEmpty;
+    if (answer is Map) return answer.isNotEmpty;
+    return true;
+  }
+
+  Future<void> _confirmSubmit() async {
+    // Count unanswered questions
+    final unanswered = _questions
+        .where((q) => !_isAnswered(q['id']))
+        .length;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16)),
+        title: const Text('Submit Quiz?'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+                'You have answered ${_questions.length - unanswered} out of ${_questions.length} questions.'),
+            if (unanswered > 0) ...[
+              const SizedBox(height: 8),
+              Text(
+                '$unanswered question(s) unanswered.',
+                style: const TextStyle(
+                    color: Colors.orange,
+                    fontWeight: FontWeight.bold),
+              ),
+            ],
+            const SizedBox(height: 8),
+            const Text('Are you sure you want to submit?'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF6C63FF),
+            ),
+            child: const Text('Submit',
+                style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await _submitQuiz();
+    }
+  }
+
+  Future<void> _submitQuiz() async {
+    setState(() => _isSubmitting = true);
+
+    // Build answers list for API
+    final answersList = [];
+    for (var question in _questions) {
+      final qId = question['id'];
+      final qType = question['question_type'];
+      final answer = _answers[qId];
+
+      if (qType == 'multiple_choice' || qType == 'true_false') {
+        answersList.add({
+          'question_id': qId,
+          'answer_type': qType,
+          'selected_option_id': answer,
+        });
+      } else if (qType == 'identification') {
+        answersList.add({
+          'question_id': qId,
+          'answer_type': qType,
+          'answer_text': answer ?? '',
+        });
+      } else if (qType == 'matching') {
+        answersList.add({
+          'question_id': qId,
+          'answer_type': qType,
+          'matches': answer ?? {},
+        });
+      }
+    }
+
+    final result = await AuthService.authPost(
+      '/quizzes/${widget.quizId}/submit',
+      {
+        'attempt_id': _attemptId,
+        'answers': answersList,
+      },
+    );
+
+    setState(() => _isSubmitting = false);
+
+    if (result['success']) {
+      if (!mounted) return;
+      Navigator.pushReplacementNamed(
+        context,
+        '/quiz-result',
+        arguments: result['data'],
+      );
+    } else {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message']),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F5F5),
+      appBar: AppBar(
+        title: Text(
+          widget.quizTitle,
+          style: const TextStyle(fontSize: 16),
+        ),
+        backgroundColor: const Color(0xFF6C63FF),
+        foregroundColor: Colors.white,
+        actions: [
+          if (!_isLoading && _questions.isNotEmpty)
+            TextButton(
+              onPressed: _isSubmitting ? null : _confirmSubmit,
+              child: const Text(
+                'Submit',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+        ],
+      ),
+      body: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_isLoading) {
+      return const Center(
+        child:
+            CircularProgressIndicator(color: Color(0xFF6C63FF)),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline,
+                  size: 60, color: Colors.red),
+              const SizedBox(height: 16),
+              Text(
+                _errorMessage!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.red),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Go Back'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_questions.isEmpty) {
+      return const Center(
+        child: Text('This quiz has no questions yet.'),
+      );
+    }
+
+    final question =
+        Map<String, dynamic>.from(_questions[_currentIndex]);
+    final questionId = question['id'] as int;
+    final totalQuestions = _questions.length;
+
+    return Column(
+      children: [
+        // Progress bar
+        Container(
+          color: Colors.white,
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Question ${_currentIndex + 1} of $totalQuestions',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF333333),
+                    ),
+                  ),
+                  Text(
+                    '${_questions.where((q) => _isAnswered(q['id'])).length} answered',
+                    style: const TextStyle(
+                        color: Colors.grey, fontSize: 13),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              // Progress bar
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: (_currentIndex + 1) / totalQuestions,
+                  backgroundColor: Colors.grey.shade200,
+                  valueColor: const AlwaysStoppedAnimation<Color>(
+                      Color(0xFF6C63FF)),
+                  minHeight: 8,
+                ),
+              ),
+              const SizedBox(height: 8),
+              // Question dots
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(totalQuestions, (index) {
+                  final q =
+                      Map<String, dynamic>.from(_questions[index]);
+                  final isAnswered = _isAnswered(q['id']);
+                  final isCurrent = index == _currentIndex;
+                  return GestureDetector(
+                    onTap: () =>
+                        setState(() => _currentIndex = index),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 3),
+                      width: isCurrent ? 24 : 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: isCurrent
+                            ? const Color(0xFF6C63FF)
+                            : isAnswered
+                                ? Colors.green
+                                : Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ],
+          ),
+        ),
+
+        // Question content
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: _buildQuestion(question, questionId),
+          ),
+        ),
+
+        // Navigation buttons
+        Container(
+          color: Colors.white,
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              // Previous button
+              if (_currentIndex > 0)
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _goToPrevious,
+                    icon: const Icon(Icons.arrow_back),
+                    label: const Text('Previous'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF6C63FF),
+                      side: const BorderSide(
+                          color: Color(0xFF6C63FF)),
+                      padding:
+                          const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ),
+              if (_currentIndex > 0) const SizedBox(width: 12),
+
+              // Next / Submit button
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: _isSubmitting
+                      ? null
+                      : _currentIndex < totalQuestions - 1
+                          ? _goToNext
+                          : _confirmSubmit,
+                  icon: Icon(
+                    _currentIndex < totalQuestions - 1
+                        ? Icons.arrow_forward
+                        : Icons.check_circle,
+                  ),
+                  label: Text(
+                    _currentIndex < totalQuestions - 1
+                        ? 'Next'
+                        : 'Submit Quiz',
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: (_currentIndex < totalQuestions - 1)
+                        ? const Color(0xFF6C63FF)
+                        : Colors.green,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQuestion(
+      Map<String, dynamic> question, int questionId) {
+    final qType = question['question_type'] as String;
+
+    switch (qType) {
+      case 'multiple_choice':
+        return MultipleChoiceWidget(
+          question: question,
+          selectedAnswerId: _answers[questionId] as int?,
+          onAnswerSelected: (id) =>
+              setState(() => _answers[questionId] = id),
+        );
+      case 'true_false':
+        return TrueFalseWidget(
+          question: question,
+          selectedAnswerId: _answers[questionId] as int?,
+          onAnswerSelected: (id) =>
+              setState(() => _answers[questionId] = id),
+        );
+      case 'identification':
+        return IdentificationWidget(
+          question: question,
+          currentAnswer: _answers[questionId] as String? ?? '',
+          onAnswerChanged: (val) =>
+              setState(() => _answers[questionId] = val),
+        );
+      case 'matching':
+        return MatchingWidget(
+          question: question,
+          currentAnswers:
+              _answers[questionId] as Map<String, String>?,
+          onAnswerChanged: (matches) =>
+              setState(() => _answers[questionId] = matches),
+        );
+      default:
+        return const Text('Unknown question type');
+    }
+  }
+}
+
+
+===== C:\Users\hp\Desktop\Quizzard\frontend\lib\screens\student_attempt_detail_screen.dart =====
+import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
+import '../widgets/multiple_choice_result_widget.dart';
+import '../widgets/true_false_result_widget.dart';
+import '../widgets/identification_result_widget.dart';
+import '../widgets/matching_result_widget.dart';
+
+class StudentAttemptDetailScreen extends StatefulWidget {
+  final int quizId;
+  final String quizTitle;
+  final int attemptId;
+  final String studentName;
+
+  const StudentAttemptDetailScreen({
+    super.key,
+    required this.quizId,
+    required this.quizTitle,
+    required this.attemptId,
+    required this.studentName,
+  });
+
+  @override
+  State<StudentAttemptDetailScreen> createState() =>
+      _StudentAttemptDetailScreenState();
+}
+
+class _StudentAttemptDetailScreenState
+    extends State<StudentAttemptDetailScreen> {
+  bool _isLoading = true;
+  String? _errorMessage;
+  Map<String, dynamic>? _data;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDetail();
+  }
+
+  Future<void> _loadDetail() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    final result = await AuthService.authGet(
+      '/teacher/quizzes/${widget.quizId}/results/${widget.attemptId}',
+    );
+
+    setState(() {
+      _isLoading = false;
+      if (result['success']) {
+        _data = result['data'];
+      } else {
+        _errorMessage = result['message'];
+      }
+    });
+  }
+
+  Color _getScoreColor(int percentage) {
+    if (percentage >= 80) return const Color(0xFF2E7D32);
+    if (percentage >= 60) return const Color(0xFFF9A825);
+    return const Color(0xFFC62828);
+  }
+
+  Widget _buildResultWidget(Map<String, dynamic> question) {
+    final qType = question['question_type'] as String;
+    final answerGiven = question['answer_given'] as String;
+
+    switch (qType) {
+      case 'multiple_choice':
+        return MultipleChoiceResultWidget(
+          question: question,
+          selectedAnswerId: int.tryParse(answerGiven),
+        );
+      case 'true_false':
+        return TrueFalseResultWidget(
+          question: question,
+          selectedAnswerId: int.tryParse(answerGiven),
+        );
+      case 'identification':
+        return IdentificationResultWidget(
+          question: question,
+          studentAnswer: answerGiven,
+        );
+      case 'matching':
+        Map<String, String> matches = {};
+        try {
+          final rawMap = _parseJsonMap(answerGiven);
+          matches = rawMap.map((key, value) => MapEntry(key, value.toString()));
+        } catch (e) {
+          matches = {};
+        }
+        return MatchingResultWidget(
+          question: question,
+          studentAnswers: matches,
+        );
+      default:
+        return const SizedBox();
+    }
+  }
+
+  Map<String, dynamic> _parseJsonMap(String jsonString) {
+    try {
+      final clean = jsonString.trim().replaceAll('{', '').replaceAll('}', '');
+      final pairs = clean.split('","');
+      final result = <String, dynamic>{};
+      for (var pair in pairs) {
+        final parts = pair.replaceAll('"', '').split(':');
+        if (parts.length >= 2) {
+          final key = parts[0].trim();
+          final value = parts.sublist(1).join(':').trim();
+          result[key] = value;
+        }
+      }
+      return result;
+    } catch (e) {
+      return {};
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final attempt =
+        _data != null ? Map<String, dynamic>.from(_data!['attempt']) : null;
+    final percentage = attempt != null ? attempt['percentage'] as int : 0;
+    final bool isPassed = percentage >= 60;
+
+    final Color themeColor =
+        isPassed ? const Color(0xFF2E7D32) : const Color(0xFFC62828);
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F5F5),
+      appBar: AppBar(
+        title: Text(
+          widget.studentName,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        backgroundColor: themeColor,
+        foregroundColor: Colors.white,
+        elevation: 0,
+      ),
+      body: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: Color(0xFF4CAF50)),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 60, color: Colors.red),
+              const SizedBox(height: 16),
+              Text(
+                _errorMessage!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.red),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _loadDetail,
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final attempt = Map<String, dynamic>.from(_data!['attempt']);
+    final student = Map<String, dynamic>.from(_data!['student']);
+    final questionResults = _data!['question_results'] as List;
+    final percentage = attempt['percentage'] as int;
+    final scoreColor = _getScoreColor(percentage);
+
+    final bool isPassed = percentage >= 60;
+    final Color themeColor =
+        isPassed ? const Color(0xFF2E7D32) : const Color(0xFFC62828);
+    final Color lightThemeColor =
+        isPassed ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE);
+
+    final int correctCount =
+        questionResults.where((q) => q['is_correct'] == true).length;
+    final int wrongCount =
+        questionResults.where((q) => q['is_correct'] == false).length;
+    final int totalCount = questionResults.length;
+
+    final String performanceMessage;
+    if (percentage >= 90) {
+      performanceMessage =
+          'Excellent performance. The student demonstrates strong mastery of this quiz.';
+    } else if (percentage >= 75) {
+      performanceMessage =
+          'Good performance. The student understands most of the assessed concepts.';
+    } else if (percentage >= 60) {
+      performanceMessage =
+          'Passed the quiz, but there is still room for improvement in some areas.';
+    } else {
+      performanceMessage =
+          'The student did not meet the passing mark. Review and remediation are recommended.';
+    }
+
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: themeColor,
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(28),
+                bottomRight: Radius.circular(28),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: themeColor.withOpacity(0.22),
+                  blurRadius: 18,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+              child: Column(
+                children: [
+                  CircleAvatar(
+                    radius: 34,
+                    backgroundColor: Colors.white.withOpacity(0.18),
+                    child: Text(
+                      student['name'][0].toUpperCase(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    student['name'],
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    student['email'],
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isPassed ? Icons.check_circle : Icons.cancel,
+                          color: themeColor,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          isPassed ? 'PASSED' : 'FAILED',
+                          style: TextStyle(
+                            color: themeColor,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.6,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  Container(
+                    width: 132,
+                    height: 132,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.10),
+                          blurRadius: 18,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '$percentage%',
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: scoreColor,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${attempt['score']}/${attempt['total_points']}',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+
+                  Text(
+                    performanceMessage,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      height: 1.45,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildSummaryCard(
+                          label: 'Correct',
+                          value: correctCount.toString(),
+                          icon: Icons.check_circle,
+                          iconColor: const Color(0xFF2E7D32),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _buildSummaryCard(
+                          label: 'Wrong',
+                          value: wrongCount.toString(),
+                          icon: Icons.cancel,
+                          iconColor: const Color(0xFFC62828),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _buildSummaryCard(
+                          label: 'Total',
+                          value: totalCount.toString(),
+                          icon: Icons.quiz,
+                          iconColor: themeColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
+            child: Column(
+              children: questionResults.asMap().entries.map((entry) {
+                final index = entry.key;
+                final q = Map<String, dynamic>.from(entry.value);
+                final bool isCorrect = q['is_correct'] == true;
+
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 18),
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                      color: isCorrect
+                          ? Colors.green.withOpacity(0.20)
+                          : Colors.red.withOpacity(0.20),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 34,
+                            height: 34,
+                            decoration: BoxDecoration(
+                              color: isCorrect
+                                  ? const Color(0xFF2E7D32)
+                                  : const Color(0xFFC62828),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: Text(
+                                '${index + 1}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            isCorrect ? 'Correct Answer' : 'Incorrect Answer',
+                            style: TextStyle(
+                              color: isCorrect
+                                  ? const Color(0xFF2E7D32)
+                                  : const Color(0xFFC62828),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      _buildResultWidget(q),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryCard({
+    required String label,
+    required String value,
+    required IconData icon,
+    required Color iconColor,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: iconColor, size: 20),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF222222),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              color: Colors.grey,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+
+===== C:\Users\hp\Desktop\Quizzard\frontend\lib\screens\student_class_quizzes_screen.dart =====
+import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
+
+class StudentClassQuizzesScreen extends StatefulWidget {
+  final int classId;
+  final String className;
+
+  const StudentClassQuizzesScreen({
+    super.key,
+    required this.classId,
+    required this.className,
+  });
+
+  @override
+  State<StudentClassQuizzesScreen> createState() =>
+      _StudentClassQuizzesScreenState();
+}
+
+class _StudentClassQuizzesScreenState
+    extends State<StudentClassQuizzesScreen> {
+  bool _isLoading = true;
+  String? _errorMessage;
+  List<dynamic> _quizzes = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadQuizzes();
+  }
+
+  Future<void> _loadQuizzes() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    final result = await AuthService.authGet(
+      '/student/classes/${widget.classId}/quizzes',
+    );
+
+    setState(() {
+      _isLoading = false;
+      if (result['success']) {
+        _quizzes = result['data']['quizzes'] as List;
+      } else {
+        _errorMessage = result['message'];
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F5F5),
+      appBar: AppBar(
+        title: Text(
+          widget.className,
+          style: const TextStyle(fontSize: 16),
+        ),
+        backgroundColor: const Color(0xFF6C63FF),
+        foregroundColor: Colors.white,
+      ),
+      body: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(
+            color: Color(0xFF6C63FF)),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline,
+                  size: 60, color: Colors.red),
+              const SizedBox(height: 16),
+              Text(_errorMessage!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.red)),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _loadQuizzes,
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_quizzes.isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.quiz_outlined,
+                size: 80, color: Colors.grey),
+            SizedBox(height: 16),
+            Text(
+              'No quizzes available yet.',
+              style: TextStyle(
+                  fontSize: 18, color: Colors.grey),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Your teacher hasn\'t assigned any quizzes yet.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadQuizzes,
+      color: const Color(0xFF6C63FF),
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: _quizzes.length,
+        itemBuilder: (context, index) {
+          final quiz =
+              Map<String, dynamic>.from(_quizzes[index]);
+          return _buildQuizCard(quiz);
+        },
+      ),
+    );
+  }
+
+  Widget _buildQuizCard(Map<String, dynamic> quiz) {
+    final alreadyTaken = quiz['already_taken'] == true;
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16)),
+      elevation: 3,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF6C63FF)
+                        .withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.quiz,
+                      color: Color(0xFF6C63FF), size: 28),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment:
+                        CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        quiz['title'],
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF333333),
+                        ),
+                      ),
+                      if (quiz['description'] != null &&
+                          quiz['description'].isNotEmpty)
+                        Text(
+                          quiz['description'],
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey.shade600),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Stats row
+            Row(
+              children: [
+                Icon(Icons.help_outline,
+                    size: 16, color: Colors.grey.shade500),
+                const SizedBox(width: 4),
+                Text(
+                  '${quiz['questions_count']} questions',
+                  style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey.shade600),
+                ),
+                const Spacer(),
+                // Status badge
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: alreadyTaken
+                        ? Colors.green.withOpacity(0.1)
+                        : const Color(0xFF6C63FF)
+                            .withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: alreadyTaken
+                          ? Colors.green.withOpacity(0.3)
+                          : const Color(0xFF6C63FF)
+                              .withOpacity(0.3),
+                    ),
+                  ),
+                  child: Text(
+                    alreadyTaken ? '✓ Done' : 'Not taken',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: alreadyTaken
+                          ? Colors.green
+                          : const Color(0xFF6C63FF),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Take button
+            SizedBox(
+              width: double.infinity,
+              height: 44,
+              child: ElevatedButton(
+                onPressed: alreadyTaken
+                    ? null
+                    : () async {
+                        await Navigator.pushNamed(
+                          context,
+                          '/quiz-taking',
+                          arguments: {
+                            'quiz_id': quiz['id'],
+                            'quiz_title': quiz['title'],
+                          },
+                        );
+                        _loadQuizzes();
+                      },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: alreadyTaken
+                      ? Colors.grey.shade300
+                      : const Color(0xFF6C63FF),
+                  shape: RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.circular(12)),
+                ),
+                child: Text(
+                  alreadyTaken
+                      ? 'Already Completed'
+                      : 'Take Quiz',
+                  style: TextStyle(
+                    color: alreadyTaken
+                        ? Colors.grey.shade600
+                        : Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
+===== C:\Users\hp\Desktop\Quizzard\frontend\lib\screens\student_dashboard_screen.dart =====
+import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
+import '../widgets/profile_widget.dart';
+
+class StudentDashboardScreen extends StatefulWidget {
+  const StudentDashboardScreen({super.key});
+
+  @override
+  State<StudentDashboardScreen> createState() => _StudentDashboardScreenState();
+}
+
+class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
+  bool _isLoading = true;
+  Map<String, dynamic>? _dashboardData;
+  String? _errorMessage;
+  int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDashboard();
+  }
+
+  Future<void> _loadDashboard() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    final result = await AuthService.authGet('/student/dashboard');
+
+    setState(() {
+      _isLoading = false;
+      if (result['success']) {
+        _dashboardData = result['data'];
+      } else {
+        _errorMessage = result['message'];
+      }
+    });
+  }
+
+  Future<void> _logout() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Log Out'),
+        content: const Text('Are you sure you want to log out?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Log Out', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+    await AuthService.logout();
+    if (!mounted) return;
+    Navigator.pushReplacementNamed(context, '/login');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F5F5),
+      body: _buildBody(),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) => setState(() => _currentIndex = index),
+        selectedItemColor: const Color(0xFF6C63FF),
+        unselectedItemColor: Colors.grey,
+        type: BottomNavigationBarType.fixed,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.quiz),
+            label: 'Quizzes',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.class_),
+            label: 'Classes',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: Color(0xFF6C63FF)),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 60, color: Colors.red),
+            const SizedBox(height: 16),
+            Text(_errorMessage!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.red)),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadDashboard,
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+
+
+    Widget _buildClassesTab() {
+      return _StudentClassesTab(
+        onRefresh: _loadDashboard,
+      );
+    }
+
+    switch (_currentIndex) {
+      case 0:
+        return _buildHomeTab();
+      case 1:
+        return _buildQuizzesTab();
+      case 2:
+        return _buildClassesTab();
+      case 3:
+        return _buildProfileTab();
+      default:
+        return _buildHomeTab();
+    }
+
+
+  }
+
+  // ─── HOME TAB ────────────────────────────────────────────
+  Widget _buildHomeTab() {
+    final student = _dashboardData!['student'];
+    final quizzes = _dashboardData!['available_quizzes'] as List;
+    final scores = _dashboardData!['recent_scores'] as List;
+    final totalTaken = _dashboardData!['total_quizzes_taken'];
+
+    return RefreshIndicator(
+      onRefresh: _loadDashboard,
+      color: const Color(0xFF6C63FF),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(20, 50, 20, 30),
+              decoration: const BoxDecoration(
+                color: Color(0xFF6C63FF),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(30),
+                  bottomRight: Radius.circular(30),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Welcome back,',
+                            style: TextStyle(
+                                color: Colors.white70, fontSize: 14),
+                          ),
+                          Text(
+                            student['name'],
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      GestureDetector(
+                        onTap: _logout,
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(Icons.logout,
+                              color: Colors.white, size: 20),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  // Stats row
+                  Row(
+                    children: [
+                      _buildStatCard(
+                        icon: Icons.quiz,
+                        label: 'Available',
+                        value: '${quizzes.length}',
+                      ),
+                      const SizedBox(width: 12),
+                      _buildStatCard(
+                        icon: Icons.check_circle,
+                        label: 'Completed',
+                        value: '$totalTaken',
+                      ),
+                      const SizedBox(width: 12),
+                      _buildStatCard(
+                        icon: Icons.star,
+                        label: 'Avg Score',
+                        value: scores.isEmpty
+                            ? 'N/A'
+                            : '${(scores.map((s) => s['percentage'] as int).reduce((a, b) => a + b) / scores.length).round()}%',
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // Recent Scores
+            if (scores.isNotEmpty) ...[
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  'Recent Scores',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF333333),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 100,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  itemCount: scores.length,
+                  itemBuilder: (context, index) {
+                    final score = scores[index];
+                    return _buildScoreCard(score);
+                  },
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
+
+            // Available Quizzes
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                'Available Quizzes',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF333333),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            quizzes.isEmpty
+                ? _buildEmptyState(
+                    icon: Icons.quiz_outlined,
+                    message: 'No quizzes available yet.\nCheck back later!',
+                  )
+                : ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    itemCount: quizzes.length,
+                    itemBuilder: (context, index) {
+                      return _buildQuizCard(quizzes[index]);
+                    },
+                  ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ─── QUIZZES TAB ─────────────────────────────────────────
+  Widget _buildQuizzesTab() {
+    final quizzes = _dashboardData!['available_quizzes'] as List;
+    return RefreshIndicator(
+      onRefresh: _loadDashboard,
+      color: const Color(0xFF6C63FF),
+      child: quizzes.isEmpty
+          ? _buildEmptyState(
+              icon: Icons.quiz_outlined,
+              message: 'No quizzes available yet.',
+            )
+          : ListView.builder(
+              padding: const EdgeInsets.all(20),
+              itemCount: quizzes.length,
+              itemBuilder: (context, index) =>
+                  _buildQuizCard(quizzes[index]),
+            ),
+    );
+  }
+
+  // ─── SCORES TAB ──────────────────────────────────────────
+  Widget _buildScoresTab() {
+    final scores = _dashboardData!['recent_scores'] as List;
+    return scores.isEmpty
+        ? _buildEmptyState(
+            icon: Icons.bar_chart,
+            message: 'No scores yet.\nTake a quiz to see your results!',
+          )
+        : ListView.builder(
+            padding: const EdgeInsets.all(20),
+            itemCount: scores.length,
+            itemBuilder: (context, index) {
+              final score = scores[index];
+              final percentage = score['percentage'] as int;
+              return Card(
+                margin: const EdgeInsets.only(bottom: 12),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 60,
+                        height: 60,
+                        decoration: BoxDecoration(
+                          color: _getScoreColor(percentage)
+                              .withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Center(
+                          child: Text(
+                            '$percentage%',
+                            style: TextStyle(
+                              color: _getScoreColor(percentage),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              score['quiz_title'],
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${score['score']} / ${score['total_points']} points',
+                              style: const TextStyle(
+                                  color: Colors.grey, fontSize: 13),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+  }
+
+  // ─── PROFILE TAB ─────────────────────────────────────────
+  Widget _buildProfileTab() {
+      return ProfileWidget(onLogout: _logout);
+  }           
+  // ─── HELPER WIDGETS ──────────────────────────────────────
+
+  Widget _buildStatCard({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: Colors.white, size: 20),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+            Text(
+              label,
+              style:
+                  const TextStyle(color: Colors.white70, fontSize: 11),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildScoreCard(Map<String, dynamic> score) {
+    final percentage = score['percentage'] as int;
+    return Container(
+      width: 150,
+      margin: const EdgeInsets.only(right: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            score['quiz_title'],
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+                fontWeight: FontWeight.bold, fontSize: 13),
+          ),
+          Row(
+            children: [
+              Icon(Icons.star,
+                  color: _getScoreColor(percentage), size: 16),
+              const SizedBox(width: 4),
+              Text(
+                '$percentage%',
+                style: TextStyle(
+                  color: _getScoreColor(percentage),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuizCard(Map<String, dynamic> quiz) {
+    final alreadyTaken = quiz['already_taken'] as bool;
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      shape:
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: const Color(0xFF6C63FF).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.quiz,
+                  color: Color(0xFF6C63FF), size: 28),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    quiz['title'],
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'By ${quiz['teacher_name']}',
+                    style: const TextStyle(
+                        color: Colors.grey, fontSize: 12),
+                  ),
+                  if (alreadyTaken) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      'Score: ${quiz['score']}/${quiz['total_points']}',
+                      style: const TextStyle(
+                        color: Color(0xFF6C63FF),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            GestureDetector(
+              onTap: alreadyTaken
+                  ? null
+                  : () => Navigator.pushNamed(
+                        context,
+                        '/quiz-taking',
+                        arguments: {
+                          'quiz_id': quiz['id'],
+                          'quiz_title': quiz['title'],
+                        },
+                      ),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: alreadyTaken
+                      ? Colors.green.withOpacity(0.1)
+                      : const Color(0xFF6C63FF),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  alreadyTaken ? 'Done' : 'Take',
+                  style: TextStyle(
+                    color: alreadyTaken ? Colors.green : Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(
+      {required IconData icon, required String message}) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(40),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 80, color: Colors.grey.shade300),
+            const SizedBox(height: 16),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style:
+                  TextStyle(color: Colors.grey.shade500, fontSize: 16),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Color _getScoreColor(int percentage) {
+    if (percentage >= 80) return Colors.green;
+    if (percentage >= 60) return Colors.orange;
+    return Colors.red;
+  }
+}
+
+
+
+class _StudentClassesTab extends StatefulWidget {
+  final VoidCallback onRefresh;
+
+  const _StudentClassesTab({required this.onRefresh});
+
+  @override
+  State<_StudentClassesTab> createState() => _StudentClassesTabState();
+}
+
+class _StudentClassesTabState extends State<_StudentClassesTab> {
+  bool _isLoading = true;
+  String? _errorMessage;
+  List<dynamic> _classes = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadClasses();
+  }
+
+  Future<void> _loadClasses() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    final result = await AuthService.authGet('/student/classes');
+
+    setState(() {
+      _isLoading = false;
+      if (result['success']) {
+        _classes = result['data']['classes'] as List;
+      } else {
+        _errorMessage = result['message'];
+      }
+    });
+  }
+
+  Future<void> _joinClass() async {
+    final codeController = TextEditingController();
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16)),
+        title: const Text('Join a Class'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Enter the class code provided by your teacher.',
+              style: TextStyle(color: Colors.grey),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: codeController,
+              textCapitalization: TextCapitalization.characters,
+              decoration: InputDecoration(
+                labelText: 'Class Code',
+                hintText: 'e.g. Y9ZJAV',
+                prefixIcon: const Icon(Icons.key,
+                    color: Color(0xFF6C63FF)),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                      color: Color(0xFF6C63FF), width: 2),
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF6C63FF),
+            ),
+            child: const Text('Join',
+                style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+    if (codeController.text.trim().isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a class code.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final result = await AuthService.authPost(
+      '/student/classes/join',
+      {'class_code': codeController.text.trim()},
+    );
+
+    if (result['success']) {
+      _loadClasses();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['data']['message'] ??
+              'Successfully joined the class!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message']),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _leaveClass(Map<String, dynamic> cls) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16)),
+        title: const Text('Leave Class'),
+        content: Text(
+            'Are you sure you want to leave "${cls['name']}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red),
+            child: const Text('Leave',
+                style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    final result = await AuthService.authDelete(
+      '/student/classes/${cls['id']}/leave',
+    );
+
+    if (result['success']) {
+      _loadClasses();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('You have left the class.'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F5F5),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _joinClass,
+        backgroundColor: const Color(0xFF6C63FF),
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text('Join Class',
+            style: TextStyle(color: Colors.white)),
+      ),
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(
+                  color: Color(0xFF6C63FF)),
+            )
+          : _errorMessage != null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline,
+                          size: 60, color: Colors.red),
+                      const SizedBox(height: 16),
+                      Text(_errorMessage!,
+                          textAlign: TextAlign.center,
+                          style:
+                              const TextStyle(color: Colors.red)),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _loadClasses,
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                )
+              : _classes.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment:
+                            MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.class_outlined,
+                              size: 80,
+                              color: Colors.grey.shade400),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No classes yet.',
+                            style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.grey.shade600),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Ask your teacher for a class code\nand tap "Join Class"!',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                color: Colors.grey.shade500),
+                          ),
+                        ],
+                      ),
+                    )
+                  : RefreshIndicator(
+                      onRefresh: _loadClasses,
+                      color: const Color(0xFF6C63FF),
+                      child: ListView.builder(
+                        padding: const EdgeInsets.fromLTRB(
+                            16, 16, 16, 80),
+                        itemCount: _classes.length,
+                        itemBuilder: (context, index) {
+                          final cls = Map<String, dynamic>.from(
+                              _classes[index]);
+                          return _buildClassCard(cls);
+                        },
+                      ),
+                    ),
+    );
+  }
+
+  Widget _buildClassCard(Map<String, dynamic> cls) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16)),
+      elevation: 3,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => Navigator.pushNamed(
+          context,
+          '/student-class-quizzes',
+          arguments: {
+            'class_id': cls['id'],
+            'class_name': cls['name'],
+          },
+        ),
+        child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Class name and icon
+            Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF6C63FF)
+                        .withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.class_,
+                      color: Color(0xFF6C63FF), size: 28),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        cls['name'],
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF333333),
+                        ),
+                      ),
+                      if (cls['description'] != null &&
+                          cls['description'].isNotEmpty)
+                        Text(
+                          cls['description'],
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey.shade600),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Teacher info
+            Row(
+              children: [
+                Icon(Icons.school,
+                    size: 16, color: Colors.grey.shade500),
+                const SizedBox(width: 6),
+                Text(
+                  cls['teacher_name'],
+                  style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey.shade600),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+
+            // Stats
+            Row(
+              children: [
+                _buildStat(Icons.people,
+                    '${cls['students_count']} students'),
+                const SizedBox(width: 16),
+                _buildStat(Icons.quiz,
+                    '${cls['quizzes_count']} quizzes'),
+              ],
+            ),
+            const Divider(height: 20),
+
+            // Actions
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton.icon(
+                  onPressed: () => _leaveClass(cls),
+                  icon: const Icon(Icons.exit_to_app,
+                      size: 16, color: Colors.red),
+                  label: const Text('Leave',
+                      style: TextStyle(color: Colors.red)),
+                ),
+              ],
+            ),
+          ],
+        ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStat(IconData icon, String label) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: Colors.grey),
+        const SizedBox(width: 4),
+        Text(label,
+            style: const TextStyle(
+                fontSize: 13, color: Colors.grey)),
+      ],
+    );
+  }
+}
+
+
+===== C:\Users\hp\Desktop\Quizzard\frontend\lib\screens\student_info_screen.dart =====
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import '../services/auth_service.dart';
+
+class StudentInfoScreen extends StatefulWidget {
+  const StudentInfoScreen({super.key});
+
+  @override
+  State<StudentInfoScreen> createState() => _StudentInfoScreenState();
+}
+
+class _StudentInfoScreenState extends State<StudentInfoScreen> {
+  final _formKey = GlobalKey<FormState>();
+
+  final _studentIdController = TextEditingController();
+  final _contactController = TextEditingController();
+  final _sectionController = TextEditingController();
+
+  String? _selectedGender;
+  String? _selectedGradeLevel;
+  DateTime? _selectedDate;
+  bool _isLoading = true;
+  bool _isSaving = false;
+
+  final List<String> _genderOptions = ['male', 'female', 'other'];
+
+  final List<String> _gradeLevelOptions = [
+    'Grade 7',
+    'Grade 8',
+    'Grade 9',
+    'Grade 10',
+    'Grade 11',
+    'Grade 12',
+    'Year 1',
+    'Year 2',
+    'Year 3',
+    'Year 4',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    final result = await AuthService.authGet('/student/profile');
+    if (result['success']) {
+      final profile = result['data']['profile'];
+      setState(() {
+        _studentIdController.text = profile['student_id'] ?? '';
+        _contactController.text = profile['contact_number'] ?? '';
+        _sectionController.text = profile['section'] ?? '';
+        _selectedGender = profile['gender'];
+        _selectedGradeLevel = profile['grade_level'];
+        if (profile['date_of_birth'] != null) {
+          _selectedDate = DateTime.parse(profile['date_of_birth']);
+        }
+        _isLoading = false;
+      });
+    } else {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? DateTime(2000),
+      firstDate: DateTime(1950),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null) {
+      setState(() => _selectedDate = picked);
+    }
+  }
+
+  Future<void> _saveProfile() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isSaving = true);
+
+    final result = await AuthService.authPut('/student/profile', {
+      'student_id': _studentIdController.text.trim(),
+      'gender': _selectedGender,
+      'date_of_birth': _selectedDate != null
+          ? '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}'
+          : null,
+      'contact_number': _contactController.text.trim(),
+      'grade_level': _selectedGradeLevel,
+      'section': _sectionController.text.trim(),
+    });
+
+    setState(() => _isSaving = false);
+
+    if (result['success']) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Profile updated successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      Navigator.pop(context);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message'] ?? 'Failed to update profile.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _studentIdController.dispose();
+    _contactController.dispose();
+    _sectionController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Student Info'),
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Student ID
+                    TextFormField(
+                      controller: _studentIdController,
+                      maxLength: 15,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                            RegExp(r'[a-zA-Z0-9\-]')),
+                      ],
+                      decoration: const InputDecoration(
+                        labelText: 'Student ID',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.badge),
+                        helperText: 'Max 15 characters, alphanumeric only',
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Gender
+                    DropdownButtonFormField<String>(
+                      value: _selectedGender,
+                      decoration: const InputDecoration(
+                        labelText: 'Gender',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.person),
+                      ),
+                      items: _genderOptions.map((gender) {
+                        return DropdownMenuItem(
+                          value: gender,
+                          child: Text(
+                            gender[0].toUpperCase() + gender.substring(1),
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (value) =>
+                          setState(() => _selectedGender = value),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Date of Birth
+                    GestureDetector(
+                      onTap: _pickDate,
+                      child: AbsorbPointer(
+                        child: TextFormField(
+                          decoration: InputDecoration(
+                            labelText: 'Date of Birth',
+                            border: const OutlineInputBorder(),
+                            prefixIcon: const Icon(Icons.calendar_today),
+                          ),
+                          controller: TextEditingController(
+                            text: _selectedDate != null
+                                ? '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}'
+                                : '',
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Contact Number
+                    TextFormField(
+                      controller: _contactController,
+                      maxLength: 15,
+                      keyboardType: TextInputType.phone,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                            RegExp(r'[0-9\+]')),
+                      ],
+                      decoration: const InputDecoration(
+                        labelText: 'Contact Number',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.phone),
+                        helperText: 'Max 15 characters, numbers only',
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Grade Level
+                    DropdownButtonFormField<String>(
+                      value: _selectedGradeLevel,
+                      decoration: const InputDecoration(
+                        labelText: 'Grade Level',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.school),
+                      ),
+                      items: _gradeLevelOptions.map((level) {
+                        return DropdownMenuItem(
+                          value: level,
+                          child: Text(level),
+                        );
+                      }).toList(),
+                      onChanged: (value) =>
+                          setState(() => _selectedGradeLevel = value),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Section
+                    TextFormField(
+                      controller: _sectionController,
+                      maxLength: 20,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                            RegExp(r'[a-zA-Z0-9 ]')),
+                      ],
+                      decoration: const InputDecoration(
+                        labelText: 'Section',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.group),
+                        helperText: 'Max 20 characters',
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Save Button
+                    ElevatedButton(
+                      onPressed: _isSaving ? null : _saveProfile,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: _isSaving
+                          ? const CircularProgressIndicator(
+                              color: Colors.white)
+                          : const Text('Save',
+                              style: TextStyle(fontSize: 16)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+    );
+  }
+}
+
+

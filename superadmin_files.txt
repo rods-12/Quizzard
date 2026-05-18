@@ -1,0 +1,2294 @@
+﻿========== FILE: backend\resources\views\admin\dashboard\index.blade.php ==========
+@extends('admin.layouts.app')
+
+@section('content')
+@php $isSuperAdmin = auth()->check() && auth()->user()->role === 'superadmin'; @endphp
+
+<div class="space-y-6">
+
+@if($isSuperAdmin)
+    {{-- ===== SUPERADMIN HERO ===== --}}
+    <div class="relative overflow-hidden rounded-2xl p-7 text-white"
+         style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%); border: 1px solid rgba(99,102,241,0.3);">
+        <div class="absolute -top-12 -right-12 h-40 w-40 rounded-full" style="background: radial-gradient(circle, rgba(99,102,241,0.2), transparent 70%);"></div>
+        <div class="absolute -bottom-10 -left-10 h-32 w-32 rounded-full" style="background: radial-gradient(circle, rgba(139,92,246,0.15), transparent 70%);"></div>
+        <div class="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+                <p class="text-xs font-semibold uppercase tracking-widest" style="color: #a5b4fc;">SuperAdmin Panel</p>
+                <h2 class="mt-1.5 text-3xl font-bold text-white sm:text-4xl">Menu Dashboard</h2>
+                <p class="mt-2 max-w-2xl text-sm" style="color: #c7d2fe;">
+                    Manage teacher, student, and admin accounts, review account details, and oversee the full Quizzard management system.
+                </p>
+            </div>
+            <div class="grid grid-cols-2 gap-3 sm:grid-cols-5 shrink-0">
+                <div class="rounded-xl px-4 py-3" style="background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1);">
+                    <p class="text-xs" style="color: #a5b4fc;">Teachers</p>
+                    <p class="mt-1 text-xl font-bold text-white">{{ $stats['teachers_count'] }}</p>
+                </div>
+                <div class="rounded-xl px-4 py-3" style="background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1);">
+                    <p class="text-xs" style="color: #a5b4fc;">Students</p>
+                    <p class="mt-1 text-xl font-bold text-white">{{ $stats['students_count'] }}</p>
+                </div>
+                <div class="rounded-xl px-4 py-3" style="background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1);">
+                    <p class="text-xs" style="color: #a5b4fc;">Admins</p>
+                    <p class="mt-1 text-xl font-bold text-white">{{ $stats['admins_count'] }}</p>
+                </div>
+                <div class="rounded-xl px-4 py-3" style="background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1);">
+                    <p class="text-xs" style="color: #a5b4fc;">Activated</p>
+                    <p class="mt-1 text-xl font-bold text-white">{{ $stats['activated_count'] }}</p>
+                </div>
+                <div class="rounded-xl px-4 py-3" style="background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1);">
+                    <p class="text-xs" style="color: #a5b4fc;">Deactivated</p>
+                    <p class="mt-1 text-xl font-bold text-white">{{ $stats['deactivated_count'] }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+@else
+    {{-- ===== ADMIN HERO â€” original unchanged ===== --}}
+    <div class="rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-blue-900 p-6 text-white shadow-xl sm:p-8">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+                <p class="text-sm font-medium uppercase tracking-[0.2em] text-blue-200">Admin Panel</p>
+                <h2 class="mt-2 text-3xl font-bold sm:text-4xl">Menu Dashboard</h2>
+                <p class="mt-2 max-w-2xl text-sm text-slate-200 sm:text-base">
+                    Manage teacher and student accounts, review account details, and maintain the Quizzard management system.
+                </p>
+            </div>
+            <div class="grid grid-cols-2 gap-3 sm:grid-cols-5">
+                <div class="rounded-2xl bg-white/10 px-4 py-3 backdrop-blur">
+                    <p class="text-xs uppercase tracking-wide text-slate-200">Teachers</p>
+                    <p class="mt-1 text-2xl font-bold">{{ $stats['teachers_count'] }}</p>
+                </div>
+                <div class="rounded-2xl bg-white/10 px-4 py-3 backdrop-blur">
+                    <p class="text-xs uppercase tracking-wide text-slate-200">Students</p>
+                    <p class="mt-1 text-2xl font-bold">{{ $stats['students_count'] }}</p>
+                </div>
+                <div class="rounded-2xl bg-white/10 px-4 py-3 backdrop-blur">
+                    <p class="text-xs uppercase tracking-wide text-slate-200">Activated</p>
+                    <p class="mt-1 text-2xl font-bold">{{ $stats['activated_count'] }}</p>
+                </div>
+                <div class="rounded-2xl bg-white/10 px-4 py-3 backdrop-blur">
+                    <p class="text-xs uppercase tracking-wide text-slate-200">Deactivated</p>
+                    <p class="mt-1 text-2xl font-bold">{{ $stats['deactivated_count'] }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+@endif
+
+    {{-- ===== ALERTS ===== --}}
+    @if(session('success'))
+        @if($isSuperAdmin)
+            <div class="rounded-2xl px-5 py-4" style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2);">
+                <div class="flex items-start gap-3">
+                    <div class="mt-0.5 flex h-8 w-8 items-center justify-center rounded-full" style="background: rgba(16,185,129,0.15); color: #34d399;">âœ“</div>
+                    <div>
+                        <p class="font-semibold" style="color: #34d399;">Success</p>
+                        <p class="text-sm" style="color: #6ee7b7;">{{ session('success') }}</p>
+                    </div>
+                </div>
+            </div>
+        @else
+            <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 shadow-sm">
+                <div class="flex items-start gap-3">
+                    <div class="mt-0.5 flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">âœ“</div>
+                    <div>
+                        <p class="font-semibold text-emerald-800">Success</p>
+                        <p class="text-sm text-emerald-700">{{ session('success') }}</p>
+                    </div>
+                </div>
+            </div>
+        @endif
+    @endif
+
+    @if($errors->any())
+        <div class="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 shadow-sm">
+            <p class="mb-2 font-semibold text-red-800">Please fix the following:</p>
+            <ul class="ml-5 list-disc text-sm text-red-700">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    {{-- ===== MAIN CARD ===== --}}
+@if($isSuperAdmin)
+    <div class="rounded-2xl p-6 shadow-lg" style="background: #161b27; border: 1px solid rgba(255,255,255,0.06);">
+@else
+    <div class="rounded-3xl bg-white p-6 shadow-lg ring-1 ring-slate-200">
+@endif
+
+        @if(!$selectedUser)
+        <div class="space-y-4">
+
+            {{-- Role tabs --}}
+            <div class="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+                <div class="flex flex-wrap items-center gap-3">
+
+                    @if($isSuperAdmin)
+                        <a href="{{ route('admin.dashboard', ['type' => 'teacher', 'search' => $search, 'filter_by' => $filterBy, 'status' => $status]) }}"
+                           class="rounded-lg px-4 py-2 text-sm font-semibold transition"
+                           style="{{ $type === 'teacher' ? 'background: rgba(99,102,241,0.2); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.4);' : 'background: rgba(255,255,255,0.04); color: #64748b; border: 1px solid rgba(255,255,255,0.06);' }}">
+                            Teachers
+                        </a>
+                        <a href="{{ route('admin.dashboard', ['type' => 'student', 'search' => $search, 'filter_by' => $filterBy, 'status' => $status]) }}"
+                           class="rounded-lg px-4 py-2 text-sm font-semibold transition"
+                           style="{{ $type === 'student' ? 'background: rgba(99,102,241,0.2); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.4);' : 'background: rgba(255,255,255,0.04); color: #64748b; border: 1px solid rgba(255,255,255,0.06);' }}">
+                            Students
+                        </a>
+                        <a href="{{ route('admin.dashboard', ['type' => 'admin', 'search' => $search, 'filter_by' => $filterBy, 'status' => $status]) }}"
+                           class="rounded-lg px-4 py-2 text-sm font-semibold transition"
+                           style="{{ $type === 'admin' ? 'background: rgba(99,102,241,0.2); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.4);' : 'background: rgba(255,255,255,0.04); color: #64748b; border: 1px solid rgba(255,255,255,0.06);' }}">
+                            Admin Management
+                        </a>
+                    @else
+                        <a href="{{ route('admin.dashboard', ['type' => 'teacher', 'search' => $search, 'filter_by' => $filterBy, 'status' => $status]) }}"
+                           class="rounded-xl px-5 py-2.5 text-sm font-semibold transition {{ $type === 'teacher' ? 'bg-blue-700 text-white shadow-md' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">
+                            Teachers
+                        </a>
+                        <a href="{{ route('admin.dashboard', ['type' => 'student', 'search' => $search, 'filter_by' => $filterBy, 'status' => $status]) }}"
+                           class="rounded-xl px-5 py-2.5 text-sm font-semibold transition {{ $type === 'student' ? 'bg-blue-700 text-white shadow-md' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">
+                            Students
+                        </a>
+                    @endif
+                </div>
+
+                <div class="flex w-full flex-col gap-3 sm:flex-row xl:w-auto">
+                    @if($isSuperAdmin)
+                        <select id="filterBy" class="rounded-lg border px-4 py-2.5 text-sm outline-none transition"
+                                style="background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.08); color: #94a3b8;">
+                    @else
+                        <select id="filterBy" class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+                    @endif
+                            <option value="all">All Fields</option>
+                            <option value="first_name">First Name</option>
+                            <option value="middle_initial">Middle Initial</option>
+                            <option value="surname">Surname</option>
+                        </select>
+
+                    @if($isSuperAdmin)
+                        <input type="text" id="searchInput" value="{{ $search }}" placeholder="Search by name or email"
+                               class="w-full rounded-lg border px-4 py-2.5 text-sm outline-none transition xl:w-72"
+                               style="background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.08); color: #e2e8f0;">
+                    @else
+                        <input type="text" id="searchInput" value="{{ $search }}" placeholder="Search by name or email"
+                               class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 xl:w-80">
+                    @endif
+                </div>
+            </div>
+
+            {{-- Status buttons + Create --}}
+            <div class="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+                <div class="flex flex-wrap gap-3">
+                    @if($isSuperAdmin)
+                        @foreach([['all','All Status'],['pending','Pending'],['active','Active'],['deactivated','Deactivated']] as [$val,$label])
+                        <a href="{{ route('admin.dashboard', ['type' => $type, 'search' => $search, 'filter_by' => $filterBy, 'status' => $val]) }}"
+                           class="rounded-lg border px-4 py-2 text-sm font-semibold transition"
+                           style="{{ $status === $val
+                               ? 'background: rgba(99,102,241,0.2); color: #a5b4fc; border-color: rgba(99,102,241,0.4);'
+                               : 'background: rgba(255,255,255,0.03); color: #64748b; border-color: rgba(255,255,255,0.06);' }}">
+                            {{ $label }}
+                        </a>
+                        @endforeach
+                    @else
+                        @php $statusButtonBase = 'rounded-xl border px-5 py-2.5 text-sm font-semibold transition'; @endphp
+                        <a href="{{ route('admin.dashboard', ['type' => $type, 'search' => $search, 'filter_by' => $filterBy, 'status' => 'all']) }}"
+                           class="{{ $statusButtonBase }} {{ $status === 'all' ? 'border-slate-900 bg-slate-900 text-white shadow-md' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100' }}">
+                            All Status
+                        </a>
+                        <a href="{{ route('admin.dashboard', ['type' => $type, 'search' => $search, 'filter_by' => $filterBy, 'status' => 'pending']) }}"
+                           class="{{ $statusButtonBase }} {{ $status === 'pending' ? 'border-amber-500 bg-amber-500 text-white shadow-md' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100' }}">
+                            Pending
+                        </a>
+                        <a href="{{ route('admin.dashboard', ['type' => $type, 'search' => $search, 'filter_by' => $filterBy, 'status' => 'active']) }}"
+                           class="{{ $statusButtonBase }} {{ $status === 'active' ? 'border-emerald-600 bg-emerald-600 text-white shadow-md' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100' }}">
+                            Active
+                        </a>
+                        <a href="{{ route('admin.dashboard', ['type' => $type, 'search' => $search, 'filter_by' => $filterBy, 'status' => 'deactivated']) }}"
+                           class="{{ $statusButtonBase }} {{ $status === 'deactivated' ? 'border-red-600 bg-red-600 text-white shadow-md' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100' }}">
+                            Deactivated
+                        </a>
+                    @endif
+                </div>
+
+                <div class="flex flex-wrap gap-3">
+                    @if($type === 'teacher')
+                        @if($isSuperAdmin)
+                            <button type="button" id="btnCreateTeacher"
+                                    class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold text-white transition"
+                                    style="background: #6366f1;"
+                                    onmouseover="this.style.background='#4f46e5';" onmouseout="this.style.background='#6366f1';">
+                                Create Teacher
+                            </button>
+                        @else
+                            <button type="button" id="btnCreateTeacher"
+                                    class="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700">
+                                Create Teacher
+                            </button>
+                        @endif
+                    @endif
+
+                    @if($type === 'student')
+                        @if($isSuperAdmin)
+                            <button type="button" id="btnCreateStudent"
+                                    class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold text-white transition"
+                                    style="background: #6366f1;"
+                                    onmouseover="this.style.background='#4f46e5';" onmouseout="this.style.background='#6366f1';">
+                                Create Student
+                            </button>
+                        @else
+                            <button type="button" id="btnCreateStudent"
+                                    class="inline-flex items-center justify-center rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700">
+                                Create Student
+                            </button>
+                        @endif
+                    @endif
+
+                    @if($type === 'admin' && $isSuperAdmin)
+                        <button type="button" id="btnCreateAdmin"
+                                class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold text-white transition"
+                                style="background: #6366f1;"
+                                onmouseover="this.style.background='#4f46e5';" onmouseout="this.style.background='#6366f1';">
+                            Create Admin Account
+                        </button>
+                    @endif
+                </div>
+            </div>
+        </div>
+        @endif
+
+        {{-- Table container --}}
+        @if($isSuperAdmin)
+            <div class="{{ $selectedUser ? 'mt-0' : 'mt-5' }} overflow-hidden rounded-xl" style="border: 1px solid rgba(255,255,255,0.06);">
+                <div id="usersTableContainer" style="background: #0f1117;">
+        @else
+            <div class="{{ $selectedUser ? 'mt-0' : 'mt-6' }} overflow-hidden rounded-2xl border border-slate-200">
+                <div id="usersTableContainer" class="bg-white">
+        @endif
+
+                @if($selectedUser)
+
+                @if($isSuperAdmin)
+                    <div class="flex justify-center px-4 py-8 sm:px-6" style="background: #0f1117;">
+                        <div class="w-full max-w-4xl">
+                            <div class="overflow-hidden rounded-2xl shadow-xl" style="border: 1px solid rgba(255,255,255,0.08); background: #161b27;">
+                                <div class="px-6 py-8 sm:px-8 sm:py-9" style="background: linear-gradient(135deg, #1e1b4b, #312e81, #1e1b4b);">
+                                    <div class="flex flex-col gap-6">
+                                        <div class="flex items-center justify-between gap-4">
+                                            <p class="text-xs font-semibold uppercase tracking-[0.22em]" style="color: #a5b4fc;">Account Information</p>
+                                            <a href="{{ route('admin.dashboard', ['type' => $type, 'search' => $search, 'filter_by' => $filterBy, 'status' => $status]) }}"
+                                               class="js-dashboard-back-link inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold shadow-sm transition"
+                                               style="background: rgba(255,255,255,0.08); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.12);"
+                                               onmouseover="this.style.background='rgba(255,255,255,0.14)';"
+                                               onmouseout="this.style.background='rgba(255,255,255,0.08)';">
+                                                â† Back to List
+                                            </a>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <h3 class="text-3xl font-bold tracking-tight text-white sm:text-4xl">{{ $selectedUser->name }}</h3>
+                                            <p class="mt-3 text-sm leading-6 sm:text-base" style="color: #a5b4fc;">
+                                                Detailed profile view for this {{ $selectedUser->role }} account.
+                                            </p>
+                                            <div class="mt-5 flex flex-wrap gap-3">
+                                                <span class="inline-flex rounded-full px-4 py-2.5 text-sm font-semibold capitalize"
+                                                      style="background: rgba(99,102,241,0.2); color: #c7d2fe; border: 1px solid rgba(99,102,241,0.3);">
+                                                    Role: {{ $selectedUser->role }}
+                                                </span>
+                                                @php
+                                                    $heroStatusClasses = match($selectedUser->status) {
+                                                        'active' => 'bg-emerald-400/20 text-emerald-200 ring-1 ring-emerald-300/30',
+                                                        'deactivated' => 'bg-red-400/20 text-red-200 ring-1 ring-red-300/30',
+                                                        default => 'bg-amber-400/20 text-amber-200 ring-1 ring-amber-300/30',
+                                                    };
+                                                @endphp
+                                                <span class="inline-flex rounded-full px-4 py-2.5 text-sm font-semibold capitalize backdrop-blur {{ $heroStatusClasses }}">
+                                                    Status: {{ $selectedUser->status }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="p-7 sm:p-8" style="background: #161b27;">
+                                    <div class="grid gap-4 sm:grid-cols-2">
+                                        @foreach([['User ID','#'.$selectedUser->id],['Email Address',$selectedUser->email],['First Name',$selectedUser->first_name??'-'],['Surname',$selectedUser->surname??'-'],['Middle Initial',$selectedUser->middle_initial??'-'],['Password','Hidden for security'],['Created At',optional($selectedUser->created_at)->format('F d, Y h:i A')??'-'],['Updated At',optional($selectedUser->updated_at)->format('F d, Y h:i A')??'-']] as [$label,$value])
+                                        <div class="rounded-xl p-4" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);">
+                                            <p class="text-xs font-semibold uppercase tracking-wide" style="color: #475569;">{{ $label }}</p>
+                                            <p class="mt-2 text-base font-bold break-all" style="color: #e2e8f0;">{{ $value }}</p>
+                                        </div>
+                                        @endforeach
+                                    </div>
+                                    <div class="mt-6 flex flex-col gap-3 sm:flex-row">
+                                        <button type="button"
+                                                class="btn-edit-user inline-flex items-center justify-center rounded-xl px-4 py-3 text-sm font-semibold text-white shadow-sm transition"
+                                                style="background: #6366f1;"
+                                                onmouseover="this.style.background='#4f46e5';" onmouseout="this.style.background='#6366f1';"
+                                                data-id="{{ $selectedUser->id }}" data-first-name="{{ $selectedUser->first_name }}" data-middle-initial="{{ $selectedUser->middle_initial }}" data-surname="{{ $selectedUser->surname }}" data-email="{{ $selectedUser->email }}" data-role="{{ $selectedUser->role }}" data-status="{{ $selectedUser->status }}" data-update-url="{{ route('admin.users.update', $selectedUser) }}">
+                                            Update Account
+                                        </button>
+                                        <button type="button"
+                                                class="btn-delete-user inline-flex items-center justify-center rounded-xl bg-red-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-red-700"
+                                                data-name="{{ $selectedUser->name }}" data-delete-url="{{ route('admin.users.destroy', $selectedUser) }}">
+                                            Delete Account
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                @else
+                    <div class="flex justify-center bg-slate-50 px-4 py-8 sm:px-6">
+                        <div class="w-full max-w-4xl">
+                            <div class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl">
+                                <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-blue-900 px-6 py-8 text-white sm:px-8 sm:py-9">
+                                    <div class="flex flex-col gap-6">
+                                        <div class="flex items-center justify-between gap-4">
+                                            <p class="text-xs font-semibold uppercase tracking-[0.22em] text-blue-200">Account Information</p>
+                                            <a href="{{ route('admin.dashboard', ['type' => $type, 'search' => $search, 'filter_by' => $filterBy, 'status' => $status]) }}"
+                                               class="js-dashboard-back-link inline-flex items-center justify-center rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-100">
+                                                â† Back to List
+                                            </a>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <h3 class="text-3xl font-bold tracking-tight sm:text-4xl">{{ $selectedUser->name }}</h3>
+                                            <p class="mt-3 text-sm leading-6 text-slate-200 sm:text-base">Detailed profile view for this {{ $selectedUser->role }} account.</p>
+                                            <div class="mt-5 flex flex-wrap gap-3">
+                                                <span class="inline-flex rounded-full bg-white/15 px-4 py-2.5 text-sm font-semibold capitalize text-white backdrop-blur">
+                                                    Role: {{ $selectedUser->role }}
+                                                </span>
+                                                @php
+                                                    $heroStatusClasses = match($selectedUser->status) {
+                                                        'active' => 'bg-emerald-400/20 text-emerald-200 ring-1 ring-emerald-300/30',
+                                                        'deactivated' => 'bg-red-400/20 text-red-200 ring-1 ring-red-300/30',
+                                                        default => 'bg-amber-400/20 text-amber-200 ring-1 ring-amber-300/30',
+                                                    };
+                                                @endphp
+                                                <span class="inline-flex rounded-full px-4 py-2.5 text-sm font-semibold capitalize backdrop-blur {{ $heroStatusClasses }}">
+                                                    Status: {{ $selectedUser->status }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="p-7 sm:p-8">
+                                    <div class="grid gap-5 sm:grid-cols-2">
+                                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5"><p class="text-xs font-semibold uppercase tracking-wide text-slate-500">User ID</p><p class="mt-2 text-lg font-bold text-slate-900">#{{ $selectedUser->id }}</p></div>
+                                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5"><p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Email Address</p><p class="mt-2 break-all text-lg font-bold text-slate-900">{{ $selectedUser->email }}</p></div>
+                                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5"><p class="text-xs font-semibold uppercase tracking-wide text-slate-500">First Name</p><p class="mt-2 text-lg font-bold text-slate-900">{{ $selectedUser->first_name ?? '-' }}</p></div>
+                                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5"><p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Surname</p><p class="mt-2 text-lg font-bold text-slate-900">{{ $selectedUser->surname ?? '-' }}</p></div>
+                                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5"><p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Middle Initial</p><p class="mt-2 text-lg font-bold text-slate-900">{{ $selectedUser->middle_initial ?? '-' }}</p></div>
+                                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5"><p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Password</p><p class="mt-2 text-base font-semibold text-slate-700">Hidden for security</p></div>
+                                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5"><p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Created At</p><p class="mt-2 text-base font-semibold text-slate-900">{{ optional($selectedUser->created_at)->format('F d, Y h:i A') ?? '-' }}</p></div>
+                                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5"><p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Updated At</p><p class="mt-2 text-base font-semibold text-slate-900">{{ optional($selectedUser->updated_at)->format('F d, Y h:i A') ?? '-' }}</p></div>
+                                    </div>
+                                    <div class="mt-6 flex flex-col gap-3 sm:flex-row">
+                                        <button type="button" class="btn-edit-user inline-flex items-center justify-center rounded-xl bg-amber-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-600"
+                                                data-id="{{ $selectedUser->id }}" data-first-name="{{ $selectedUser->first_name }}" data-middle-initial="{{ $selectedUser->middle_initial }}" data-surname="{{ $selectedUser->surname }}" data-email="{{ $selectedUser->email }}" data-role="{{ $selectedUser->role }}" data-status="{{ $selectedUser->status }}" data-update-url="{{ route('admin.users.update', $selectedUser) }}">
+                                            Update Account
+                                        </button>
+                                        <button type="button" class="btn-delete-user inline-flex items-center justify-center rounded-xl bg-red-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-red-700"
+                                                data-name="{{ $selectedUser->name }}" data-delete-url="{{ route('admin.users.destroy', $selectedUser) }}">
+                                            Delete Account
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+                @else
+                    @include('admin.dashboard.partials.users_table', ['users' => $users, 'type' => $type, 'isSuperAdmin' => $isSuperAdmin])
+                @endif
+                </div>
+            </div>
+        </div>
+
+    {{-- Row loader --}}
+    @if($isSuperAdmin)
+        <div id="rowNavigationLoader" class="fixed inset-0 z-[99999] hidden items-center justify-center bg-slate-950/55 backdrop-blur-sm">
+            <div class="flex flex-col items-center rounded-2xl px-8 py-7 shadow-2xl" style="background: #161b27; border: 1px solid rgba(255,255,255,0.08);">
+                <div class="h-12 w-12 animate-spin rounded-full" style="border: 3px solid rgba(99,102,241,0.2); border-top-color: #6366f1;"></div>
+                <p class="mt-4 text-sm font-semibold" style="color: #e2e8f0;">Loading account details...</p>
+                <p class="mt-1 text-xs" style="color: #475569;">Please wait</p>
+            </div>
+        </div>
+    @else
+        <div id="rowNavigationLoader" class="fixed inset-0 z-[99999] hidden items-center justify-center bg-slate-950/55 backdrop-blur-sm">
+            <div class="flex flex-col items-center rounded-3xl bg-white px-8 py-7 shadow-2xl ring-1 ring-slate-200">
+                <div class="h-12 w-12 animate-spin rounded-full border-4 border-blue-200 border-t-blue-700"></div>
+                <p class="mt-4 text-sm font-semibold text-slate-800">Loading account details...</p>
+                <p class="mt-1 text-xs text-slate-500">Please wait</p>
+            </div>
+        </div>
+    @endif
+
+</div>
+@endsection
+
+@push('modals')
+    {{-- CREATE MODAL --}}
+    <div id="createModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
+        @if($isSuperAdmin)
+        <div class="relative w-full max-w-xl rounded-2xl p-6 shadow-2xl" style="background: #161b27; border: 1px solid rgba(255,255,255,0.08);">
+            <button type="button" class="close-modal absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full text-lg transition" style="background: rgba(255,255,255,0.06); color: #94a3b8;">&times;</button>
+            <div class="mb-5">
+                <h3 class="text-xl font-bold" id="createModalTitle" style="color: #e2e8f0;">Create Account</h3>
+                <p class="mt-1 text-sm" style="color: #475569;">Fill in the account details below.</p>
+            </div>
+        @else
+        <div class="relative w-full max-w-xl rounded-3xl bg-white p-6 shadow-2xl">
+            <button type="button" class="close-modal absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-xl text-slate-500 hover:bg-slate-200 hover:text-slate-700">&times;</button>
+            <div class="mb-6">
+                <h3 class="text-2xl font-bold text-slate-900" id="createModalTitle">Create Account</h3>
+                <p class="mt-1 text-sm text-slate-500">Fill in the account details below.</p>
+            </div>
+        @endif
+            <form method="POST" action="{{ route('admin.users.store') }}" class="space-y-4">
+                @csrf
+                <div class="grid gap-4 sm:grid-cols-3">
+                    <div>
+                        <label class="mb-1.5 block text-sm font-medium {{ $isSuperAdmin ? '' : 'text-slate-700' }}" @if($isSuperAdmin) style="color:#94a3b8;" @endif>First Name</label>
+                        <input type="text" name="first_name" id="createFirstName" required class="w-full rounded-xl border px-4 py-2.5 outline-none {{ $isSuperAdmin ? '' : 'border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100' }}" @if($isSuperAdmin) style="background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.08);color:#e2e8f0;" @endif>
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-medium {{ $isSuperAdmin ? '' : 'text-slate-700' }}" @if($isSuperAdmin) style="color:#94a3b8;" @endif>Middle Initial</label>
+                        <input type="text" name="middle_initial" id="createMiddleInitial" maxlength="1" placeholder="Optional" class="w-full rounded-xl border px-4 py-2.5 outline-none {{ $isSuperAdmin ? '' : 'border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100' }}" @if($isSuperAdmin) style="background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.08);color:#e2e8f0;" @endif>
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-medium {{ $isSuperAdmin ? '' : 'text-slate-700' }}" @if($isSuperAdmin) style="color:#94a3b8;" @endif>Surname</label>
+                        <input type="text" name="surname" id="createSurname" required class="w-full rounded-xl border px-4 py-2.5 outline-none {{ $isSuperAdmin ? '' : 'border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100' }}" @if($isSuperAdmin) style="background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.08);color:#e2e8f0;" @endif>
+                    </div>
+                </div>
+                <div>
+                    <label class="mb-1.5 block text-sm font-medium {{ $isSuperAdmin ? '' : 'text-slate-700' }}" @if($isSuperAdmin) style="color:#94a3b8;" @endif>Email</label>
+                    <input type="email" name="email" required class="w-full rounded-xl border px-4 py-2.5 outline-none {{ $isSuperAdmin ? '' : 'border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100' }}" @if($isSuperAdmin) style="background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.08);color:#e2e8f0;" @endif>
+                </div>
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <div>
+                        <label class="mb-1.5 block text-sm font-medium {{ $isSuperAdmin ? '' : 'text-slate-700' }}" @if($isSuperAdmin) style="color:#94a3b8;" @endif>Role</label>
+                        <select name="role" id="createRole" required class="w-full rounded-xl border px-4 py-2.5 outline-none {{ $isSuperAdmin ? '' : 'border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100' }}" @if($isSuperAdmin) style="background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.08);color:#e2e8f0;" @endif>
+                            <option value="teacher">Teacher</option>
+                            <option value="student">Student</option>
+                            @if($isSuperAdmin)<option value="admin">Admin</option>@endif
+                        </select>
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-medium {{ $isSuperAdmin ? '' : 'text-slate-700' }}" @if($isSuperAdmin) style="color:#94a3b8;" @endif>Status</label>
+                        <select name="status" required class="w-full rounded-xl border px-4 py-2.5 outline-none {{ $isSuperAdmin ? '' : 'border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100' }}" @if($isSuperAdmin) style="background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.08);color:#e2e8f0;" @endif>
+                            <option value="pending">Pending</option>
+                            <option value="active">Active</option>
+                            <option value="deactivated">Deactivated</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="mb-1.5 block text-sm font-medium {{ $isSuperAdmin ? '' : 'text-slate-700' }}" @if($isSuperAdmin) style="color:#94a3b8;" @endif>Password</label>
+                    <input type="password" name="password" required class="w-full rounded-xl border px-4 py-2.5 outline-none {{ $isSuperAdmin ? '' : 'border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100' }}" @if($isSuperAdmin) style="background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.08);color:#e2e8f0;" @endif>
+                </div>
+                <div>
+                    <label class="mb-1.5 block text-sm font-medium {{ $isSuperAdmin ? '' : 'text-slate-700' }}" @if($isSuperAdmin) style="color:#94a3b8;" @endif>Confirm Password</label>
+                    <input type="password" name="password_confirmation" required class="w-full rounded-xl border px-4 py-2.5 outline-none {{ $isSuperAdmin ? '' : 'border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100' }}" @if($isSuperAdmin) style="background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.08);color:#e2e8f0;" @endif>
+                </div>
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" class="close-modal rounded-xl px-5 py-2.5 font-semibold transition {{ $isSuperAdmin ? '' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}" @if($isSuperAdmin) style="background:rgba(255,255,255,0.05);color:#94a3b8;border:1px solid rgba(255,255,255,0.08);" @endif>Cancel</button>
+                    <button type="submit" class="rounded-xl px-5 py-2.5 font-semibold text-white transition {{ $isSuperAdmin ? '' : 'bg-emerald-600 hover:bg-emerald-700' }}" @if($isSuperAdmin) style="background:#6366f1;" onmouseover="this.style.background='#4f46e5';" onmouseout="this.style.background='#6366f1';" @endif>Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- EDIT MODAL --}}
+    <div id="editModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-slate-950/60 py-8 px-4 backdrop-blur-sm">
+        @if($isSuperAdmin)
+        <div class="relative w-full max-w-xl max-h-[calc(100vh-4rem)] overflow-y-auto rounded-2xl p-6 shadow-2xl" style="background: #161b27; border: 1px solid rgba(255,255,255,0.08);">
+            <div id="editModalSpinner" class="hidden absolute inset-0 z-10 flex items-center justify-center rounded-2xl" style="background: rgba(22,27,39,0.85);">
+                <div class="h-10 w-10 animate-spin rounded-full" style="border: 3px solid rgba(99,102,241,0.2); border-top-color: #6366f1;"></div>
+            </div>
+            <button type="button" class="close-modal absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full text-lg transition" style="background: rgba(255,255,255,0.06); color: #94a3b8;">&times;</button>
+            <div class="mb-5">
+                <h3 class="text-xl font-bold" style="color: #e2e8f0;">Update Account</h3>
+                <p class="mt-1 text-sm" style="color: #475569;">Edit user details and save changes.</p>
+            </div>
+        @else
+        <div class="relative w-full max-w-xl max-h-[calc(100vh-4rem)] overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl">
+            <div id="editModalSpinner" class="hidden absolute inset-0 z-10 flex items-center justify-center bg-white/80 rounded-3xl">
+                <div class="h-10 w-10 animate-spin rounded-full border-4 border-blue-400 border-t-transparent"></div>
+            </div>
+            <button type="button" class="close-modal absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-xl text-slate-500 hover:bg-slate-200 hover:text-slate-700">&times;</button>
+            <div class="mb-6">
+                <h3 class="text-2xl font-bold text-slate-900">Update Account</h3>
+                <p class="mt-1 text-sm text-slate-500">Edit user details and save changes.</p>
+            </div>
+        @endif
+            <form method="POST" id="editForm" class="space-y-4">
+                @csrf @method('PUT')
+                <div class="grid gap-4 sm:grid-cols-3">
+                    <div>
+                        <label class="mb-1.5 block text-sm font-medium {{ $isSuperAdmin ? '' : 'text-slate-700' }}" @if($isSuperAdmin) style="color:#94a3b8;" @endif>First Name</label>
+                        <input type="text" name="first_name" id="editFirstName" required class="w-full rounded-xl border px-4 py-2.5 outline-none {{ $isSuperAdmin ? '' : 'border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100' }}" @if($isSuperAdmin) style="background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.08);color:#e2e8f0;" @endif>
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-medium {{ $isSuperAdmin ? '' : 'text-slate-700' }}" @if($isSuperAdmin) style="color:#94a3b8;" @endif>Middle Initial</label>
+                        <input type="text" name="middle_initial" id="editMiddleInitial" maxlength="1" class="w-full rounded-xl border px-4 py-2.5 outline-none {{ $isSuperAdmin ? '' : 'border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100' }}" @if($isSuperAdmin) style="background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.08);color:#e2e8f0;" @endif>
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-medium {{ $isSuperAdmin ? '' : 'text-slate-700' }}" @if($isSuperAdmin) style="color:#94a3b8;" @endif>Surname</label>
+                        <input type="text" name="surname" id="editSurname" required class="w-full rounded-xl border px-4 py-2.5 outline-none {{ $isSuperAdmin ? '' : 'border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100' }}" @if($isSuperAdmin) style="background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.08);color:#e2e8f0;" @endif>
+                    </div>
+                </div>
+                <div>
+                    <label class="mb-1.5 block text-sm font-medium {{ $isSuperAdmin ? '' : 'text-slate-700' }}" @if($isSuperAdmin) style="color:#94a3b8;" @endif>Email</label>
+                    <input type="email" name="email" id="editEmail" required class="w-full rounded-xl border px-4 py-2.5 outline-none {{ $isSuperAdmin ? '' : 'border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100' }}" @if($isSuperAdmin) style="background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.08);color:#e2e8f0;" @endif>
+                </div>
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <div>
+                        <label class="mb-1.5 block text-sm font-medium {{ $isSuperAdmin ? '' : 'text-slate-700' }}" @if($isSuperAdmin) style="color:#94a3b8;" @endif>Role</label>
+                        <select name="role" id="editRole" required class="w-full rounded-xl border px-4 py-2.5 outline-none {{ $isSuperAdmin ? '' : 'border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100' }}" @if($isSuperAdmin) style="background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.08);color:#e2e8f0;" @endif>
+                            <option value="teacher">Teacher</option>
+                            <option value="student">Student</option>
+                            @if($isSuperAdmin)<option value="admin">Admin</option>@endif
+                        </select>
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-medium {{ $isSuperAdmin ? '' : 'text-slate-700' }}" @if($isSuperAdmin) style="color:#94a3b8;" @endif>Status</label>
+                        <select name="status" id="editStatus" required class="w-full rounded-xl border px-4 py-2.5 outline-none {{ $isSuperAdmin ? '' : 'border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100' }}" @if($isSuperAdmin) style="background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.08);color:#e2e8f0;" @endif>
+                            <option value="pending">Pending</option>
+                            <option value="active">Active</option>
+                            <option value="deactivated">Deactivated</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="mb-1.5 block text-sm font-medium {{ $isSuperAdmin ? '' : 'text-slate-700' }}" @if($isSuperAdmin) style="color:#94a3b8;" @endif>New Password</label>
+                    <input type="password" name="password" id="editPassword" class="w-full rounded-xl border px-4 py-2.5 outline-none {{ $isSuperAdmin ? '' : 'border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100' }}" @if($isSuperAdmin) style="background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.08);color:#e2e8f0;" @endif>
+                </div>
+                <div>
+                    <label class="mb-1.5 block text-sm font-medium {{ $isSuperAdmin ? '' : 'text-slate-700' }}" @if($isSuperAdmin) style="color:#94a3b8;" @endif>Confirm New Password</label>
+                    <input type="password" name="password_confirmation" id="editPasswordConfirmation" class="w-full rounded-xl border px-4 py-2.5 outline-none {{ $isSuperAdmin ? '' : 'border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100' }}" @if($isSuperAdmin) style="background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.08);color:#e2e8f0;" @endif>
+                </div>
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" class="close-modal rounded-xl px-5 py-2.5 font-semibold transition {{ $isSuperAdmin ? '' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}" @if($isSuperAdmin) style="background:rgba(255,255,255,0.05);color:#94a3b8;border:1px solid rgba(255,255,255,0.08);" @endif>Cancel</button>
+                    <button id="updateUserBtn" type="submit" class="rounded-xl px-5 py-2.5 font-semibold text-white transition disabled:opacity-60 disabled:cursor-not-allowed {{ $isSuperAdmin ? '' : 'bg-amber-500 hover:bg-amber-600' }}" @if($isSuperAdmin) style="background:#6366f1;" onmouseover="this.style.background='#4f46e5';" onmouseout="this.style.background='#6366f1';" @endif>
+                        <span class="flex items-center justify-center gap-2">
+                            <span class="spinner hidden h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                            <span>Update</span>
+                        </span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- DELETE MODAL --}}
+    <div id="deleteModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
+        @if($isSuperAdmin)
+        <div class="relative w-full max-w-lg rounded-2xl p-6 shadow-2xl" style="background: #161b27; border: 1px solid rgba(239,68,68,0.2);">
+            <button type="button" class="close-modal absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full text-lg" style="background: rgba(255,255,255,0.06); color: #94a3b8;">&times;</button>
+        @else
+        <div class="relative w-full max-w-lg rounded-3xl border border-red-200 bg-white p-6 shadow-2xl">
+            <button type="button" class="close-modal absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-xl text-slate-500 hover:bg-slate-200 hover:text-slate-700">&times;</button>
+        @endif
+            <div class="mb-5">
+                <div class="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-xl text-red-600">!</div>
+                <h3 class="text-2xl font-bold text-red-500">Delete Account</h3>
+                <p class="mt-2 text-sm {{ $isSuperAdmin ? '' : 'text-slate-600' }}" @if($isSuperAdmin) style="color:#94a3b8;" @endif>
+                    Are you sure you want to delete <strong id="deleteUserName" class="{{ $isSuperAdmin ? '' : 'text-slate-900' }}" @if($isSuperAdmin) style="color:#e2e8f0;" @endif></strong>?
+                </p>
+                <p class="mt-2 text-sm text-red-500">This action cannot be undone.</p>
+            </div>
+            <form method="POST" id="deleteForm" class="flex justify-end gap-3">
+                @csrf @method('DELETE')
+                <button type="button" class="close-modal rounded-xl px-5 py-2.5 font-semibold transition {{ $isSuperAdmin ? '' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}" @if($isSuperAdmin) style="background:rgba(255,255,255,0.05);color:#94a3b8;border:1px solid rgba(255,255,255,0.08);" @endif>Cancel</button>
+                <button type="submit" class="rounded-xl bg-red-600 px-5 py-2.5 font-semibold text-white hover:bg-red-700">Delete</button>
+            </form>
+        </div>
+    </div>
+@endpush
+
+@push('scripts')
+    <script>
+        const dashboardUrl = "{{ route('admin.dashboard') }}";
+        const currentType = "{{ $type }}";
+        const currentStatus = "{{ $status }}";
+        const searchInput = document.getElementById('searchInput');
+        const filterBySelect = document.getElementById('filterBy');
+        const usersTableContainer = document.getElementById('usersTableContainer');
+        const rowNavigationLoader = document.getElementById('rowNavigationLoader');
+        let isRowNavigating = false;
+        let currentFilterBy = @json($filterBy ?? 'all');
+        if (filterBySelect) { filterBySelect.value = currentFilterBy; }
+        const createModal = document.getElementById('createModal');
+        const editModal = document.getElementById('editModal');
+        const deleteModal = document.getElementById('deleteModal');
+        const allModals = [createModal, editModal, deleteModal];
+        function openModal(modal) { if (!modal) return; modal.classList.remove('hidden'); modal.classList.add('flex'); document.body.classList.add('overflow-hidden'); }
+        function closeModal(modal) { if (!modal) return; modal.classList.add('hidden'); modal.classList.remove('flex'); const hasVisibleModal = allModals.some(m => m && !m.classList.contains('hidden')); if (!hasVisibleModal) { document.body.classList.remove('overflow-hidden'); } }
+        function closeAllModals() { allModals.forEach(modal => closeModal(modal)); }
+        function showRowNavigationLoader() { if (!rowNavigationLoader || isRowNavigating) return; isRowNavigating = true; rowNavigationLoader.classList.remove('hidden'); rowNavigationLoader.classList.add('flex'); document.body.classList.add('overflow-hidden'); }
+        allModals.forEach(modal => { if (!modal) return; modal.addEventListener('click', function(e) { if (e.target === modal) { closeModal(modal); } }); });
+        document.querySelectorAll('.close-modal').forEach(button => { button.addEventListener('click', function() { const modal = button.closest('#createModal, #viewModal, #editModal, #deleteModal'); closeModal(modal); }); });
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { closeAllModals(); } });
+        function setLocalButtonLoading(button, loadingText = 'Processing...') { if (!button) return; if (!button.dataset.originalHtml) { button.dataset.originalHtml = button.innerHTML; } button.disabled = true; button.innerHTML = `<span class="inline-flex items-center justify-center gap-2"><span class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span><span>${loadingText}</span></span>`; }
+        function resetLocalButtonLoading(button) { if (!button) return; button.disabled = false; if (button.dataset.originalHtml) { button.innerHTML = button.dataset.originalHtml; } }
+        const btnCreateTeacher = document.getElementById('btnCreateTeacher');
+        const btnCreateStudent = document.getElementById('btnCreateStudent');
+        const btnCreateAdmin = document.getElementById('btnCreateAdmin');
+        if (btnCreateTeacher) { btnCreateTeacher.addEventListener('click', function() { document.getElementById('createRole').value = 'teacher'; document.getElementById('createModalTitle').textContent = 'Create Teacher Account'; openModal(createModal); }); }
+        if (btnCreateStudent) { btnCreateStudent.addEventListener('click', function() { document.getElementById('createRole').value = 'student'; document.getElementById('createModalTitle').textContent = 'Create Student Account'; openModal(createModal); }); }
+        if (btnCreateAdmin) { btnCreateAdmin.addEventListener('click', function() { document.getElementById('createRole').value = 'admin'; document.getElementById('createModalTitle').textContent = 'Create Admin Account'; openModal(createModal); }); }
+        if (filterBySelect) { filterBySelect.addEventListener('change', function() { currentFilterBy = this.value; performSearch(); }); }
+        let searchTimeout;
+        if (searchInput) { searchInput.addEventListener('input', function() { clearTimeout(searchTimeout); searchTimeout = setTimeout(function() { performSearch(); }, 250); }); }
+        function performSearch() { const search = searchInput.value; const url = `${dashboardUrl}?type=${encodeURIComponent(currentType)}&status=${encodeURIComponent(currentStatus)}&search=${encodeURIComponent(search)}&filter_by=${encodeURIComponent(currentFilterBy)}`; loadUsers(url); }
+        document.addEventListener('click', async function(e) {
+            const row = e.target.closest('tr[data-view-url]');
+            const backLink = e.target.closest('.js-dashboard-back-link');
+            const editBtn = e.target.closest('.btn-edit-user');
+            const deleteBtn = e.target.closest('.btn-delete-user');
+            const paginationLink = e.target.closest('#usersPagination a');
+            if (backLink) { e.preventDefault(); const backUrl = backLink.getAttribute('href'); if (backUrl && !isRowNavigating) { showRowNavigationLoader(); window.location.href = backUrl; } return; }
+            if (row && !editBtn && !deleteBtn) { const viewUrl = row.dataset.viewUrl; if (viewUrl && !isRowNavigating) { showRowNavigationLoader(); window.location.href = viewUrl; } return; }
+            if (editBtn) { document.getElementById('editFirstName').value = editBtn.dataset.firstName ?? ''; document.getElementById('editMiddleInitial').value = editBtn.dataset.middleInitial ?? ''; document.getElementById('editSurname').value = editBtn.dataset.surname ?? ''; document.getElementById('editEmail').value = editBtn.dataset.email ?? ''; document.getElementById('editRole').value = editBtn.dataset.role ?? ''; document.getElementById('editStatus').value = editBtn.dataset.status ?? ''; document.getElementById('editPassword').value = ''; document.getElementById('editPasswordConfirmation').value = ''; document.getElementById('editForm').action = editBtn.dataset.updateUrl ?? ''; openModal(editModal); return; }
+            if (deleteBtn) { document.getElementById('deleteUserName').textContent = deleteBtn.dataset.name ?? ''; document.getElementById('deleteForm').action = deleteBtn.dataset.deleteUrl ?? ''; openModal(deleteModal); return; }
+            if (paginationLink) { e.preventDefault(); const url = paginationLink.getAttribute('href'); if (url) { loadUsers(url); } }
+        });
+        function userSkeleton() { return `<div class="py-12 text-center"><div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-slate-600"></div><p class="mt-3 text-sm text-slate-600">Loading users...</p></div>`; }
+        async function loadUsers(url) { try { usersTableContainer.innerHTML = userSkeleton(); const response = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } }); const data = await response.json(); usersTableContainer.innerHTML = data.html; } catch (error) { usersTableContainer.innerHTML = `<div class="py-8 text-center text-red-600">Failed to load users.</div>`; console.error(error); } }
+        document.getElementById('editForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const submitBtn = this.querySelector('button[type="submit"]');
+            setLocalButtonLoading(submitBtn, 'Updating...');
+            try { const formData = new FormData(this); const response = await fetch(this.action, { method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } }); const data = await response.json(); if (response.ok) { closeModal(editModal); await loadUsers(dashboardUrl + window.location.search); } else { alert(data.message || 'Error updating user'); } }
+            catch (error) { console.error(error); alert('Error updating user'); }
+            finally { resetLocalButtonLoading(submitBtn); }
+        });
+    </script>
+    <script>
+        document.addEventListener('click', function(e) { if (e.target.classList.contains('close-modal') || e.target.closest('.close-modal')) { resetLocalButtonLoading(document.querySelector('#editForm button[type="submit"]')); } });
+    </script>
+@endpush
+
+========== FILE: backend\resources\views\admin\dashboard\partials\users_table.blade.php ==========
+@php $isSuperAdmin = isset($isSuperAdmin) ? $isSuperAdmin : (auth()->check() && auth()->user()->role === 'superadmin'); @endphp
+
+@if($isSuperAdmin)
+{{-- ===== SUPERADMIN TABLE ===== --}}
+<style>
+    .sa-row { transition: background 0.15s ease; }
+    .sa-row:hover { background: rgba(99,102,241,0.06) !important; }
+    .sa-row:hover .sa-id { color: #a5b4fc !important; }
+    .sa-row:hover .sa-hint { opacity: 1 !important; }
+</style>
+<div class="overflow-x-auto p-2">
+    <table class="min-w-full border-separate border-spacing-y-2 text-sm">
+        <thead class="text-left text-xs font-bold uppercase tracking-wide" style="color:#475569;">
+            <tr>
+                <th class="px-4 py-3">ID</th>
+                <th class="px-4 py-3">First Name</th>
+                <th class="px-4 py-3">Middle Initial</th>
+                <th class="px-4 py-3">Surname</th>
+                <th class="px-4 py-3">Email</th>
+                <th class="px-4 py-3">Role</th>
+                <th class="px-4 py-3">Status</th>
+                <th class="px-4 py-3">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($users as $user)
+                <tr class="sa-row group cursor-pointer"
+                    style="background:rgba(255,255,255,0.02);"
+                    data-view-url="{{ route('admin.dashboard', ['type' => $type, 'search' => request('search'), 'filter_by' => request('filter_by', 'all'), 'status' => request('status', 'all'), 'view_user' => $user->id]) }}">
+
+                    <td class="sa-id rounded-l-xl border-y border-l px-4 py-4 font-semibold transition-all duration-200"
+                        style="border-color:rgba(255,255,255,0.06);color:#a5b4fc;">
+                        #{{ $user->id }}
+                    </td>
+                    <td class="border-y px-4 py-4 font-medium transition-all duration-200"
+                        style="border-color:rgba(255,255,255,0.06);color:#e2e8f0;">
+                        {{ $user->first_name ?? '-' }}
+                    </td>
+                    <td class="border-y px-4 py-4 transition-all duration-200"
+                        style="border-color:rgba(255,255,255,0.06);color:#94a3b8;">
+                        {{ $user->middle_initial ?? '-' }}
+                    </td>
+                    <td class="border-y px-4 py-4 transition-all duration-200"
+                        style="border-color:rgba(255,255,255,0.06);color:#94a3b8;">
+                        {{ $user->surname ?? '-' }}
+                    </td>
+                    <td class="border-y px-4 py-4 transition-all duration-200"
+                        style="border-color:rgba(255,255,255,0.06);color:#94a3b8;">
+                        <div class="flex flex-col">
+                            <span>{{ $user->email }}</span>
+                            <span class="sa-hint mt-1 text-xs font-medium transition-opacity duration-200"
+                                  style="color:#6366f1;opacity:0;">
+                                Click to view full account details
+                            </span>
+                        </div>
+                    </td>
+                    <td class="border-y px-4 py-4 transition-all duration-200"
+                        style="border-color:rgba(255,255,255,0.06);">
+                        @php
+                            $roleStyle = match($user->role) {
+                                'admin'    => 'background:rgba(139,92,246,0.15);color:#c4b5fd;',
+                                'teacher'  => 'background:rgba(99,102,241,0.15);color:#a5b4fc;',
+                                'student'  => 'background:rgba(100,116,139,0.15);color:#94a3b8;',
+                                default    => 'background:rgba(100,116,139,0.15);color:#94a3b8;',
+                            };
+                        @endphp
+                        <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold capitalize"
+                              style="{{ $roleStyle }}">
+                            {{ $user->role }}
+                        </span>
+                    </td>
+                    <td class="border-y px-4 py-4 transition-all duration-200"
+                        style="border-color:rgba(255,255,255,0.06);">
+                        @php
+                            $statusStyle = match($user->status) {
+                                'active'      => 'background:rgba(16,185,129,0.12);color:#34d399;',
+                                'deactivated' => 'background:rgba(239,68,68,0.12);color:#f87171;',
+                                default       => 'background:rgba(245,158,11,0.12);color:#fbbf24;',
+                            };
+                        @endphp
+                        <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold capitalize"
+                              style="{{ $statusStyle }}">
+                            {{ $user->status }}
+                        </span>
+                    </td>
+                    <td class="rounded-r-xl border-y border-r px-4 py-4 transition-all duration-200"
+                        style="border-color:rgba(255,255,255,0.06);">
+                        <div class="flex flex-wrap gap-2">
+                            <button type="button"
+                                    onclick="event.stopPropagation();"
+                                    class="btn-edit-user inline-flex items-center rounded-lg px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition"
+                                    style="background:#6366f1;"
+                                    onmouseover="this.style.background='#4f46e5';"
+                                    onmouseout="this.style.background='#6366f1';"
+                                    data-id="{{ $user->id }}"
+                                    data-first-name="{{ $user->first_name }}"
+                                    data-middle-initial="{{ $user->middle_initial }}"
+                                    data-surname="{{ $user->surname }}"
+                                    data-email="{{ $user->email }}"
+                                    data-role="{{ $user->role }}"
+                                    data-status="{{ $user->status }}"
+                                    data-update-url="{{ route('admin.users.update', $user) }}">
+                                Update
+                            </button>
+                            <button type="button"
+                                    onclick="event.stopPropagation();"
+                                    class="btn-delete-user inline-flex items-center rounded-lg px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition"
+                                    style="background:rgba(239,68,68,0.2);color:#f87171;border:1px solid rgba(239,68,68,0.3);"
+                                    onmouseover="this.style.background='rgba(239,68,68,0.35)';"
+                                    onmouseout="this.style.background='rgba(239,68,68,0.2)';"
+                                    data-name="{{ $user->name }}"
+                                    data-delete-url="{{ route('admin.users.destroy', $user) }}">
+                                Delete
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="8" class="rounded-xl px-4 py-10 text-center text-sm"
+                        style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);color:#475569;">
+                        No users found.
+                    </td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
+</div>
+
+@if($users->hasPages())
+    <div id="usersPagination" class="px-4 py-4" style="border-top:1px solid rgba(255,255,255,0.06);">
+        {{ $users->links() }}
+    </div>
+@endif
+
+@else
+{{-- ===== ADMIN TABLE â€” 100% original, zero changes ===== --}}
+<div class="overflow-x-auto p-2">
+    <table class="min-w-full border-separate border-spacing-y-3 text-sm text-slate-700">
+        <thead class="text-left text-xs font-bold uppercase tracking-wide text-slate-600">
+            <tr>
+                <th class="px-4 py-3">ID</th>
+                <th class="px-4 py-3">First Name</th>
+                <th class="px-4 py-3">Middle Initial</th>
+                <th class="px-4 py-3">Surname</th>
+                <th class="px-4 py-3">Email</th>
+                <th class="px-4 py-3">Role</th>
+                <th class="px-4 py-3">Status</th>
+                <th class="px-4 py-3">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($users as $user)
+                <tr
+                    class="group cursor-pointer"
+                    data-view-url="{{ route('admin.dashboard', ['type' => $type, 'search' => request('search'), 'filter_by' => request('filter_by', 'all'), 'status' => request('status', 'all'), 'view_user' => $user->id]) }}">
+
+                    <td class="rounded-l-2xl border-y border-l border-slate-200 bg-white px-4 py-4 font-semibold text-slate-800 shadow-sm transition-all duration-200 ease-out group-hover:bg-blue-50 group-hover:text-blue-700 group-hover:shadow-[0_0_0_3px_rgba(59,130,246,0.18),0_16px_30px_-12px_rgba(15,23,42,0.25)] group-hover:border-blue-500 group-hover:scale-[1.01]">
+                        #{{ $user->id }}
+                    </td>
+                    <td class="border-y border-slate-200 bg-white px-4 py-4 font-medium text-slate-800 shadow-sm transition-all duration-200 ease-out group-hover:bg-blue-50 group-hover:border-y-blue-500 group-hover:shadow-[0_16px_30px_-12px_rgba(15,23,42,0.25)] group-hover:scale-[1.01]">
+                        {{ $user->first_name ?? '-' }}
+                    </td>
+                    <td class="border-y border-slate-200 bg-white px-4 py-4 shadow-sm transition-all duration-200 ease-out group-hover:bg-blue-50 group-hover:border-y-blue-500 group-hover:shadow-[0_16px_30px_-12px_rgba(15,23,42,0.25)] group-hover:scale-[1.01]">
+                        {{ $user->middle_initial ?? '-' }}
+                    </td>
+                    <td class="border-y border-slate-200 bg-white px-4 py-4 shadow-sm transition-all duration-200 ease-out group-hover:bg-blue-50 group-hover:border-y-blue-500 group-hover:shadow-[0_16px_30px_-12px_rgba(15,23,42,0.25)] group-hover:scale-[1.01]">
+                        {{ $user->surname ?? '-' }}
+                    </td>
+                    <td class="border-y border-slate-200 bg-white px-4 py-4 shadow-sm transition-all duration-200 ease-out group-hover:bg-blue-50 group-hover:border-y-blue-500 group-hover:shadow-[0_16px_30px_-12px_rgba(15,23,42,0.25)] group-hover:scale-[1.01]">
+                        <div class="flex flex-col">
+                            <span class="text-slate-800">{{ $user->email }}</span>
+                            <span class="mt-1 text-xs font-medium text-blue-600 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                                Click to view full account details
+                            </span>
+                        </div>
+                    </td>
+                    <td class="border-y border-slate-200 bg-white px-4 py-4 shadow-sm transition-all duration-200 ease-out group-hover:bg-blue-50 group-hover:border-y-blue-500 group-hover:shadow-[0_16px_30px_-12px_rgba(15,23,42,0.25)] group-hover:scale-[1.01]">
+                        <span class="inline-flex rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold capitalize text-blue-700">
+                            {{ $user->role }}
+                        </span>
+                    </td>
+                    <td class="border-y border-slate-200 bg-white px-4 py-4 shadow-sm transition-all duration-200 ease-out group-hover:bg-blue-50 group-hover:border-y-blue-500 group-hover:shadow-[0_16px_30px_-12px_rgba(15,23,42,0.25)] group-hover:scale-[1.01]">
+                        @php
+                            $statusClasses = match($user->status) {
+                                'active' => 'bg-emerald-100 text-emerald-700',
+                                'deactivated' => 'bg-red-100 text-red-700',
+                                default => 'bg-amber-100 text-amber-700',
+                            };
+                        @endphp
+                        <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold capitalize {{ $statusClasses }}">
+                            {{ $user->status }}
+                        </span>
+                    </td>
+                    <td class="rounded-r-2xl border-y border-r border-slate-200 bg-white px-4 py-4 shadow-sm transition-all duration-200 ease-out group-hover:bg-blue-50 group-hover:border-blue-500 group-hover:shadow-[0_0_0_3px_rgba(59,130,246,0.18),0_16px_30px_-12px_rgba(15,23,42,0.25)] group-hover:scale-[1.01]">
+                        <div class="flex flex-wrap gap-2">
+                            <button type="button" onclick="event.stopPropagation();"
+                                    class="btn-edit-user inline-flex items-center rounded-xl bg-amber-500 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-amber-600"
+                                    data-id="{{ $user->id }}" data-first-name="{{ $user->first_name }}" data-middle-initial="{{ $user->middle_initial }}" data-surname="{{ $user->surname }}" data-email="{{ $user->email }}" data-role="{{ $user->role }}" data-status="{{ $user->status }}" data-update-url="{{ route('admin.users.update', $user) }}">
+                                Update
+                            </button>
+                            <button type="button" onclick="event.stopPropagation();"
+                                    class="btn-delete-user inline-flex items-center rounded-xl bg-red-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-red-700"
+                                    data-name="{{ $user->name }}" data-delete-url="{{ route('admin.users.destroy', $user) }}">
+                                Delete
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="8" class="rounded-2xl bg-white px-4 py-10 text-center text-slate-500 shadow-sm ring-1 ring-slate-200">
+                        No users found.
+                    </td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
+</div>
+
+@if ($users->hasPages())
+    <div id="usersPagination" class="border-t border-slate-200 bg-slate-50 px-4 py-4">
+        {{ $users->links() }}
+    </div>
+@endif
+@endif
+
+========== FILE: backend\resources\views\admin\classes\index.blade.php ==========
+@extends('admin.layouts.app')
+
+@section('title', 'Classes')
+
+@section('content')
+<div class="space-y-6">
+    <!-- Hero -->
+    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 p-6 md:p-8 text-white shadow-lg">
+        <div class="relative z-10">
+            <h1 class="text-2xl md:text-3xl font-bold">Classes Management</h1>
+            <p class="mt-2 text-sm md:text-base text-white/90">
+                Create, view, update, and manage all classes across the platform.
+            </p>
+        </div>
+        <div class="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/10"></div>
+        <div class="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-white/10"></div>
+    </div>
+
+    <!-- Widgets -->
+    <div id="classWidgets" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div class="rounded-2xl bg-white p-5 shadow-sm border border-slate-200">
+            <p class="text-sm font-medium text-slate-500">Active Teachers</p>
+            <h2 id="activeTeachersCount" class="mt-2 text-3xl font-bold text-slate-800">{{ $activeTeachers }}</h2>
+        </div>
+
+        <div class="rounded-2xl bg-white p-5 shadow-sm border border-slate-200">
+            <p class="text-sm font-medium text-slate-500">Total Students</p>
+            <h2 id="studentsCount" class="mt-2 text-3xl font-bold text-slate-800">{{ $studentsCount }}</h2>
+        </div>
+
+        <div class="rounded-2xl bg-white p-5 shadow-sm border border-slate-200">
+            <p class="text-sm font-medium text-slate-500">Classes</p>
+            <h2 id="classesCount" class="mt-2 text-3xl font-bold text-slate-800">{{ $classesCount }}</h2>
+        </div>
+
+        <div class="rounded-2xl bg-white p-5 shadow-sm border border-slate-200">
+            <p class="text-sm font-medium text-slate-500">Total Enrollments</p>
+            <h2 class="mt-2 text-3xl font-bold text-slate-800">{{ $totalEnrollments }}</h2>
+        </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="rounded-3xl bg-white p-6 shadow-lg ring-1 ring-slate-200">
+        <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+            <div class="flex w-full flex-col gap-3 sm:flex-row xl:w-auto xl:flex-1">
+                <div class="w-full xl:max-w-3xl">
+                    <input
+                        type="text"
+                        id="searchInput"
+                        placeholder="Search by class title or teacher..."
+                        class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm shadow-sm outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
+                    >
+                </div>
+
+                <div class="w-full sm:w-48">
+                    <select
+                        id="sortFilter"
+                        class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm shadow-sm outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
+                    >
+                        <option value="latest">Latest</option>
+                        <option value="oldest">Oldest</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex w-full flex-col gap-3 sm:flex-row xl:w-auto">
+                <button
+                    type="button"
+                    id="btnCreateClass"
+                    class="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                    <span class="flex items-center justify-center gap-2">
+                        <span class="spinner hidden h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                        <span>Create Class</span>
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="rounded-2xl bg-white shadow-sm border border-slate-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <div id="classesTableWrapper">
+                @include('admin.classes.partials.table', ['classes' => $classes])
+            </div>
+        </div>
+    </div>
+</div>
+
+@include('admin.classes.modals.create')
+@include('admin.classes.modals.view')
+@include('admin.classes.modals.edit')
+@include('admin.classes.modals.delete')
+
+<div id="pageLoadingOverlay" class="fixed inset-0 z-[99999] hidden items-center justify-center bg-black/80 backdrop-blur-sm">
+    <div style="background:#0f172a; border:1px solid #334155; box-shadow:0 25px 50px rgba(0,0,0,.45);"
+         class="flex min-w-[340px] flex-col items-center justify-center rounded-3xl px-10 py-10 text-white">
+        <svg class="h-20 w-20 animate-spin" viewBox="0 0 50 50" aria-hidden="true">
+            <circle cx="25" cy="25" r="20" fill="none" stroke="#334155" stroke-width="6"></circle>
+            <path d="M25 5a20 20 0 0 1 20 20" fill="none" stroke="#60a5fa" stroke-width="6" stroke-linecap="round"></path>
+        </svg>
+
+        <div class="mt-6 text-xl font-bold tracking-[0.25em] text-white">
+            LOADING
+        </div>
+
+        <div class="mt-3 text-sm text-slate-300">
+            Opening class details...
+        </div>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const searchInput = document.getElementById('searchInput');
+    const sortFilter = document.getElementById('sortFilter');
+    const tableWrapper = document.getElementById('classesTableWrapper');
+
+    const createModal = document.getElementById('createClassModal');
+    const viewModal = document.getElementById('viewClassModal');
+    const editModal = document.getElementById('editClassModal');
+    const deleteModal = document.getElementById('deleteClassModal');
+
+    const createForm = document.getElementById('createClassForm');
+    const editForm = document.getElementById('editClassForm');
+    const deleteForm = document.getElementById('deleteClassForm');
+    const btnCreateClass = document.getElementById('btnCreateClass');
+
+    let searchTimeout = null;
+    let currentDeleteId = null;
+
+    function getActionButtons() {
+        return document.querySelectorAll('.class-action-btn, #btnCreateClass');
+    }
+
+    function setButtonLoading(button, loadingText = 'Processing...') {
+        if (!button) return;
+
+        button.disabled = true;
+        button.dataset.originalHtml = button.innerHTML;
+
+        const spinner = button.querySelector('.spinner');
+        if (spinner) {
+            spinner.classList.remove('hidden');
+        }
+
+        const textSpan = button.querySelector('span > span:last-child');
+        if (textSpan) {
+            textSpan.textContent = loadingText;
+        }
+    }
+
+    function resetButtonLoading(button) {
+        if (!button) return;
+
+        if (button.dataset.originalHtml) {
+            button.innerHTML = button.dataset.originalHtml;
+        }
+
+        button.disabled = false;
+    }
+
+    function disableOtherActionButtons(activeButton = null) {
+        getActionButtons().forEach(button => {
+            if (button !== activeButton) {
+                button.disabled = true;
+            }
+        });
+    }
+
+    function enableAllActionButtons() {
+        getActionButtons().forEach(button => {
+            button.disabled = false;
+        });
+    }
+
+    function showPageLoadingOverlay() {
+    const overlay = document.getElementById('pageLoadingOverlay');
+    if (!overlay) return;
+
+    overlay.classList.remove('hidden');
+    overlay.classList.add('flex');
+    document.body.classList.add('overflow-hidden');
+}
+
+function hidePageLoadingOverlay() {
+    const overlay = document.getElementById('pageLoadingOverlay');
+    if (!overlay) return;
+
+    overlay.classList.add('hidden');
+    overlay.classList.remove('flex');
+    document.body.classList.remove('overflow-hidden');
+}
+
+    function openModal(modal) {
+        if (!modal) return;
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.classList.add('overflow-hidden');
+    }
+
+    function closeModal(modal) {
+        if (!modal) return;
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+
+        const hasVisibleModal = [createModal, viewModal, editModal, deleteModal].some(
+            currentModal => currentModal && !currentModal.classList.contains('hidden')
+        );
+
+        if (!hasVisibleModal) {
+            document.body.classList.remove('overflow-hidden');
+        }
+    }
+
+    if (btnCreateClass && createModal) {
+        btnCreateClass.addEventListener('click', function () {
+            disableOtherActionButtons(btnCreateClass);
+            openModal(createModal);
+        });
+    }
+
+    document.querySelectorAll('.close-modal').forEach(button => {
+        button.addEventListener('click', function () {
+            closeModal(createModal);
+            closeModal(viewModal);
+            closeModal(editModal);
+            closeModal(deleteModal);
+            enableAllActionButtons();
+        });
+    });
+
+    [createModal, viewModal, editModal, deleteModal].forEach(modal => {
+        if (!modal) return;
+
+        modal.addEventListener('click', function (e) {
+            if (e.target === modal) {
+                closeModal(modal);
+                enableAllActionButtons();
+            }
+        });
+    });
+
+    function fetchClasses(pageUrl = null) {
+        const search = searchInput ? searchInput.value : '';
+        const sort = sortFilter ? sortFilter.value : 'latest';
+
+        const url = pageUrl ?? `{{ route('admin.classes') }}?search=${encodeURIComponent(search)}&sort=${encodeURIComponent(sort)}`;
+
+        tableWrapper.innerHTML = `
+            <div class="py-12 text-center">
+                <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-slate-600"></div>
+                <p class="mt-3 text-sm text-slate-600">Loading classes...</p>
+            </div>
+        `;
+
+        fetch(url, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+            tableWrapper.innerHTML = html;
+            bindTableActions();
+            enableAllActionButtons();
+        })
+        .catch(() => {
+            tableWrapper.innerHTML = `
+                <div class="py-8 text-center text-rose-600 text-sm">
+                    Failed to load classes.
+                </div>
+            `;
+            enableAllActionButtons();
+        });
+    }
+
+    function bindTableActions() {
+
+        // CLASS DETAILS CLICK (NEW FEATURE)
+document.querySelectorAll('.class-row').forEach(row => {
+    row.addEventListener('click', function (e) {
+        const clickedActionButton = e.target.closest('.view-class-btn, .edit-class-btn, .delete-class-btn');
+        if (clickedActionButton) {
+            return;
+        }
+
+        if (this.dataset.loading === 'true') return;
+
+        this.dataset.loading = 'true';
+        this.classList.add('opacity-70');
+
+        document.querySelectorAll('.class-row').forEach(otherRow => {
+            if (otherRow !== this) {
+                otherRow.classList.add('pointer-events-none', 'opacity-60');
+            }
+        });
+
+        showPageLoadingOverlay();
+
+        const url = this.dataset.url;
+
+        setTimeout(() => {
+            window.location.href = url;
+        }, 350);
+    });
+});
+        document.querySelectorAll('.view-class-btn').forEach(button => {
+            button.addEventListener('click', function () {
+                const id = this.dataset.id;
+
+                disableOtherActionButtons(button);
+                setButtonLoading(button, button.dataset.loadingText || 'Loading...');
+
+                fetch(`/admin/classes/${id}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('viewClassName').textContent = data.name ?? 'â€”';
+                        document.getElementById('viewClassCode').textContent = data.class_code ?? 'â€”';
+                        document.getElementById('viewClassDescription').textContent = data.description ?? 'â€”';
+                        document.getElementById('viewClassTeacher').textContent = data.teacher?.name ?? 'â€”';
+                        document.getElementById('viewClassStudentCount').textContent = data.students?.length ?? 0;
+
+                        resetButtonLoading(button);
+                        openModal(viewModal);
+                    })
+                    .catch(() => {
+                        resetButtonLoading(button);
+                        enableAllActionButtons();
+                        alert('Failed to load class details.');
+                    });
+            });
+        });
+
+        document.querySelectorAll('.edit-class-btn').forEach(button => {
+            button.addEventListener('click', function () {
+                const id = this.dataset.id;
+
+                disableOtherActionButtons(button);
+                setButtonLoading(button, button.dataset.loadingText || 'Loading...');
+
+                fetch(`/admin/classes/${id}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('editClassId').value = data.id;
+                        document.getElementById('editClassName').value = data.name ?? '';
+                        document.getElementById('editClassDescription').value = data.description ?? '';
+
+                        resetButtonLoading(button);
+                        openModal(editModal);
+                    })
+                    .catch(() => {
+                        resetButtonLoading(button);
+                        enableAllActionButtons();
+                        alert('Failed to load class details.');
+                    });
+            });
+        });
+
+        document.querySelectorAll('.delete-class-btn').forEach(button => {
+            button.addEventListener('click', function () {
+                disableOtherActionButtons(button);
+                setButtonLoading(button, button.dataset.loadingText || 'Loading...');
+
+                currentDeleteId = this.dataset.id;
+                document.getElementById('deleteClassName').textContent = this.dataset.name;
+
+                resetButtonLoading(button);
+                openModal(deleteModal);
+            });
+        });
+
+        document.querySelectorAll('#classesTableWrapper .pagination a').forEach(link => {
+            link.addEventListener('click', function (e) {
+                e.preventDefault();
+                fetchClasses(this.href);
+            });
+        });
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function () {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                fetchClasses();
+            }, 300);
+        });
+    }
+
+    if (sortFilter) {
+        sortFilter.addEventListener('change', function () {
+            fetchClasses();
+        });
+    }
+
+    if (createForm) {
+        createForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('createClassSubmitBtn');
+            disableOtherActionButtons(submitBtn);
+            setButtonLoading(submitBtn, 'Creating...');
+
+            const formData = new FormData(createForm);
+
+            fetch(`{{ route('admin.classes.store') }}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: formData
+            })
+            .then(async response => {
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Failed to create class.');
+                }
+
+                closeModal(createModal);
+                createForm.reset();
+                fetchClasses();
+
+                setTimeout(() => window.location.reload(), 250);
+            })
+            .catch(error => {
+                alert(error.message || 'Failed to create class.');
+            })
+            .finally(() => {
+                resetButtonLoading(submitBtn);
+                enableAllActionButtons();
+            });
+        });
+    }
+
+    if (editForm) {
+        editForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const submitBtn = editForm.querySelector('button[type="submit"]');
+            const id = document.getElementById('editClassId').value;
+            const formData = new FormData(editForm);
+
+            disableOtherActionButtons(submitBtn);
+            setButtonLoading(submitBtn, 'Saving...');
+
+            fetch(`/admin/classes/${id}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-HTTP-Method-Override': 'PUT',
+                    'Accept': 'application/json'
+                },
+                body: formData
+            })
+            .then(async response => {
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Failed to update class.');
+                }
+
+                if (data.success) {
+                    closeModal(editModal);
+                    fetchClasses();
+                    setTimeout(() => window.location.reload(), 250);
+                }
+            })
+            .catch(error => {
+                alert(error.message || 'Failed to update class.');
+            })
+            .finally(() => {
+                resetButtonLoading(submitBtn);
+                enableAllActionButtons();
+            });
+        });
+    }
+
+    if (deleteForm) {
+        deleteForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            if (!currentDeleteId) return;
+
+            const submitBtn = deleteForm.querySelector('button[type="submit"]');
+            disableOtherActionButtons(submitBtn);
+            setButtonLoading(submitBtn, 'Deleting...');
+
+            fetch(`/admin/classes/${currentDeleteId}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-HTTP-Method-Override': 'DELETE',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(async response => {
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Failed to delete class.');
+                }
+
+                if (data.success) {
+                    closeModal(deleteModal);
+                    fetchClasses();
+                    setTimeout(() => window.location.reload(), 250);
+                }
+            })
+            .catch(error => {
+                alert(error.message || 'Failed to delete class.');
+            })
+            .finally(() => {
+                resetButtonLoading(submitBtn);
+                enableAllActionButtons();
+            });
+        });
+    }
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            closeModal(createModal);
+            closeModal(viewModal);
+            closeModal(editModal);
+            closeModal(deleteModal);
+            enableAllActionButtons();
+        }
+    });
+
+    bindTableActions();
+});
+</script>
+@endsection
+
+========== FILE: backend\resources\views\admin\classes\show.blade.php ==========
+@extends('admin.layouts.app')
+
+@section('title', 'Class Details')
+
+@section('content')
+<div class="space-y-6">
+
+    <!-- Back button -->
+    <div>
+        <a href="{{ route('admin.classes') }}"
+           class="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50">
+            <span>&larr;</span>
+            <span>Back to Classes</span>
+        </a>
+    </div>
+
+    <!-- Hero / Class Info -->
+    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-900 p-6 text-white shadow-xl sm:p-8">
+        <!-- subtle colored glows only, no white circles -->
+        <div class="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-indigo-500/10 blur-3xl"></div>
+        <div class="absolute -bottom-16 -left-16 h-44 w-44 rounded-full bg-violet-500/10 blur-3xl"></div>
+
+        <div class="relative z-10 flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
+            <div class="max-w-3xl">
+                <p class="text-sm font-medium uppercase tracking-[0.2em] text-indigo-200">Class Details</p>
+                <h1 class="mt-2 text-3xl font-bold sm:text-4xl">{{ $class->name }}</h1>
+
+                <p class="mt-3 max-w-2xl text-sm text-slate-200 sm:text-base">
+                    {{ $class->description ?: 'No class description provided.' }}
+                </p>
+
+                <div class="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                    <div class="rounded-2xl bg-slate-800/60 border border-white/10 px-4 py-3 backdrop-blur">
+                        <p class="text-xs uppercase tracking-wide text-slate-200">Teacher</p>
+                        <p class="mt-1 text-base font-semibold text-white">
+                            {{ $class->teacher->name ?? 'Unknown Teacher' }}
+                        </p>
+                    </div>
+
+                    <div class="rounded-2xl bg-slate-800/60 border border-white/10 px-4 py-3 backdrop-blur">
+                        <p class="text-xs uppercase tracking-wide text-slate-200">Class Code</p>
+                        <p class="mt-1 text-base font-semibold text-white">
+                            {{ $class->class_code }}
+                        </p>
+                    </div>
+
+                    <div class="rounded-2xl bg-slate-800/60 border border-white/10 px-4 py-3 backdrop-blur">
+                        <p class="text-xs uppercase tracking-wide text-slate-200">Created</p>
+                        <p class="mt-1 text-base font-semibold text-white">
+                            {{ $class->created_at ? $class->created_at->format('M d, Y') : 'â€”' }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- smaller widgets -->
+            <div class="flex flex-wrap gap-3 xl:max-w-xs xl:justify-end">
+                <div class="min-w-[140px] rounded-2xl bg-white/10 px-4 py-3 backdrop-blur shadow-lg">
+                    <p class="text-xs uppercase tracking-wide text-slate-200">Students Enrolled</p>
+                    <p class="mt-1 text-2xl font-bold text-white">{{ $studentsEnrolledCount }}</p>
+                </div>
+
+                <div class="min-w-[140px] rounded-2xl bg-white/10 px-4 py-3 backdrop-blur shadow-lg">
+                    <p class="text-xs uppercase tracking-wide text-slate-200">Total Quizzes</p>
+                    <p class="mt-1 text-2xl font-bold text-white">{{ $quizzesCount }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quizzes Card -->
+    <div class="rounded-3xl bg-white p-6 shadow-lg ring-1 ring-slate-200">
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h2 class="text-xl font-bold text-slate-900">Class Quizzes</h2>
+                <p class="mt-1 text-sm text-slate-500">
+                    View all quizzes currently assigned to this class.
+                </p>
+            </div>
+        </div>
+
+        <div class="mt-6 overflow-hidden rounded-2xl border border-slate-200">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-slate-200">
+                    <thead class="bg-slate-50">
+                        <tr>
+                            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                                Quiz
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                                Description
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                                Questions
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+    Students Taken
+</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                                Status
+                            </th>
+                        </tr>
+                    </thead>
+
+                    <tbody class="divide-y divide-slate-100 bg-white">
+                        @forelse($class->quizzes as $quiz)
+                            <tr
+    class="quiz-row cursor-pointer transition duration-150 hover:bg-indigo-100 hover:shadow-sm"
+    data-url="{{ route('admin.classes.quizzes.details', [$class->id, $quiz->id]) }}"
+>
+                                <td class="px-6 py-4">
+                                    <div class="font-semibold text-slate-800">{{ $quiz->title }}</div>
+                                </td>
+
+                                <td class="px-6 py-4 text-sm text-slate-600">
+                                    <div class="max-w-md truncate">
+                                        {{ $quiz->description ?: 'No description' }}
+                                    </div>
+                                </td>
+
+                                <td class="px-6 py-4 text-sm text-slate-700">
+    {{ $quiz->questions_count ?? 0 }}
+</td>
+
+<td class="px-6 py-4 text-sm text-slate-700">
+    {{ $quiz->attempts_count ?? 0 }}
+</td>
+
+<td class="px-6 py-4">
+    @if($quiz->is_published)
+        <span class="inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+            Published
+        </span>
+    @else
+        <span class="inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
+            Unpublished
+        </span>
+    @endif
+</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="px-6 py-10 text-center text-sm text-slate-500">
+                                    No quizzes are currently assigned to this class.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+@endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.quiz-row').forEach(row => {
+        row.addEventListener('click', function (e) {
+            if (e.target.closest('button, a')) return;
+            if (this.dataset.loading === 'true') return;
+
+            this.dataset.loading = 'true';
+            this.style.opacity = '0.65';
+
+            document.querySelectorAll('.quiz-row').forEach(otherRow => {
+                if (otherRow !== this) {
+                    otherRow.style.pointerEvents = 'none';
+                    otherRow.style.opacity = '0.55';
+                }
+            });
+
+            const overlay = document.getElementById('pageLoadingOverlay');
+            if (overlay) {
+                overlay.classList.remove('hidden');
+                overlay.classList.add('flex');
+            }
+
+            window.location.href = this.dataset.url;
+        });
+    });
+});
+</script>
+@endpush
+
+========== FILE: backend\resources\views\admin\classes\partials\table.blade.php ==========
+@php $isSuperAdmin = isset($isSuperAdmin) ? $isSuperAdmin : (auth()->check() && auth()->user()->role === 'superadmin'); @endphp
+
+@if($isSuperAdmin)
+{{-- ===== SUPERADMIN TABLE ===== --}}
+<style>
+    .sa-class-row { transition: background 0.15s ease; }
+    .sa-class-row:hover { background: rgba(99,102,241,0.06) !important; }
+    .sa-class-row:hover .sa-class-title { color: #a5b4fc !important; }
+    .sa-class-row:hover .sa-class-desc { color: #64748b !important; }
+</style>
+
+<table class="min-w-full" style="border-collapse:separate;border-spacing:0;">
+    <thead style="background:rgba(255,255,255,0.03);">
+        <tr>
+            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider" style="color:#475569;">Class</th>
+            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider" style="color:#475569;">Teacher</th>
+            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider" style="color:#475569;">Students</th>
+            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider" style="color:#475569;">Code</th>
+            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider" style="color:#475569;">Created</th>
+            <th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider" style="color:#475569;">Actions</th>
+        </tr>
+    </thead>
+    <tbody style="background:#0f1117;">
+        @forelse($classes as $class)
+            <tr class="sa-class-row class-row cursor-pointer"
+                style="border-bottom:1px solid rgba(255,255,255,0.04);"
+                data-url="{{ route('admin.classes.details', $class->id) }}">
+
+                <td class="px-6 py-4">
+                    <div class="min-w-0 rounded-xl border border-transparent p-3 transition duration-200"
+                         style="border-color:rgba(255,255,255,0.04);">
+                        <div class="sa-class-title font-semibold transition" style="color:#e2e8f0;">
+                            {{ $class->name }}
+                        </div>
+                        <div class="sa-class-desc mt-1 max-w-xs truncate text-sm transition" style="color:#475569;">
+                            {{ $class->description ?: 'No description' }}
+                        </div>
+                    </div>
+                </td>
+                <td class="px-6 py-4 text-sm" style="color:#94a3b8;">
+                    {{ $class->teacher->name ?? 'Unknown Teacher' }}
+                </td>
+                <td class="px-6 py-4 text-sm" style="color:#94a3b8;">
+                    {{ $class->students->count() }}
+                </td>
+                <td class="px-6 py-4 text-sm" style="color:#94a3b8;">
+                    {{ $class->class_code }}
+                </td>
+                <td class="px-6 py-4 text-sm" style="color:#94a3b8;">
+                    {{ $class->created_at ? $class->created_at->format('M d, Y') : 'â€”' }}
+                </td>
+                <td class="px-6 py-4">
+                    <div class="flex items-center justify-center gap-2 flex-wrap">
+                        <button type="button"
+                                class="edit-class-btn class-action-btn inline-flex items-center justify-center rounded-lg px-4 py-2 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-60"
+                                style="background:rgba(99,102,241,0.15);color:#a5b4fc;border:1px solid rgba(99,102,241,0.25);"
+                                onmouseover="this.style.background='rgba(99,102,241,0.28)';"
+                                onmouseout="this.style.background='rgba(99,102,241,0.15)';"
+                                data-id="{{ $class->id }}"
+                                data-loading-text="Loading...">
+                            <span class="flex items-center justify-center gap-2">
+                                <span class="spinner hidden h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
+                                <span>Update</span>
+                            </span>
+                        </button>
+                        <button type="button"
+                                class="delete-class-btn class-action-btn inline-flex items-center justify-center rounded-lg px-4 py-2 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-60"
+                                style="background:rgba(239,68,68,0.12);color:#f87171;border:1px solid rgba(239,68,68,0.2);"
+                                onmouseover="this.style.background='rgba(239,68,68,0.25)';"
+                                onmouseout="this.style.background='rgba(239,68,68,0.12)';"
+                                data-id="{{ $class->id }}"
+                                data-name="{{ $class->name }}"
+                                data-loading-text="Loading...">
+                            <span class="flex items-center justify-center gap-2">
+                                <span class="spinner hidden h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
+                                <span>Delete</span>
+                            </span>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        @empty
+            <tr>
+                <td colspan="6" class="px-6 py-10 text-center text-sm" style="color:#475569;">
+                    No classes found.
+                </td>
+            </tr>
+        @endforelse
+    </tbody>
+</table>
+
+@if($classes->hasPages())
+    <div class="px-6 py-4" style="border-top:1px solid rgba(255,255,255,0.06);">
+        {{ $classes->links() }}
+    </div>
+@endif
+
+@else
+{{-- ===== ADMIN TABLE â€” 100% original, zero changes ===== --}}
+<style>
+    .class-row-hoverable {
+        cursor: pointer;
+        transition: background-color 0.18s ease, box-shadow 0.18s ease;
+    }
+    .class-row-hoverable:hover > td { background-color: #dbeafe !important; }
+    .class-row-hoverable:hover .class-main-cell { background-color: #c7d2fe !important; border-color: #818cf8 !important; }
+    .class-row-hoverable:hover .class-main-title { color: #312e81 !important; }
+    .class-row-hoverable:hover .class-main-desc,
+    .class-row-hoverable:hover .class-meta-text { color: #334155 !important; }
+</style>
+
+<table class="min-w-full divide-y divide-slate-200">
+    <thead class="bg-slate-50">
+        <tr>
+            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Class</th>
+            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Teacher</th>
+            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Students</th>
+            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Code</th>
+            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Created</th>
+            <th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider text-slate-500">Actions</th>
+        </tr>
+    </thead>
+    <tbody class="divide-y divide-slate-100 bg-white">
+        @forelse($classes as $class)
+            <tr class="class-row class-row-hoverable group" data-url="{{ route('admin.classes.details', $class->id) }}">
+                <td class="px-6 py-4">
+                    <div class="class-main-cell min-w-0 rounded-2xl border border-transparent p-3 transition duration-200">
+                        <div class="class-main-title font-semibold text-slate-800">{{ $class->name }}</div>
+                        <div class="class-main-desc mt-1 max-w-xs truncate text-sm text-slate-500">{{ $class->description ?: 'No description' }}</div>
+                    </div>
+                </td>
+                <td class="class-meta-text px-6 py-4 text-sm text-slate-700">{{ $class->teacher->name ?? 'Unknown Teacher' }}</td>
+                <td class="class-meta-text px-6 py-4 text-sm text-slate-700">{{ $class->students->count() }}</td>
+                <td class="class-meta-text px-6 py-4 text-sm text-slate-700">{{ $class->class_code }}</td>
+                <td class="class-meta-text px-6 py-4 text-sm text-slate-700">{{ $class->created_at ? $class->created_at->format('M d, Y') : 'â€”' }}</td>
+                <td class="px-6 py-4">
+                    <div class="flex items-center justify-center gap-2 flex-wrap">
+                        <button type="button"
+                                class="edit-class-btn class-action-btn inline-flex items-center justify-center rounded-xl bg-amber-100 px-4 py-2 text-xs font-semibold text-amber-700 transition hover:bg-amber-200 disabled:cursor-not-allowed disabled:opacity-60"
+                                data-id="{{ $class->id }}" data-loading-text="Loading...">
+                            <span class="flex items-center justify-center gap-2">
+                                <span class="spinner hidden h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
+                                <span>Update</span>
+                            </span>
+                        </button>
+                        <button type="button"
+                                class="delete-class-btn class-action-btn inline-flex items-center justify-center rounded-xl bg-rose-100 px-4 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-200 disabled:cursor-not-allowed disabled:opacity-60"
+                                data-id="{{ $class->id }}" data-name="{{ $class->name }}" data-loading-text="Loading...">
+                            <span class="flex items-center justify-center gap-2">
+                                <span class="spinner hidden h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
+                                <span>Delete</span>
+                            </span>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        @empty
+            <tr>
+                <td colspan="6" class="px-6 py-10 text-center text-sm text-slate-500">No classes found.</td>
+            </tr>
+        @endforelse
+    </tbody>
+</table>
+
+@if($classes->hasPages())
+    <div class="border-t border-slate-200 bg-white px-6 py-4">{{ $classes->links() }}</div>
+@endif
+@endif
+
+========== FILE: backend\resources\views\admin\quizzes\show.blade.php ==========
+@extends('admin.layouts.app')
+
+@section('title', 'Quiz Details')
+
+@section('content')
+<div class="space-y-6">
+
+    <!-- Back -->
+    <div>
+        <a href="{{ route('admin.classes.details', $class->id) }}"
+           class="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow">
+            â† Back to Class
+        </a>
+    </div>
+
+    <!-- QUIZ HEADER -->
+    <div class="rounded-3xl p-6 text-white shadow-xl"
+         style="background: linear-gradient(135deg,#020617,#0f172a,#1e1b4b);">
+
+        <h1 class="text-3xl font-bold">{{ $quiz->title }}</h1>
+        <p class="mt-2 text-slate-300">
+            {{ $quiz->description ?? 'No description' }}
+        </p>
+
+        <div class="mt-6 flex flex-wrap gap-4">
+
+            <div class="bg-slate-800/60 px-4 py-2 rounded-xl">
+                <p class="text-xs text-slate-400">Attempts</p>
+                <p class="text-xl font-bold">{{ $totalAttempts }}</p>
+            </div>
+
+            <div class="bg-slate-800/60 px-4 py-2 rounded-xl">
+                <p class="text-xs text-slate-400">Avg Score</p>
+                <p class="text-xl font-bold">{{ $averageScore }}</p>
+            </div>
+
+            <div class="bg-slate-800/60 px-4 py-2 rounded-xl">
+                <p class="text-xs text-slate-400">Pass Rate</p>
+                <p class="text-xl font-bold">{{ $passRate }}%</p>
+            </div>
+
+            <div class="bg-slate-800/60 px-4 py-2 rounded-xl">
+                <p class="text-xs text-slate-400">Questions</p>
+                <p class="text-xl font-bold">{{ $totalQuestions }}</p>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- TAB BUTTONS -->
+    <div class="flex gap-2">
+        <a href="?tab=results"
+           class="px-4 py-2 rounded-xl text-sm font-semibold {{ $tab=='results' ? 'bg-indigo-600 text-white' : 'bg-slate-200' }}">
+            Results
+        </a>
+
+        <a href="?tab=analytics"
+           class="px-4 py-2 rounded-xl text-sm font-semibold {{ $tab=='analytics' ? 'bg-indigo-600 text-white' : 'bg-slate-200' }}">
+            Analytics
+        </a>
+    </div>
+
+    <!-- RESULTS TABLE -->
+@if($tab == 'results')
+<div class="bg-white rounded-2xl shadow p-6">
+
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+        <div>
+            <h2 class="font-bold text-lg text-slate-800">Student Results</h2>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <select
+                id="resultsSortDropdown"
+                class="rounded-xl border border-slate-300 px-4 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            >
+                <option value="newest" selected>Newest to Oldest</option>
+                <option value="ranking">Ranking</option>
+                <option value="surname">Surname</option>
+            </select>
+
+            <a href="?tab=results&export=excel"
+               class="bg-green-600 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow hover:bg-green-700 transition">
+                Export Excel
+            </a>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="overflow-x-auto rounded-2xl border border-slate-100 shadow-sm">
+        <table class="w-full text-sm">
+            <thead class="bg-slate-50 text-slate-600 uppercase text-xs tracking-wider">
+                <tr>
+                    <th class="p-3 text-left">Rank</th>
+                    <th class="p-3 text-left">Student ID</th>
+                    <th class="p-3 text-left">Surname</th>
+                    <th class="p-3 text-left">First Name</th>
+                    <th class="p-3 text-left">M.I.</th>
+                    <th class="p-3 text-left">Gender</th>
+                    <th class="p-3 text-left">Grade</th>
+                    <th class="p-3 text-left">Section</th>
+                    <th class="p-3 text-left">Score</th>
+                    <th class="p-3 text-left">Total</th>
+                    <th class="p-3 text-left">%</th>
+                    <th class="p-3 text-left">Status</th>
+                </tr>
+            </thead>
+
+            <tbody id="resultsTableBody">
+                @foreach($resultsRows as $index => $row)
+                @php
+                    $rowClass = 'hover:bg-slate-50 transition';
+
+                    if ($index === 0) {
+    $rowClass .= ' bg-yellow-50 ring-1 ring-yellow-200 shadow-sm';
+} elseif ($index === 1) {
+    $rowClass .= ' bg-slate-50 ring-1 ring-slate-200 shadow-sm';
+} elseif ($index === 2) {
+    $rowClass .= ' bg-amber-50 ring-1 ring-amber-200 shadow-sm';
+}
+                @endphp
+
+                <tr class="{{ $rowClass }}">
+                    <td class="p-3 font-bold text-slate-700">{{ $index + 1 }}</td>
+                    <td class="p-3">{{ $row['student_id'] }}</td>
+                    <td class="p-3">{{ $row['surname'] }}</td>
+                    <td class="p-3">{{ $row['first_name'] }}</td>
+                    <td class="p-3">{{ $row['middle_initial'] }}</td>
+                    <td class="p-3 capitalize">{{ $row['gender'] }}</td>
+                    <td class="p-3">{{ $row['grade_level'] }}</td>
+                    <td class="p-3">{{ $row['section'] }}</td>
+                    <td class="p-3 font-semibold">{{ $row['score'] }}</td>
+                    <td class="p-3">{{ $row['total_points'] }}</td>
+                    <td class="p-3">{{ $row['percentage'] }}%</td>
+                    <td class="p-3">
+                        <span class="{{ $row['status']=='Passed' ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold' }}">
+                            {{ $row['status'] }}
+                        </span>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+</div>
+@endif
+
+    <!-- ANALYTICS -->
+@if($tab == 'analytics')
+<div class="space-y-6">
+
+    
+
+    <!-- Detailed Table -->
+    <div class="bg-white rounded-2xl shadow-sm p-6 border border-slate-100">
+
+        <div class="mb-4">
+            <div class="flex justify-between items-center mb-4">
+    <h2 class="font-bold text-lg">Question Analytics</h2>
+
+    <a href="?tab=analytics&export=excel"
+       class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+        Export Excel
+    </a>
+</div>
+            <p class="text-sm text-slate-500">
+                Performance breakdown per question
+            </p>
+        </div>
+
+        <div class="overflow-x-auto rounded-2xl border border-slate-100 shadow-sm">
+    <table class="w-full text-sm">
+        <thead class="bg-slate-50 text-slate-600 uppercase text-xs tracking-wider">
+            <tr>
+                <th class="px-4 py-3 text-left">#</th>
+                <th class="px-4 py-3 text-left">Question</th>
+                <th class="px-4 py-3 text-left">Type</th>
+                <th class="px-4 py-3 text-left">Points</th>
+                <th class="px-4 py-3 text-left">Correct %</th>
+                <th class="px-4 py-3 text-left">Correct</th>
+                <th class="px-4 py-3 text-left">Wrong</th>
+                <th class="px-4 py-3 text-left">Avg Points</th>
+                <th class="px-4 py-3 text-left">Status</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach($questionAnalytics as $q)
+            @php
+                $wrongCount = $q['attempted_count'] - $q['correct_count'];
+
+                if ($q['correct_rate'] >= 80) {
+                    $statusClass = 'bg-green-100 text-green-700';
+                    $statusText = 'Excellent';
+                } elseif ($q['correct_rate'] >= 50) {
+                    $statusClass = 'bg-yellow-100 text-yellow-700';
+                    $statusText = 'Average';
+                } else {
+                    $statusClass = 'bg-red-100 text-red-700';
+                    $statusText = 'Needs Review';
+                }
+            @endphp
+
+            <tr class="hover:bg-slate-50 transition">
+                <td class="px-4 py-3 font-semibold text-slate-700">
+                    {{ $q['order'] }}
+                </td>
+
+                <td class="px-4 py-3 text-slate-700">
+                    {{ $q['question_text'] }}
+                </td>
+
+                <td class="px-4 py-3 capitalize">
+                    {{ $q['question_type'] }}
+                </td>
+
+                <td class="px-4 py-3 font-semibold">
+                    {{ $q['points'] }}
+                </td>
+
+                <td class="px-4 py-3 font-semibold">
+                    {{ $q['correct_rate'] }}%
+                </td>
+
+                <td class="px-4 py-3 text-green-600 font-semibold">
+                    {{ $q['correct_count'] }}
+                </td>
+
+                <td class="px-4 py-3 text-red-600 font-semibold">
+                    {{ $wrongCount }}
+                </td>
+
+                <td class="px-4 py-3">
+                    {{ $q['average_points'] }}
+                </td>
+
+                <td class="px-4 py-3">
+                    <span class="px-3 py-1 rounded-full text-xs font-semibold {{ $statusClass }}">
+                        {{ $statusText }}
+                    </span>
+                </td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
+</div>
+
+    </div>
+</div>
+@endif
+
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const dropdown = document.getElementById('resultsSortDropdown');
+    const tableBody = document.getElementById('resultsTableBody');
+
+    if (!dropdown || !tableBody) return;
+
+    const originalRows = Array.from(tableBody.querySelectorAll('tr'));
+
+    function updateRankAndHighlights(rows) {
+        rows.forEach((row, index) => {
+            // Update rank column (first td)
+            row.children[0].textContent = index + 1;
+
+            // Reset row classes
+            row.className = 'hover:bg-slate-50 transition';
+
+            // Top 3 highlights
+            if (index === 0) {
+                row.classList.add('bg-yellow-50', 'shadow-sm');
+            } else if (index === 1) {
+                row.classList.add('bg-slate-100', 'shadow-sm');
+            } else if (index === 2) {
+                row.classList.add('bg-amber-50', 'shadow-sm');
+            }
+        });
+    }
+
+    function sortTable(mode) {
+        let rows = [...originalRows];
+
+        if (mode === 'ranking') {
+            rows.sort((a, b) => {
+                const scoreA = parseFloat(a.children[8].textContent) || 0;
+                const scoreB = parseFloat(b.children[8].textContent) || 0;
+                return scoreB - scoreA;
+            });
+        }
+
+        if (mode === 'surname') {
+            rows.sort((a, b) => {
+                const surnameA = a.children[2].textContent.trim().toLowerCase();
+                const surnameB = b.children[2].textContent.trim().toLowerCase();
+                return surnameA.localeCompare(surnameB);
+            });
+        }
+
+        if (mode === 'newest') {
+            rows = [...originalRows];
+        }
+
+        tableBody.innerHTML = '';
+        rows.forEach(row => tableBody.appendChild(row));
+
+        updateRankAndHighlights(rows);
+    }
+
+    dropdown.addEventListener('change', function () {
+        sortTable(this.value);
+    });
+
+    // Default initial formatting
+    updateRankAndHighlights(originalRows);
+});
+</script>
+@endsection
+
+========== FILE: backend\resources\views\admin\layouts\app.blade.php ==========
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ auth()->check() && auth()->user()->role === 'superadmin' ? 'Quizzard SuperAdmin' : 'Quizzard Admin' }}</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+</head>
+
+@php
+    $isSuperAdmin = auth()->check() && auth()->user()->role === 'superadmin';
+@endphp
+
+@if($isSuperAdmin)
+{{-- ============================================================ --}}
+{{-- SUPERADMIN BODY - deep navy dark theme                       --}}
+{{-- ============================================================ --}}
+<body style="background:#0f1117; color:#e2e8f0; min-height:100vh;">
+    <div class="min-h-screen lg:grid lg:grid-cols-[260px_1fr]">
+
+        <aside style="background:linear-gradient(180deg,#0a0c12 0%,#0d1018 50%,#0a0c12 100%); border-right:1px solid rgba(255,255,255,0.06);" class="shadow-2xl">
+            <div class="flex h-full flex-col">
+
+                <div class="px-6 py-6" style="border-bottom:1px solid rgba(255,255,255,0.06);">
+                    <div class="flex items-center gap-2 mb-1">
+                        <div class="flex items-center justify-center w-6 h-6 rounded-md" style="background:linear-gradient(135deg,#6366f1,#818cf8);">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                            </svg>
+                        </div>
+                        <span class="text-xs font-bold tracking-widest uppercase" style="color:#818cf8;">SuperAdmin</span>
+                    </div>
+                    <h1 class="text-lg font-bold text-white mt-2">Quizzard</h1>
+                    <p class="text-xs mt-0.5" style="color:#475569;">Control Panel</p>
+                </div>
+
+                <nav class="flex-1 px-3 py-5 space-y-1">
+                    <a href="{{ route('admin.dashboard') }}"
+                       class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150"
+                       style="{{ request()->routeIs('admin.dashboard*') ? 'background:rgba(99,102,241,0.15);color:#a5b4fc;border-left:3px solid #6366f1;' : 'color:#64748b;border-left:3px solid transparent;' }}"
+                       @if(!request()->routeIs('admin.dashboard*'))
+                           onmouseover="this.style.background='rgba(255,255,255,0.04)';this.style.color='#cbd5e1';"
+                           onmouseout="this.style.background='transparent';this.style.color='#64748b';"
+                       @endif>
+                        <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                        Menu Dashboard
+                    </a>
+
+                    <a href="{{ route('admin.profile') }}"
+                       class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150"
+                       style="{{ request()->routeIs('admin.profile*') ? 'background:rgba(99,102,241,0.15);color:#a5b4fc;border-left:3px solid #6366f1;' : 'color:#64748b;border-left:3px solid transparent;' }}"
+                       @if(!request()->routeIs('admin.profile*'))
+                           onmouseover="this.style.background='rgba(255,255,255,0.04)';this.style.color='#cbd5e1';"
+                           onmouseout="this.style.background='transparent';this.style.color='#64748b';"
+                       @endif>
+                        <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                        Profile
+                    </a>
+
+                    <a href="{{ route('admin.classes') }}"
+                       class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150"
+                       style="{{ request()->routeIs('admin.classes*') ? 'background:rgba(99,102,241,0.15);color:#a5b4fc;border-left:3px solid #6366f1;' : 'color:#64748b;border-left:3px solid transparent;' }}"
+                       @if(!request()->routeIs('admin.classes*'))
+                           onmouseover="this.style.background='rgba(255,255,255,0.04)';this.style.color='#cbd5e1';"
+                           onmouseout="this.style.background='transparent';this.style.color='#64748b';"
+                       @endif>
+                        <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                        Classes
+                    </a>
+                </nav>
+
+                <div class="px-3 pb-5" style="border-top:1px solid rgba(255,255,255,0.06);">
+                    <div class="mt-4 mb-3 px-3 py-3 rounded-lg" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);">
+                        <p class="text-xs font-semibold text-white truncate">{{ auth()->user()->name }}</p>
+                        <p class="text-xs truncate mt-0.5" style="color:#475569;">{{ auth()->user()->email }}</p>
+                    </div>
+                    <form action="{{ route('admin.logout') }}" method="POST">
+                        @csrf
+                        <button type="submit"
+                                class="w-full rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-150"
+                                style="background:rgba(239,68,68,0.1);color:#f87171;border:1px solid rgba(239,68,68,0.2);"
+                                onmouseover="this.style.background='rgba(239,68,68,0.18)';"
+                                onmouseout="this.style.background='rgba(239,68,68,0.1)';">
+                            Logout
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </aside>
+
+        <main class="min-w-0 p-4 sm:p-6 lg:p-8" style="background:#0f1117;">
+            @if(session('success'))
+                <div id="globalSuccessToast"
+                     class="mb-6 flex items-start gap-3 rounded-2xl px-4 py-4"
+                     style="background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.2);color:#a5b4fc;">
+                    <div class="mt-0.5">
+                        <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.707a1 1 0 00-1.414-1.414L9 10.172 7.707 8.879a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-semibold">Login Successful</p>
+                        <p class="text-sm opacity-80">{{ session('success') }}</p>
+                    </div>
+                    <button type="button" onclick="document.getElementById('globalSuccessToast').remove()" class="opacity-60 hover:opacity-100 transition">Ã—</button>
+                </div>
+                <script>setTimeout(()=>{const t=document.getElementById('globalSuccessToast');if(t)t.remove();},3500);</script>
+            @endif
+            @yield('content')
+        </main>
+    </div>
+    @stack('modals')
+    @stack('scripts')
+</body>
+
+@else
+{{-- ============================================================ --}}
+{{-- ADMIN BODY - 100% original, zero changes                     --}}
+{{-- ============================================================ --}}
+<body class="min-h-screen bg-slate-100 text-slate-800">
+    <div class="min-h-screen lg:grid lg:grid-cols-[260px_1fr]">
+        <aside class="bg-slate-900 text-white shadow-2xl">
+            <div class="flex h-full flex-col">
+                <div class="border-b border-slate-800 px-6 py-6">
+                    <h1 class="text-2xl font-bold tracking-wide">Quizzard Admin</h1>
+                    <p class="mt-1 text-sm text-slate-400">Admin Management Panel</p>
+                </div>
+                <nav class="flex-1 space-y-2 px-4 py-6">
+                    <a href="{{ route('admin.dashboard') }}"
+                       class="block rounded-xl px-4 py-3 text-sm font-medium transition {{ request()->routeIs('admin.dashboard*') ? 'bg-blue-600 text-white' : 'text-slate-200 hover:bg-slate-800' }}">
+                        Menu Dashboard
+                    </a>
+                    <a href="{{ route('admin.profile') }}"
+                       class="block rounded-xl px-4 py-3 text-sm font-medium transition {{ request()->routeIs('admin.profile*') ? 'bg-blue-600 text-white' : 'text-slate-200 hover:bg-slate-800' }}">
+                        Profile
+                    </a>
+                    <a href="{{ route('admin.classes') }}"
+                       class="block rounded-xl px-4 py-3 text-sm font-medium transition {{ request()->routeIs('admin.classes*') ? 'bg-blue-600 text-white' : 'text-slate-200 hover:bg-slate-800' }}">
+                        Classes
+                    </a>
+                </nav>
+                <div class="border-t border-slate-800 p-4">
+                    <form action="{{ route('admin.logout') }}" method="POST">
+                        @csrf
+                        <button type="submit" class="w-full rounded-xl bg-red-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-red-700">
+                            Logout
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </aside>
+
+        <main class="min-w-0 p-4 sm:p-6 lg:p-8">
+            @if(session('success'))
+                <div id="globalSuccessToast" class="mb-6 flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-emerald-800 shadow-sm">
+                    <div class="mt-0.5">
+                        <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.707a1 1 0 00-1.414-1.414L9 10.172 7.707 8.879a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-semibold">Login Successful</p>
+                        <p class="text-sm">{{ session('success') }}</p>
+                    </div>
+                    <button type="button" onclick="document.getElementById('globalSuccessToast').remove()" class="text-emerald-700 transition hover:text-emerald-900">Ã—</button>
+                </div>
+                <script>setTimeout(()=>{const t=document.getElementById('globalSuccessToast');if(t)t.remove();},3500);</script>
+            @endif
+            @yield('content')
+        </main>
+    </div>
+    @stack('modals')
+    @stack('scripts')
+</body>
+@endif
+
+</html>
+
