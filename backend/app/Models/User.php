@@ -70,4 +70,15 @@ class User extends Authenticatable
     {
         return $this->hasOne(StudentProfile::class);
     }
+
+    public function quizAttempts()
+    {
+        return $this->hasMany(\App\Models\QuizAttempt::class, 'student_id');
+    }
+ 
+    public function quizzes()
+    {
+        return $this->hasMany(\App\Models\Quiz::class, 'teacher_id');
+    }
+ 
 }

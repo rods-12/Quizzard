@@ -171,51 +171,34 @@
     </div>
 
     <!-- Hero / Class Info -->
-    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-900 p-6 text-white shadow-xl sm:p-8">
-        <!-- subtle colored glows only, no white circles -->
-        <div class="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-indigo-500/10 blur-3xl"></div>
-        <div class="absolute -bottom-16 -left-16 h-44 w-44 rounded-full bg-violet-500/10 blur-3xl"></div>
-
-        <div class="relative z-10 flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
+    <div class="rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-blue-900 p-6 text-white shadow-xl sm:p-8">
+        <div class="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
             <div class="max-w-3xl">
-                <p class="text-sm font-medium uppercase tracking-[0.2em] text-indigo-200">Class Details</p>
-                <h1 class="mt-2 text-3xl font-bold sm:text-4xl">{{ $class->name }}</h1>
-
-                <p class="mt-3 max-w-2xl text-sm text-slate-200 sm:text-base">
-                    {{ $class->description ?: 'No class description provided.' }}
-                </p>
+                <p class="text-sm font-medium uppercase tracking-[0.2em] text-blue-200">Class Details</p>
+                <h1 class="mt-2 truncate text-3xl font-bold sm:text-4xl">{{ $class->name }}</h1>
+                <p class="mt-3 truncate text-sm text-slate-200 sm:text-base">{{ $class->description ?: 'No class description provided.' }}</p>
 
                 <div class="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                    <div class="rounded-2xl bg-slate-800/60 border border-white/10 px-4 py-3 backdrop-blur">
+                    <div class="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 backdrop-blur">
                         <p class="text-xs uppercase tracking-wide text-slate-200">Teacher</p>
-                        <p class="mt-1 text-base font-semibold text-white">
-                            {{ $class->teacher->name ?? 'Unknown Teacher' }}
-                        </p>
+                        <p class="mt-1 truncate text-base font-semibold text-white">{{ $class->teacher->name ?? 'Unknown Teacher' }}</p>
                     </div>
-
-                    <div class="rounded-2xl bg-slate-800/60 border border-white/10 px-4 py-3 backdrop-blur">
+                    <div class="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 backdrop-blur">
                         <p class="text-xs uppercase tracking-wide text-slate-200">Class Code</p>
-                        <p class="mt-1 text-base font-semibold text-white">
-                            {{ $class->class_code }}
-                        </p>
+                        <p class="mt-1 truncate text-base font-semibold text-white">{{ $class->class_code }}</p>
                     </div>
-
-                    <div class="rounded-2xl bg-slate-800/60 border border-white/10 px-4 py-3 backdrop-blur">
+                    <div class="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 backdrop-blur">
                         <p class="text-xs uppercase tracking-wide text-slate-200">Created</p>
-                        <p class="mt-1 text-base font-semibold text-white">
-                            {{ $class->created_at ? $class->created_at->format('M d, Y') : '—' }}
-                        </p>
+                        <p class="mt-1 truncate text-base font-semibold text-white">{{ $class->created_at ? $class->created_at->format('M d, Y') : '—' }}</p>
                     </div>
                 </div>
             </div>
 
-            <!-- smaller widgets -->
             <div class="flex flex-wrap gap-3 xl:max-w-xs xl:justify-end">
                 <div class="min-w-[140px] rounded-2xl bg-white/10 px-4 py-3 backdrop-blur shadow-lg">
                     <p class="text-xs uppercase tracking-wide text-slate-200">Students Enrolled</p>
                     <p class="mt-1 text-2xl font-bold text-white">{{ $studentsEnrolledCount }}</p>
                 </div>
-
                 <div class="min-w-[140px] rounded-2xl bg-white/10 px-4 py-3 backdrop-blur shadow-lg">
                     <p class="text-xs uppercase tracking-wide text-slate-200">Total Quizzes</p>
                     <p class="mt-1 text-2xl font-bold text-white">{{ $quizzesCount }}</p>
@@ -235,79 +218,97 @@
             </div>
         </div>
 
+        <!-- Table -->
         <div class="mt-6 overflow-hidden rounded-2xl border border-slate-200">
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-slate-200">
-                    <thead class="bg-slate-50">
-                        <tr>
-                            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                                Quiz
-                            </th>
-                            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                                Description
-                            </th>
-                            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                                Questions
-                            </th>
-                            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                                Students Taken
-                            </th>
-                            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                                Status
-                            </th>
-                        </tr>
-                    </thead>
-
-                    <tbody class="divide-y divide-slate-100 bg-white">
-                        @forelse($class->quizzes as $quiz)
-                            <tr
-                                class="quiz-row cursor-pointer transition duration-150 hover:bg-indigo-100 hover:shadow-sm"
-                                data-url="{{ route('admin.classes.quizzes.details', [$class->id, $quiz->id]) }}"
-                            >
-                                <td class="px-6 py-4">
-                                    <div class="font-semibold text-slate-800">{{ $quiz->title }}</div>
-                                </td>
-
-                                <td class="px-6 py-4 text-sm text-slate-600">
-                                    <div class="max-w-md truncate">
-                                        {{ $quiz->description ?: 'No description' }}
-                                    </div>
-                                </td>
-
-                                <td class="px-6 py-4 text-sm text-slate-700">
-                                    {{ $quiz->questions_count ?? 0 }}
-                                </td>
-
-                                <td class="px-6 py-4 text-sm text-slate-700">
-                                    {{ $quiz->attempts_count ?? 0 }}
-                                </td>
-
-                                <td class="px-6 py-4">
-                                    @if($quiz->is_published)
-                                        <span class="inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
-                                            Published
-                                        </span>
-                                    @else
-                                        <span class="inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
-                                            Unpublished
-                                        </span>
-                                    @endif
-                                </td>
-                            </tr>
-                        @empty
+            <div class="bg-white">
+                <div class="overflow-x-auto p-2">
+                    <table class="min-w-full table-fixed border-separate border-spacing-y-3 text-sm text-slate-700">
+                        <thead class="text-left text-xs font-bold uppercase tracking-wide text-slate-600">
                             <tr>
-                                <td colspan="5" class="px-6 py-10 text-center text-sm text-slate-500">
-                                    No quizzes are currently assigned to this class.
-                                </td>
+                                <th class="w-48 px-4 py-3">Quiz</th>
+                                <th class="w-56 px-4 py-3">Description</th>
+                                <th class="w-28 px-4 py-3">Questions</th>
+                                <th class="w-32 px-4 py-3">Students Taken</th>
+                                <th class="w-28 px-4 py-3">Status</th>
                             </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @forelse($class->quizzes as $quiz)
+                                <tr class="quiz-row group cursor-pointer"
+                                    data-url="{{ route('admin.classes.quizzes.details', [$class->id, $quiz->id]) }}">
+
+                                    {{-- Quiz Title --}}
+                                    <td class="rounded-l-2xl border-y border-l border-slate-200 bg-white px-4 py-4 shadow-sm transition-all duration-200 ease-out
+                                               group-hover:scale-[1.01] group-hover:border-blue-500 group-hover:bg-blue-50
+                                               group-hover:shadow-[0_0_0_3px_rgba(59,130,246,0.18),0_16px_30px_-12px_rgba(15,23,42,0.25)]">
+                                        <p class="truncate font-semibold text-slate-800 group-hover:text-blue-700" title="{{ $quiz->title }}">{{ \Illuminate\Support\Str::limit($quiz->title, 30) }}</p>
+                                        <p class="mt-1 truncate text-xs font-medium text-blue-600 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                                            Click to view quiz details
+                                        </p>
+                                    </td>
+
+                                    {{-- Description --}}
+                                    <td class="border-y border-slate-200 bg-white px-4 py-4 shadow-sm transition-all duration-200 ease-out
+                                               group-hover:scale-[1.01] group-hover:border-y-blue-500 group-hover:bg-blue-50
+                                               group-hover:shadow-[0_16px_30px_-12px_rgba(15,23,42,0.25)]">
+                                        <p class="truncate text-slate-600" title="{{ $quiz->description }}">{{ $quiz->description ? \Illuminate\Support\Str::limit($quiz->description, 30) : 'No description' }}</p>
+                                    </td>
+
+                                    {{-- Questions --}}
+                                    <td class="border-y border-slate-200 bg-white px-4 py-4 shadow-sm transition-all duration-200 ease-out
+                                               group-hover:scale-[1.01] group-hover:border-y-blue-500 group-hover:bg-blue-50
+                                               group-hover:shadow-[0_16px_30px_-12px_rgba(15,23,42,0.25)]">
+                                        <div class="overflow-x-auto">
+                                            <p class="whitespace-nowrap text-slate-700">{{ $quiz->questions_count ?? 0 }}</p>
+                                        </div>
+                                    </td>
+
+                                    {{-- Students Taken --}}
+                                    <td class="border-y border-slate-200 bg-white px-4 py-4 shadow-sm transition-all duration-200 ease-out
+                                               group-hover:scale-[1.01] group-hover:border-y-blue-500 group-hover:bg-blue-50
+                                               group-hover:shadow-[0_16px_30px_-12px_rgba(15,23,42,0.25)]">
+                                        <div class="overflow-x-auto">
+                                            <p class="whitespace-nowrap text-slate-700">{{ $quiz->attempts_count ?? 0 }}</p>
+                                        </div>
+                                    </td>
+
+                                    {{-- Status --}}
+                                    <td class="rounded-r-2xl border-y border-r border-slate-200 bg-white px-4 py-4 shadow-sm transition-all duration-200 ease-out
+                                               group-hover:scale-[1.01] group-hover:border-blue-500 group-hover:bg-blue-50
+                                               group-hover:shadow-[0_0_0_3px_rgba(59,130,246,0.18),0_16px_30px_-12px_rgba(15,23,42,0.25)]">
+                                        @if($quiz->is_published)
+                                            <span class="inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+                                                Published
+                                            </span>
+                                        @else
+                                            <span class="inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
+                                                Unpublished
+                                            </span>
+                                        @endif
+                                    </td>
+
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="rounded-2xl bg-white px-4 py-10 text-center text-slate-500 shadow-sm ring-1 ring-slate-200">
+                                        No quizzes are currently assigned to this class.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 
-@endif
+    <!-- Page Loading Overlay -->
+    <div id="pageLoadingOverlay" class="fixed inset-0 z-[99999] hidden items-center justify-center bg-slate-950/55 backdrop-blur-sm">
+        <div class="flex min-w-[300px] flex-col items-center justify-center rounded-3xl bg-white px-8 py-7 shadow-2xl ring-1 ring-slate-200">
+            <div class="h-12 w-12 animate-spin rounded-full border-4 border-blue-200 border-t-blue-700"></div>
+            <p class="mt-5 text-sm font-semibold text-slate-700">Opening quiz details...</p>
+        </div>
+    </div>
 
 </div>
 @endsection
@@ -321,12 +322,11 @@ document.addEventListener('DOMContentLoaded', function () {
             if (this.dataset.loading === 'true') return;
 
             this.dataset.loading = 'true';
-            this.style.opacity = '0.65';
+            this.classList.add('opacity-70');
 
             document.querySelectorAll('.quiz-row').forEach(otherRow => {
                 if (otherRow !== this) {
-                    otherRow.style.pointerEvents = 'none';
-                    otherRow.style.opacity = '0.55';
+                    otherRow.classList.add('pointer-events-none', 'opacity-60');
                 }
             });
 
@@ -334,9 +334,12 @@ document.addEventListener('DOMContentLoaded', function () {
             if (overlay) {
                 overlay.classList.remove('hidden');
                 overlay.classList.add('flex');
+                document.body.classList.add('overflow-hidden');
             }
 
-            window.location.href = this.dataset.url;
+            setTimeout(() => {
+                window.location.href = this.dataset.url;
+            }, 350);
         });
     });
 });
