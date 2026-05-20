@@ -2,17 +2,22 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 
 class _T {
-  static const Color primary = Color(0xFF2ECC71);
-  static const Color primaryLight = Color(0xFFE8F8F0);
-  static const Color accent = Color(0xFF6C63FF);
-  static const Color bg = Color(0xFFF4F7F5);
+  static const Color primary = Color(0xFF5B2A9B);
+  static const Color primaryDark = Color(0xFF3A1A6B);
+  static const Color primaryLight = Color(0xFFEDE7F2);
+  static const Color accent = Color(0xFFA14BC9);
+  static const Color gold = Color(0xFFF2C94C);
+  static const Color goldDark = Color(0xFFE0A93B);
+  static const Color softPurple = Color(0xFFC9A8F0);
+  static const Color bg = Color(0xFFFAF6EC);
   static const Color surface = Colors.white;
-  static const Color textDark = Color(0xFF1A2E22);
-  static const Color textMid = Color(0xFF6B7580);
-  static const Color textLight = Color(0xFFADB5BD);
+  static const Color textDark = Color(0xFF1F1235);
+  static const Color textMid = Color(0xFF7B6E99);
+  static const Color textLight = Color(0xFFA99BC4);
   static const Color success = Color(0xFF22C55E);
   static const Color warning = Color(0xFFF59E0B);
   static const Color danger = Color(0xFFEF4444);
+  static const Color plumShadow = Color(0xFF2A1247);
   static const Color orange = Color(0xFFF97316);
 
   static BoxDecoration get card => BoxDecoration(
@@ -20,7 +25,7 @@ class _T {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: plumShadow.withOpacity(0.08),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -106,10 +111,18 @@ class _ManualReviewStudentsScreenState
     return Scaffold(
       backgroundColor: _T.bg,
       appBar: AppBar(
-        backgroundColor: _T.surface,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF5B2A9B), Color(0xFF3A1A6B)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: _T.textDark),
+          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
         title: Column(
@@ -118,23 +131,26 @@ class _ManualReviewStudentsScreenState
             Text(
               widget.quizTitle,
               style: const TextStyle(
-                  color: _T.textDark,
+                  color: Colors.white,
                   fontWeight: FontWeight.bold,
                   fontSize: 16),
             ),
             Text(
               widget.className,
-              style: const TextStyle(color: _T.textMid, fontSize: 12),
+              style: TextStyle(
+                  color: Colors.white.withOpacity(0.75), fontSize: 12),
             ),
           ],
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Divider(color: Colors.grey.shade100, height: 1),
+          child: Divider(
+              color: Colors.white.withOpacity(0.15), height: 1),
         ),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: _T.primary))
+          ? const Center(
+              child: CircularProgressIndicator(color: _T.primary))
           : RefreshIndicator(
               onRefresh: _load,
               color: _T.primary,
@@ -180,8 +196,6 @@ class _ManualReviewStudentsScreenState
     );
   }
 
-
-//card for seeded data without the necessary data like the attempt id
   Widget _buildSeededCard(Map<String, dynamic> attempt) {
     final studentName = _displayName(attempt);
     final email = attempt['email'] ?? '';
@@ -194,7 +208,7 @@ class _ManualReviewStudentsScreenState
         border: Border.all(color: _T.warning.withOpacity(0.4), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: _T.plumShadow.withOpacity(0.06),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -208,14 +222,16 @@ class _ManualReviewStudentsScreenState
             // ── Seeded banner ──
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
                 color: _T.warning.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.science_outlined, size: 14, color: _T.warning),
+                  Icon(Icons.science_outlined,
+                      size: 14, color: _T.warning),
                   const SizedBox(width: 6),
                   const Text(
                     'Seeded data — not a real submission',
@@ -235,9 +251,11 @@ class _ManualReviewStudentsScreenState
               children: [
                 CircleAvatar(
                   radius: 22,
-                  backgroundColor: Colors.grey.shade100,
+                  backgroundColor: _T.primaryLight,
                   child: Text(
-                    studentName.isNotEmpty ? studentName[0].toUpperCase() : '?',
+                    studentName.isNotEmpty
+                        ? studentName[0].toUpperCase()
+                        : '?',
                     style: TextStyle(
                       color: _T.textLight,
                       fontWeight: FontWeight.bold,
@@ -259,7 +277,8 @@ class _ManualReviewStudentsScreenState
                     ),
                     Text(
                       email.isNotEmpty ? email : 'No email provided',
-                      style: const TextStyle(fontSize: 12, color: _T.textLight),
+                      style: const TextStyle(
+                          fontSize: 12, color: _T.textLight),
                     ),
                   ],
                 ),
@@ -271,13 +290,9 @@ class _ManualReviewStudentsScreenState
     );
   }
 
-
   Widget _buildAttemptCard(Map<String, dynamic> attempt) {
-    
     final attemptId = attempt['attempt_id'];
-    // If no attempt_id, render the seeded card instead
-    if (attemptId == null) return _buildSeededCard(attempt);  
-
+    if (attemptId == null) return _buildSeededCard(attempt);
 
     final status = attempt['status'] ?? 'submitted';
     final studentName = _displayName(attempt);
@@ -299,13 +314,13 @@ class _ManualReviewStudentsScreenState
               children: [
                 CircleAvatar(
                   radius: 22,
-                  backgroundColor: _T.accent.withOpacity(0.1),
+                  backgroundColor: _T.softPurple.withOpacity(0.25),
                   child: Text(
                     studentName.isNotEmpty
                         ? studentName[0].toUpperCase()
                         : '?',
                     style: const TextStyle(
-                        color: _T.accent,
+                        color: _T.primary,
                         fontWeight: FontWeight.bold,
                         fontSize: 16),
                   ),
@@ -324,8 +339,8 @@ class _ManualReviewStudentsScreenState
                       ),
                       Text(
                         email,
-                        style:
-                            const TextStyle(fontSize: 12, color: _T.textMid),
+                        style: const TextStyle(
+                            fontSize: 12, color: _T.textMid),
                       ),
                     ],
                   ),
@@ -334,7 +349,7 @@ class _ManualReviewStudentsScreenState
               ],
             ),
             const SizedBox(height: 12),
-            Divider(color: Colors.grey.shade100, height: 1),
+            Divider(color: _T.primaryLight, height: 1),
             const SizedBox(height: 12),
 
             // ── Timestamps ──
@@ -357,7 +372,8 @@ class _ManualReviewStudentsScreenState
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                _buildActionButton(attempt, status, attemptId, studentName),
+                _buildActionButton(
+                    attempt, status, attemptId, studentName),
               ],
             ),
           ],
@@ -393,7 +409,7 @@ class _ManualReviewStudentsScreenState
         break;
       default:
         color = _T.textLight;
-        bg = Colors.grey.shade100;
+        bg = _T.primaryLight;
         icon = Icons.help_outline_rounded;
         label = status;
     }
@@ -411,7 +427,9 @@ class _ManualReviewStudentsScreenState
           const SizedBox(width: 4),
           Text(label,
               style: TextStyle(
-                  fontSize: 11, color: color, fontWeight: FontWeight.w600)),
+                  fontSize: 11,
+                  color: color,
+                  fontWeight: FontWeight.w600)),
         ],
       ),
     );
@@ -439,7 +457,8 @@ class _ManualReviewStudentsScreenState
           _load();
         },
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
             color: _T.success.withOpacity(0.1),
             borderRadius: BorderRadius.circular(20),
@@ -447,7 +466,8 @@ class _ManualReviewStudentsScreenState
           ),
           child: const Row(
             children: [
-              Icon(Icons.visibility_rounded, size: 14, color: _T.success),
+              Icon(Icons.visibility_rounded,
+                  size: 14, color: _T.success),
               SizedBox(width: 6),
               Text('View Result',
                   style: TextStyle(
@@ -476,7 +496,8 @@ class _ManualReviewStudentsScreenState
           _load();
         },
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
             color: _T.accent.withOpacity(0.1),
             borderRadius: BorderRadius.circular(20),
@@ -484,7 +505,8 @@ class _ManualReviewStudentsScreenState
           ),
           child: const Row(
             children: [
-              Icon(Icons.edit_note_rounded, size: 14, color: _T.accent),
+              Icon(Icons.edit_note_rounded,
+                  size: 14, color: _T.accent),
               SizedBox(width: 6),
               Text('Continue Review',
                   style: TextStyle(
@@ -497,7 +519,7 @@ class _ManualReviewStudentsScreenState
       );
     }
 
-    // submitted
+    // submitted — primary CTA uses Enchanted Gold
     return GestureDetector(
       onTap: () async {
         await Navigator.pushNamed(
@@ -513,18 +535,27 @@ class _ManualReviewStudentsScreenState
         _load();
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: _T.orange,
+          color: _T.gold,
           borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: _T.goldDark.withOpacity(0.35),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         child: const Row(
           children: [
-            Icon(Icons.rate_review_rounded, size: 14, color: Colors.white),
+            Icon(Icons.rate_review_rounded,
+                size: 14, color: _T.textDark),
             SizedBox(width: 6),
             Text('Review',
                 style: TextStyle(
-                    color: Colors.white,
+                    color: _T.textDark,
                     fontSize: 13,
                     fontWeight: FontWeight.bold)),
           ],
@@ -533,7 +564,8 @@ class _ManualReviewStudentsScreenState
     );
   }
 
-  Widget _buildMeta(IconData icon, String label, {Color color = _T.textMid}) {
+  Widget _buildMeta(IconData icon, String label,
+      {Color color = _T.textMid}) {
     return Row(
       children: [
         Icon(icon, size: 13, color: color),

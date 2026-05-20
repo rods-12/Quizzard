@@ -1,157 +1,198 @@
 @extends('teacher.layouts.app')
-
 @section('title', 'Edit Question')
-
 @section('content')
-<div class="space-y-6 max-w-2xl mx-auto">
 
-    {{-- Back --}}
-    <a href="{{ route('teacher.quizzes.manage', $quiz->id) }}"
-       class="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow">
-        ← Back to Manage Quiz
+{{-- Back Link --}}
+<div style="margin-bottom:20px;">
+    <a href="{{ route('teacher.quizzes.manage', $quiz->id) }}" class="btn btn-ghost btn-sm" style="display:inline-flex; align-items:center; gap:6px;">
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M12 15l-5-5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Back to Manage Quiz
     </a>
+</div>
 
-    <div class="bg-white rounded-2xl shadow p-6">
-        <h1 class="text-xl font-bold text-slate-800 mb-1">Edit Question</h1>
-        <p class="text-sm text-slate-500 mb-6">
-            Quiz: <span class="font-semibold text-slate-700">{{ $quiz->title }}</span>
-            &nbsp;·&nbsp;
-            Type: <span class="font-semibold text-indigo-600 capitalize">{{ str_replace('_', ' ', $question->type) }}</span>
-        </p>
+{{-- Page Header --}}
+<div style="margin-bottom:28px;">
+    <p style="font-size:10.5px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--accent); margin-bottom:6px;">Content</p>
+    <h1 style="font-size:24px; font-weight:700; color:var(--text); letter-spacing:-0.03em; line-height:1.2; margin-bottom:6px;">Edit Question</h1>
+    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+        <p style="font-size:13px; color:var(--text-2);">{{ $quiz->title }}</p>
+        <span style="color:var(--text-3); font-size:12px;">·</span>
+        <span class="badge badge-sky" style="font-size:10px; text-transform:capitalize;">{{ str_replace('_', ' ', $question->type) }}</span>
+    </div>
+</div>
 
-        @if($errors->any())
-            <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm mb-4">
-                <ul class="list-disc list-inside space-y-1">
+{{-- Form Card --}}
+<div style="max-width:680px;">
+    <div class="card" style="overflow:hidden;">
+
+        <div style="padding:18px 22px; border-bottom:1px solid var(--border);">
+            <p style="font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent); margin-bottom:4px;">Editing</p>
+            <h2 style="font-size:14px; font-weight:700; color:var(--text); margin-bottom:2px;">Question Details</h2>
+            <p style="font-size:12px; color:var(--text-2);">Update the question text, point value, and answer options below.</p>
+        </div>
+
+        <div style="padding:22px;">
+
+            {{-- Validation Errors --}}
+            @if($errors->any())
+            <div class="attention-rose" style="margin-bottom:20px;">
+                <p style="font-size:12px; font-weight:700; color:var(--danger); margin-bottom:6px;">Please fix the following errors:</p>
+                <ul style="margin:0; padding-left:16px;">
                     @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
+                        <li style="font-size:12px; color:var(--text-2); margin-bottom:2px;">{{ $error }}</li>
                     @endforeach
                 </ul>
             </div>
-        @endif
+            @endif
 
-        <form action="{{ route('teacher.quizzes.questions.update', ['quizId' => $quiz->id, 'questionId' => $question->id]) }}"
-              method="POST" class="space-y-5">
-            @csrf
-            @method('PUT')
+            <form action="{{ route('teacher.quizzes.questions.update', ['quizId' => $quiz->id, 'questionId' => $question->id]) }}"
+                  method="POST">
+                @csrf
+                @method('PUT')
 
-            {{-- Question Text --}}
-            <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-1">Question <span class="text-red-500">*</span></label>
-                <textarea name="question_text" rows="3" required
-                          class="w-full border border-slate-300 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                          placeholder="Enter your question...">{{ old('question_text', $question->question_text) }}</textarea>
-            </div>
+                {{-- Question Text --}}
+                <div style="margin-bottom:18px;">
+                    <label style="display:block; font-size:11.5px; font-weight:700; color:var(--text-2); letter-spacing:0.05em; text-transform:uppercase; margin-bottom:7px;">
+                        Question <span style="color:var(--danger);">*</span>
+                    </label>
+                    <textarea name="question_text" rows="3" required
+                              placeholder="Enter your question..."
+                              style="width:100%; background:var(--surface-3); border:1px solid var(--border-md); border-radius:var(--radius-sm); padding:9px 13px; font-size:13px; color:var(--text); font-family:var(--font); outline:none; resize:vertical; box-sizing:border-box; transition:border-color 0.15s;"
+                              onfocus="this.style.borderColor='var(--accent)'"
+                              onblur="this.style.borderColor='var(--border-md)'">{{ old('question_text', $question->question_text) }}</textarea>
+                </div>
 
-            {{-- Points --}}
-            <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-1">Points <span class="text-red-500">*</span></label>
-                <input type="number" name="points" value="{{ old('points', $question->points) }}" min="1"
-                       class="w-32 border border-slate-300 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                       required>
-            </div>
+                {{-- Points --}}
+                <div style="margin-bottom:24px;">
+                    <label style="display:block; font-size:11.5px; font-weight:700; color:var(--text-2); letter-spacing:0.05em; text-transform:uppercase; margin-bottom:7px;">
+                        Points <span style="color:var(--danger);">*</span>
+                    </label>
+                    <input type="number" name="points" value="{{ old('points', $question->points) }}" min="1" required
+                           style="width:110px; background:var(--surface-3); border:1px solid var(--border-md); border-radius:var(--radius-sm); padding:9px 13px; font-size:13px; color:var(--text); font-family:var(--mono); outline:none; box-sizing:border-box; transition:border-color 0.15s;"
+                           onfocus="this.style.borderColor='var(--accent)'"
+                           onblur="this.style.borderColor='var(--border-md)'">
+                </div>
 
-            {{-- Multiple Choice --}}
-            @if($question->type === 'multiple_choice')
+                {{-- ── Multiple Choice ── --}}
+                @if($question->type === 'multiple_choice')
                 @php $options = $question->answerOptions->sortBy('order')->values(); @endphp
-                <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-2">Answer Choices <span class="text-red-500">*</span></label>
-                    <p class="text-xs text-slate-400 mb-3">Select the radio button next to the correct answer.</p>
-                    <div id="optionsContainer" class="space-y-2">
+                <div style="margin-bottom:24px;">
+                    <label style="display:block; font-size:11.5px; font-weight:700; color:var(--text-2); letter-spacing:0.05em; text-transform:uppercase; margin-bottom:5px;">
+                        Answer Choices <span style="color:var(--danger);">*</span>
+                    </label>
+                    <p style="font-size:11.5px; color:var(--text-3); margin-bottom:12px;">Select the radio button next to the correct answer.</p>
+
+                    <div id="optionsContainer" style="display:flex; flex-direction:column; gap:8px;">
                         @foreach($options as $i => $opt)
-                            <div class="flex items-center gap-3">
-                                <input type="radio" name="correct_option" value="{{ $i }}"
-                                       {{ old('correct_option', $opt->is_correct ? $i : null) == $i && (old('correct_option') !== null ? old('correct_option') == $i : $opt->is_correct) ? 'checked' : '' }}
-                                       class="accent-indigo-600 w-4 h-4 shrink-0">
-                                <input type="text" name="options[]"
-                                       value="{{ old('options.'.$i, $opt->option_text) }}"
-                                       placeholder="Option {{ chr(65 + $i) }}"
-                                       class="flex-1 border border-slate-300 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                            </div>
+                        <div class="option-row" style="display:flex; align-items:center; gap:10px;">
+                            <input type="radio" name="correct_option" value="{{ $i }}"
+                                   {{ old('correct_option', $opt->is_correct ? $i : null) == $i && (old('correct_option') !== null ? old('correct_option') == $i : $opt->is_correct) ? 'checked' : '' }}
+                                   style="accent-color:var(--accent); width:15px; height:15px; flex-shrink:0; cursor:pointer;">
+                            <input type="text" name="options[]"
+                                   value="{{ old('options.'.$i, $opt->option_text) }}"
+                                   placeholder="Option {{ chr(65 + $i) }}"
+                                   style="flex:1; background:var(--surface-3); border:1px solid var(--border-md); border-radius:var(--radius-sm); padding:8px 13px; font-size:13px; color:var(--text); font-family:var(--font); outline:none; transition:border-color 0.15s;"
+                                   onfocus="this.style.borderColor='var(--accent)'"
+                                   onblur="this.style.borderColor='var(--border-md)'">
+                        </div>
                         @endforeach
                     </div>
+
                     <button type="button" onclick="addOption()"
-                            class="mt-3 text-xs text-indigo-600 hover:underline font-semibold">
+                            style="margin-top:10px; background:none; border:none; font-size:12px; font-weight:700; color:var(--accent); cursor:pointer; padding:0; font-family:var(--font);">
                         + Add Option
                     </button>
                 </div>
-            @endif
+                @endif
 
-            {{-- True / False --}}
-            @if($question->type === 'true_false')
+                {{-- ── True / False ── --}}
+                @if($question->type === 'true_false')
                 @php $correctTf = strtolower($question->answerOptions->firstWhere('is_correct', true)?->option_text ?? 'true'); @endphp
-                <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-2">Correct Answer <span class="text-red-500">*</span></label>
-                    <div class="flex gap-4">
-                        <label class="flex items-center gap-2 text-sm cursor-pointer">
+                <div style="margin-bottom:24px;">
+                    <label style="display:block; font-size:11.5px; font-weight:700; color:var(--text-2); letter-spacing:0.05em; text-transform:uppercase; margin-bottom:12px;">
+                        Correct Answer <span style="color:var(--danger);">*</span>
+                    </label>
+                    <div style="display:flex; gap:12px;">
+                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; font-weight:600; color:var(--text); background:var(--surface-3); border:1px solid var(--border-md); border-radius:var(--radius-sm); padding:9px 16px;">
                             <input type="radio" name="correct_tf" value="true"
                                    {{ old('correct_tf', $correctTf) === 'true' ? 'checked' : '' }}
-                                   class="accent-indigo-600 w-4 h-4">
+                                   style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;">
                             True
                         </label>
-                        <label class="flex items-center gap-2 text-sm cursor-pointer">
+                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; font-weight:600; color:var(--text); background:var(--surface-3); border:1px solid var(--border-md); border-radius:var(--radius-sm); padding:9px 16px;">
                             <input type="radio" name="correct_tf" value="false"
                                    {{ old('correct_tf', $correctTf) === 'false' ? 'checked' : '' }}
-                                   class="accent-indigo-600 w-4 h-4">
+                                   style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;">
                             False
                         </label>
                     </div>
                 </div>
-            @endif
+                @endif
 
-            {{-- Identification --}}
-            @if($question->type === 'identification')
-                <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-1">Correct Answer <span class="text-red-500">*</span></label>
+                {{-- ── Identification ── --}}
+                @if($question->type === 'identification')
+                <div style="margin-bottom:24px;">
+                    <label style="display:block; font-size:11.5px; font-weight:700; color:var(--text-2); letter-spacing:0.05em; text-transform:uppercase; margin-bottom:7px;">
+                        Correct Answer <span style="color:var(--danger);">*</span>
+                    </label>
                     <input type="text" name="answer"
                            value="{{ old('answer', $question->answerOptions->first()?->option_text) }}"
-                           class="w-full border border-slate-300 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                           placeholder="Enter the expected answer..." required>
+                           placeholder="Enter the expected answer..."
+                           required
+                           style="width:100%; background:var(--surface-3); border:1px solid var(--border-md); border-radius:var(--radius-sm); padding:9px 13px; font-size:13px; color:var(--text); font-family:var(--font); outline:none; box-sizing:border-box; transition:border-color 0.15s;"
+                           onfocus="this.style.borderColor='var(--accent)'"
+                           onblur="this.style.borderColor='var(--border-md)'">
                 </div>
-            @endif
+                @endif
 
-            {{-- Matching --}}
-            @if($question->type === 'matching')
+                {{-- ── Matching ── --}}
+                @if($question->type === 'matching')
                 @php $pairs = $question->answerOptions->sortBy('order')->values(); @endphp
-                <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-2">Matching Pairs <span class="text-red-500">*</span></label>
-                    <p class="text-xs text-slate-400 mb-3">Each premise on the left matches the answer on the right.</p>
-                    <div class="grid grid-cols-2 gap-2 text-xs font-semibold text-slate-500 uppercase mb-1 px-1">
-                        <span>Premise</span>
-                        <span>Match</span>
+                <div style="margin-bottom:24px;">
+                    <label style="display:block; font-size:11.5px; font-weight:700; color:var(--text-2); letter-spacing:0.05em; text-transform:uppercase; margin-bottom:5px;">
+                        Matching Pairs <span style="color:var(--danger);">*</span>
+                    </label>
+                    <p style="font-size:11.5px; color:var(--text-3); margin-bottom:12px;">Each premise on the left matches the answer on the right.</p>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+                        <span style="font-size:10px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-3); padding-left:2px;">Premise</span>
+                        <span style="font-size:10px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-3); padding-left:2px;">Match</span>
                     </div>
-                    <div id="matchingContainer" class="space-y-2">
+
+                    <div id="matchingContainer" style="display:flex; flex-direction:column; gap:8px;">
                         @foreach($pairs as $i => $pair)
-                            <div class="grid grid-cols-2 gap-2">
-                                <input type="text" name="premises[]"
-                                       value="{{ old('premises.'.$i, $pair->option_text) }}"
-                                       placeholder="Premise {{ $i + 1 }}"
-                                       class="border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                                <input type="text" name="matches[]"
-                                       value="{{ old('matches.'.$i, $pair->match_pair) }}"
-                                       placeholder="Match {{ $i + 1 }}"
-                                       class="border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                            </div>
+                        <div class="pair-row" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; align-items:center;">
+                            <input type="text" name="premises[]"
+                                   value="{{ old('premises.'.$i, $pair->option_text) }}"
+                                   placeholder="Premise {{ $i + 1 }}"
+                                   style="background:var(--surface-3); border:1px solid var(--border-md); border-radius:var(--radius-sm); padding:8px 13px; font-size:13px; color:var(--text); font-family:var(--font); outline:none; transition:border-color 0.15s;"
+                                   onfocus="this.style.borderColor='var(--accent)'"
+                                   onblur="this.style.borderColor='var(--border-md)'">
+                            <input type="text" name="matches[]"
+                                   value="{{ old('matches.'.$i, $pair->match_pair) }}"
+                                   placeholder="Match {{ $i + 1 }}"
+                                   style="background:var(--surface-3); border:1px solid var(--border-md); border-radius:var(--radius-sm); padding:8px 13px; font-size:13px; color:var(--text); font-family:var(--font); outline:none; transition:border-color 0.15s;"
+                                   onfocus="this.style.borderColor='var(--accent)'"
+                                   onblur="this.style.borderColor='var(--border-md)'">
+                        </div>
                         @endforeach
                     </div>
+
                     <button type="button" onclick="addPair()"
-                            class="mt-3 text-xs text-indigo-600 hover:underline font-semibold">
+                            style="margin-top:10px; background:none; border:none; font-size:12px; font-weight:700; color:var(--accent); cursor:pointer; padding:0; font-family:var(--font);">
                         + Add Pair
                     </button>
                 </div>
-            @endif
+                @endif
 
-            {{-- Submit --}}
-            <div class="flex justify-end gap-3 pt-2">
-                <a href="{{ route('teacher.quizzes.manage', $quiz->id) }}"
-                   class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">
-                    Cancel
-                </a>
-                <button type="submit"
-                        class="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition shadow">
-                    Save Changes
-                </button>
-            </div>
-        </form>
+                {{-- Actions --}}
+                <div style="display:flex; align-items:center; justify-content:flex-end; gap:8px; padding-top:4px; border-top:1px solid var(--border);">
+                    <a href="{{ route('teacher.quizzes.manage', $quiz->id) }}" class="btn btn-ghost btn-sm">Cancel</a>
+                    <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
+                </div>
+
+            </form>
+        </div>
     </div>
 </div>
 
@@ -162,11 +203,15 @@
         const container = document.getElementById('optionsContainer');
         const i = optionCount++;
         const div = document.createElement('div');
-        div.className = 'flex items-center gap-3';
+        div.className = 'option-row';
+        div.style.cssText = 'display:flex; align-items:center; gap:10px;';
         div.innerHTML = `
-            <input type="radio" name="correct_option" value="${i}" class="accent-indigo-600 w-4 h-4 shrink-0">
+            <input type="radio" name="correct_option" value="${i}"
+                   style="accent-color:var(--accent); width:15px; height:15px; flex-shrink:0; cursor:pointer;">
             <input type="text" name="options[]" placeholder="Option ${String.fromCharCode(65 + i)}"
-                   class="flex-1 border border-slate-300 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                   style="flex:1; background:var(--surface-3); border:1px solid var(--border-md); border-radius:var(--radius-sm); padding:8px 13px; font-size:13px; color:var(--text); font-family:var(--font); outline:none; transition:border-color 0.15s;"
+                   onfocus="this.style.borderColor='var(--accent)'"
+                   onblur="this.style.borderColor='var(--border-md)'">
         `;
         container.appendChild(div);
     }
@@ -177,14 +222,20 @@
         const container = document.getElementById('matchingContainer');
         const i = pairCount++;
         const div = document.createElement('div');
-        div.className = 'grid grid-cols-2 gap-2';
+        div.className = 'pair-row';
+        div.style.cssText = 'display:grid; grid-template-columns:1fr 1fr; gap:8px; align-items:center;';
         div.innerHTML = `
             <input type="text" name="premises[]" placeholder="Premise ${i + 1}"
-                   class="border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                   style="background:var(--surface-3); border:1px solid var(--border-md); border-radius:var(--radius-sm); padding:8px 13px; font-size:13px; color:var(--text); font-family:var(--font); outline:none; transition:border-color 0.15s;"
+                   onfocus="this.style.borderColor='var(--accent)'"
+                   onblur="this.style.borderColor='var(--border-md)'">
             <input type="text" name="matches[]" placeholder="Match ${i + 1}"
-                   class="border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                   style="background:var(--surface-3); border:1px solid var(--border-md); border-radius:var(--radius-sm); padding:8px 13px; font-size:13px; color:var(--text); font-family:var(--font); outline:none; transition:border-color 0.15s;"
+                   onfocus="this.style.borderColor='var(--accent)'"
+                   onblur="this.style.borderColor='var(--border-md)'">
         `;
         container.appendChild(div);
     }
 </script>
+
 @endsection

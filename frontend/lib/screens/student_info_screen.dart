@@ -4,14 +4,17 @@ import '../services/auth_service.dart';
 
 // ─── THEME CONSTANTS ──────────────────────────────────────────────────────────
 class _AppTheme {
-  static const Color primary = Color(0xFF6C63FF);
-  static const Color primaryDark = Color(0xFF4B44CC);
-  static const Color primaryLight = Color(0xFFEEEDFF);
-  static const Color bg = Color(0xFFF4F6FB);
+  static const Color primary = Color(0xFF5B2A9B);
+  static const Color primaryDark = Color(0xFF3A1A6B);
+  static const Color primaryLight = Color(0xFFEDE7F2);
+  static const Color accent = Color(0xFFF2C94C);
+  static const Color softPurple = Color(0xFFC9A8F0);
+  static const Color plumShadow = Color(0xFF2A1247);
+  static const Color bg = Color(0xFFFAF6EC);
   static const Color surface = Colors.white;
-  static const Color textDark = Color(0xFF1A1D2E);
-  static const Color textMid = Color(0xFF6B7080);
-  static const Color textLight = Color(0xFFADB5BD);
+  static const Color textDark = Color(0xFF1F1235);
+  static const Color textMid = Color(0xFF7A6E8A);
+  static const Color textLight = Color(0xFFA99BC4);
   static const Color success = Color(0xFF22C55E);
   static const Color danger = Color(0xFFEF4444);
 }
@@ -176,16 +179,23 @@ class _StudentInfoScreenState extends State<StudentInfoScreen> {
                 SliverToBoxAdapter(
                   child: Container(
                     padding: const EdgeInsets.fromLTRB(20, 50, 20, 28),
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
                         colors: [_AppTheme.primary, _AppTheme.primaryDark],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
-                      borderRadius: BorderRadius.only(
+                      borderRadius: const BorderRadius.only(
                         bottomLeft: Radius.circular(32),
                         bottomRight: Radius.circular(32),
                       ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: _AppTheme.plumShadow.withOpacity(0.3),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
                     ),
                     child: Column(
                       children: [
@@ -199,6 +209,7 @@ class _StudentInfoScreenState extends State<StudentInfoScreen> {
                                 decoration: BoxDecoration(
                                   color: Colors.white.withOpacity(0.2),
                                   borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(color: Colors.white.withOpacity(0.25)),
                                 ),
                                 child: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 18),
                               ),
@@ -217,9 +228,9 @@ class _StudentInfoScreenState extends State<StudentInfoScreen> {
                           width: 80,
                           height: 80,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withOpacity(0.18),
                             shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white.withOpacity(0.4), width: 2),
+                            border: Border.all(color: _AppTheme.accent.withOpacity(0.6), width: 2.5),
                           ),
                           child: const Icon(Icons.person_rounded, color: Colors.white, size: 44),
                         ),
@@ -271,6 +282,7 @@ class _StudentInfoScreenState extends State<StudentInfoScreen> {
                                   value: _selectedGradeLevel,
                                   style: const TextStyle(fontSize: 14, color: _AppTheme.textDark),
                                   decoration: _fieldDecoration(label: 'Grade / Year Level'),
+                                  dropdownColor: _AppTheme.surface,
                                   items: _gradeLevelOptions.map((level) {
                                     return DropdownMenuItem(value: level, child: Text(level));
                                   }).toList(),
@@ -311,6 +323,7 @@ class _StudentInfoScreenState extends State<StudentInfoScreen> {
                                   value: _selectedGender,
                                   style: const TextStyle(fontSize: 14, color: _AppTheme.textDark),
                                   decoration: _fieldDecoration(label: 'Gender'),
+                                  dropdownColor: _AppTheme.surface,
                                   items: _genderOptions.map((gender) {
                                     return DropdownMenuItem(
                                       value: gender,
@@ -372,26 +385,27 @@ class _StudentInfoScreenState extends State<StudentInfoScreen> {
                             child: ElevatedButton(
                               onPressed: _isSaving ? null : _saveProfile,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: _AppTheme.primary,
-                                disabledBackgroundColor: _AppTheme.primary.withOpacity(0.5),
+                                backgroundColor: _AppTheme.accent,
+                                disabledBackgroundColor: _AppTheme.accent.withOpacity(0.5),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                                 elevation: 0,
+                                shadowColor: _AppTheme.plumShadow.withOpacity(0.2),
                               ),
                               child: _isSaving
                                   ? const SizedBox(
                                       width: 22,
                                       height: 22,
-                                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                                      child: CircularProgressIndicator(color: _AppTheme.textDark, strokeWidth: 2.5),
                                     )
                                   : const Row(
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
-                                        Icon(Icons.save_rounded, color: Colors.white, size: 20),
+                                        Icon(Icons.save_rounded, color: _AppTheme.textDark, size: 20),
                                         SizedBox(width: 8),
                                         Text(
                                           'Save Changes',
                                           style: TextStyle(
-                                            color: Colors.white,
+                                            color: _AppTheme.textDark,
                                             fontSize: 16,
                                             fontWeight: FontWeight.bold,
                                           ),
@@ -442,7 +456,7 @@ class _StudentInfoScreenState extends State<StudentInfoScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: _AppTheme.plumShadow.withOpacity(0.08),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -477,7 +491,7 @@ class _StudentInfoScreenState extends State<StudentInfoScreen> {
   Widget _buildDivider() {
     return Divider(
       height: 1,
-      color: Colors.grey.shade100,
+      color: _AppTheme.primaryLight,
       indent: 16,
       endIndent: 16,
     );
@@ -488,7 +502,7 @@ class _StudentInfoScreenState extends State<StudentInfoScreen> {
       labelText: label,
       hintText: hint,
       counterText: counter,
-      labelStyle: TextStyle(color: _AppTheme.textLight, fontSize: 13),
+      labelStyle: const TextStyle(color: _AppTheme.textLight, fontSize: 13),
       hintStyle: TextStyle(color: _AppTheme.textLight.withOpacity(0.7), fontSize: 13),
       border: InputBorder.none,
       focusedBorder: InputBorder.none,

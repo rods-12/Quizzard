@@ -433,6 +433,7 @@ class ClassController extends Controller
             }
 
             return [
+                'user_id'            => $student->id,
                 'student_id' => $student->studentProfile?->student_id ?? 'STU-' . strtoupper(substr(md5($student->id), 0, 6)),
                 'first_name' => $student->first_name,
                 'surname' => $student->surname,
@@ -511,5 +512,33 @@ class ClassController extends Controller
             new StudentPerformanceExport($exportData, $class->name),
             $filename
         );
+    }
+
+
+    /**
+     * Remove a student from a class (teacher only).
+     * Keeps all existing attempts and answers intact.
+     */
+    public function removeStudent(Request $request, $classId, $studentId)
+    {
+        $class = ClassRoom::where('id', $classId)
+            ->where('teacher_id', $request->user()->id)
+            ->firstOrFail();
+
+        $isMember = $class->students()->where('users.id', $studentId)->exists();
+
+        if (!$isMember) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Student is not a member of this class.',
+            ], 404);
+        }
+
+        $class->students()->detach($studentId);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Student removed from class successfully.',
+        ]);
     }
 }

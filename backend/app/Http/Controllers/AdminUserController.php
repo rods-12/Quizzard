@@ -26,6 +26,33 @@ class AdminUserController extends Controller
         abort_if(!in_array($user->role, $this->allowedRoles()), 404);
     }
 
+    private function hasProtectedActivity(User $user): bool
+    {
+        if ($user->role === 'teacher') {
+            return $user->quizzes()->exists() || $user->taughtClasses()->exists();
+        }
+
+        if ($user->role === 'student') {
+            return $user->enrolledClasses()->exists() || $user->quizAttempts()->exists();
+        }
+
+        return false;
+    }
+
+    private function accountValidationMessages(): array
+    {
+        return [
+            'first_name.regex' => 'First name must not contain emojis or special characters.',
+            'surname.regex' => 'Last name must not contain emojis or special characters.',
+            'password.regex' => 'Password must contain uppercase, lowercase, number, and special character (@$!%*#?&).',
+            'password.min' => 'Password must be at least 8 characters.',
+            'password.max' => 'Password must not exceed 50 characters.',
+            'password.confirmed' => 'Passwords do not match.',
+            'email.unique' => 'This email is already registered.',
+            'email.max' => 'Email must not exceed 30 characters.',
+        ];
+    }
+
     public function index(Request $request)
     {
         return redirect()->route('admin.dashboard', $request->only('type', 'search'));
@@ -48,14 +75,21 @@ class AdminUserController extends Controller
         $allowedRoles = $this->allowedRoles();
 
         $validated = $request->validate([
-            'first_name' => ['required', 'string', 'max:255'],
+            'first_name' => ['required', 'string', 'max:50', 'regex:/^[\pL\s\-\.]+$/u'],
             'middle_initial' => ['nullable', 'string', 'size:1', 'alpha'],
-            'surname' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'surname' => ['required', 'string', 'max:50', 'regex:/^[\pL\s\-\.]+$/u'],
+            'email' => ['required', 'email', 'max:30', 'unique:users,email'],
+            'password' => [
+                'required',
+                'string',
+                'min:8',
+                'max:50',
+                'confirmed',
+                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&]).+$/',
+            ],
             'role' => ['required', Rule::in($allowedRoles)],
             'status' => ['required', Rule::in(['pending', 'active', 'deactivated'])],
-        ]);
+        ], $this->accountValidationMessages());
 
         $middleInitial = $validated['middle_initial']
             ? strtoupper(substr($validated['middle_initial'], 0, 1))
@@ -68,7 +102,7 @@ class AdminUserController extends Controller
             $validated['surname']
         ));
 
-        User::create([
+        $user = User::create([
             'name' => $fullName,
             'first_name' => $validated['first_name'],
             'middle_initial' => $middleInitial,
@@ -78,6 +112,13 @@ class AdminUserController extends Controller
             'role' => $validated['role'],
             'status' => $validated['status'],
         ]);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => ucfirst($user->role) . ' account created successfully.',
+                'redirect' => route('admin.dashboard', ['type' => $user->role]),
+            ]);
+        }
 
         return redirect()
             ->route('admin.dashboard', ['type' => $validated['role']])
@@ -115,22 +156,26 @@ class AdminUserController extends Controller
     {
         $this->ensureManageableUser($user);
 
-        $allowedRoles = $this->allowedRoles();
-
         $validated = $request->validate([
-            'first_name' => ['required', 'string', 'max:255'],
+            'first_name' => ['required', 'string', 'max:50', 'regex:/^[\pL\s\-\.]+$/u'],
             'middle_initial' => ['nullable', 'string', 'size:1', 'alpha'],
-            'surname' => ['required', 'string', 'max:255'],
+            'surname' => ['required', 'string', 'max:50', 'regex:/^[\pL\s\-\.]+$/u'],
             'email' => [
                 'required',
                 'email',
-                'max:255',
+                'max:30',
                 Rule::unique('users', 'email')->ignore($user->id),
             ],
-            'role' => ['required', Rule::in($allowedRoles)],
             'status' => ['required', Rule::in(['pending', 'active', 'deactivated'])],
-            'password' => ['nullable', 'string', 'min:8', 'confirmed'],
-        ]);
+            'password' => [
+                'nullable',
+                'string',
+                'min:8',
+                'max:50',
+                'confirmed',
+                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&]).+$/',
+            ],
+        ], $this->accountValidationMessages());
 
         $middleInitial = $validated['middle_initial']
             ? strtoupper(substr($validated['middle_initial'], 0, 1))
@@ -148,7 +193,6 @@ class AdminUserController extends Controller
         $user->middle_initial = $middleInitial;
         $user->surname = $validated['surname'];
         $user->email = $validated['email'];
-        $user->role = $validated['role'];
         $user->status = $validated['status'];
 
         if (!empty($validated['password'])) {
@@ -159,18 +203,27 @@ class AdminUserController extends Controller
 
         if ($request->expectsJson()) {
             return response()->json([
-                'message' => ucfirst($validated['role']) . ' account updated successfully'
+                'message' => ucfirst($user->role) . ' account updated successfully',
+                'redirect' => route('admin.dashboard', ['type' => $user->role])
             ]);
         }
 
         return redirect()
-            ->route('admin.dashboard', ['type' => $validated['role']])
-            ->with('success', ucfirst($validated['role']) . ' account updated successfully.');
+            ->route('admin.dashboard', ['type' => $user->role])
+            ->with('success', ucfirst($user->role) . ' account updated successfully.');
     }
 
     public function destroy(User $user)
     {
         $this->ensureManageableUser($user);
+
+        if ($this->hasProtectedActivity($user)) {
+            return redirect()
+                ->route('admin.dashboard', ['type' => $user->role])
+                ->withErrors([
+                    'delete' => ucfirst($user->role) . ' accounts with existing activity cannot be deleted. Deactivate the account instead.',
+                ]);
+        }
 
         $role = $user->role;
         $user->delete();

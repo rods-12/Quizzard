@@ -2,24 +2,28 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 
 class _T {
-  static const Color primary = Color(0xFF2ECC71);
-  static const Color primaryLight = Color(0xFFE8F8F0);
-  static const Color accent = Color(0xFF6C63FF);
-  static const Color bg = Color(0xFFF4F7F5);
+  static const Color primary = Color(0xFF5B2A9B);
+  static const Color primaryDark = Color(0xFF3A1A6B);
+  static const Color primaryLight = Color(0xFFEDE7F2);
+  static const Color accent = Color(0xFFA14BC9);
+  static const Color accentGold = Color(0xFFF2C94C);
+  static const Color softPurple = Color(0xFFC9A8F0);
+  static const Color bg = Color(0xFFFAF6EC);
   static const Color surface = Colors.white;
-  static const Color textDark = Color(0xFF1A2E22);
-  static const Color textMid = Color(0xFF6B7580);
-  static const Color textLight = Color(0xFFADB5BD);
+  static const Color textDark = Color(0xFF1F1235);
+  static const Color textMid = Color(0xFF7B6F96);
+  static const Color textLight = Color(0xFFA99BC4);
   static const Color warning = Color(0xFFF59E0B);
   static const Color success = Color(0xFF22C55E);
   static const Color orange = Color(0xFFF97316);
+  static const Color plumShadow = Color(0xFF2A1247);
 
   static BoxDecoration get card => BoxDecoration(
         color: surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: plumShadow.withOpacity(0.08),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -84,20 +88,29 @@ class _ManualReviewQuizListScreenState
     return Scaffold(
       backgroundColor: _T.bg,
       appBar: AppBar(
-        backgroundColor: _T.surface,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF5B2A9B), Color(0xFF3A1A6B)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: _T.textDark),
+          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
           'Manual Review',
           style: TextStyle(
-              color: _T.textDark, fontWeight: FontWeight.bold, fontSize: 18),
+              color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Divider(color: Colors.grey.shade100, height: 1),
+          child: Divider(color: Colors.white.withOpacity(0.15), height: 1),
         ),
       ),
       body: _isLoading
@@ -277,7 +290,7 @@ class _ManualReviewQuizListScreenState
                 ],
               ),
               const SizedBox(height: 14),
-              Divider(color: Colors.grey.shade100, height: 1),
+              Divider(color: _T.softPurple.withOpacity(0.25), height: 1),
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -287,7 +300,7 @@ class _ManualReviewQuizListScreenState
                     color: pendingCount > 0 ? _T.orange : _T.textLight,
                     bg: pendingCount > 0
                         ? _T.orange.withOpacity(0.1)
-                        : Colors.grey.shade100,
+                        : _T.primaryLight,
                   ),
                   const SizedBox(width: 8),
                   _buildCountChip(
@@ -296,7 +309,7 @@ class _ManualReviewQuizListScreenState
                     color: reviewedCount > 0 ? _T.success : _T.textLight,
                     bg: reviewedCount > 0
                         ? _T.success.withOpacity(0.1)
-                        : Colors.grey.shade100,
+                        : _T.primaryLight,
                   ),
                   const Spacer(),
                   Text(

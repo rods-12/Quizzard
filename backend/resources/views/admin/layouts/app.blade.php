@@ -59,15 +59,15 @@
             <div class="flex h-full flex-col">
 
                 <div class="border-b border-slate-800 px-5 py-5">
-                    <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 rounded-2xl px-1 py-1 transition hover:bg-slate-800/60">
-                        <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/95 p-1.5 shadow-md ring-1 ring-white/10">
-                            <img src="{{ asset('images/quizzard-logo.png') }}" alt="Quizzard" class="max-h-full max-w-full object-contain">
+                    <div class="flex items-center gap-3 rounded-2xl px-1 py-1">
+                        <span class="flex h-28 w-32 shrink-0 items-center justify-center overflow-hidden">
+                            <img src="{{ asset('images/quizzard-logo.png') }}" alt="Quizzard" class="h-full w-full scale-125 object-contain drop-shadow-[0_10px_18px_rgba(0,0,0,0.35)]">
                         </span>
-                        <span class="min-w-0">
+                        <span class="min-w-0 flex-1">
                             <span class="block text-base font-bold leading-tight tracking-wide">Quizzard</span>
                             <span class="mt-1 block text-xs font-medium leading-snug text-slate-400">{{ $panelLabel }}</span>
                         </span>
-                    </a>
+                    </div>
                 </div>
 
                 <nav class="flex-1 space-y-2 px-4 py-6">

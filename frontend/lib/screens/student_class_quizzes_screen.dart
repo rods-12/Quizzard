@@ -5,24 +5,29 @@ import '../services/auth_service.dart';
 
 // ─── THEME CONSTANTS ─────────────────────────────────────────────────────────
 class _AppTheme {
-  static const Color primary = Color(0xFF6C63FF);
-  static const Color primaryDark = Color(0xFF4B44CC);
-  static const Color primaryLight = Color(0xFFEEEDFF);
-  static const Color bg = Color(0xFFF4F6FB);
+  static const Color primary = Color(0xFF5B2A9B);
+  static const Color primaryDark = Color(0xFF3A1A6B);
+  static const Color primaryLight = Color(0xFFEDE7F2);
+  static const Color bg = Color(0xFFFAF6EC);
   static const Color surface = Colors.white;
-  static const Color textDark = Color(0xFF1A1D2E);
-  static const Color textMid = Color(0xFF6B7080);
-  static const Color textLight = Color(0xFFADB5BD);
+  static const Color textDark = Color(0xFF1F1235);
+  static const Color textMid = Color(0xFF7A6E99);
+  static const Color textLight = Color(0xFFA99BC4);
   static const Color success = Color(0xFF22C55E);
   static const Color warning = Color(0xFFF59E0B);
   static const Color danger = Color(0xFFEF4444);
+  static const Color accent = Color(0xFFF2C94C);
+  static const Color accentDark = Color(0xFFE0A93B);
+  static const Color softPurple = Color(0xFFC9A8F0);
+  static const Color highlightPurple = Color(0xFFA14BC9);
+  static const Color plumShadow = Color(0xFF2A1247);
 
   static BoxDecoration get cardDecoration => BoxDecoration(
         color: surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: plumShadow.withOpacity(0.08),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -162,9 +167,13 @@ class _StudentClassQuizzesScreenState
               ElevatedButton(
                 onPressed: _loadQuizzes,
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: _AppTheme.primary),
+                  backgroundColor: _AppTheme.accent,
+                  foregroundColor: _AppTheme.textDark,
+                ),
                 child: const Text('Retry',
-                    style: TextStyle(color: Colors.white)),
+                    style: TextStyle(
+                        color: _AppTheme.textDark,
+                        fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -174,7 +183,8 @@ class _StudentClassQuizzesScreenState
 
     return RefreshIndicator(
       onRefresh: _loadQuizzes,
-      color: _AppTheme.primary,
+      color: _AppTheme.accent,
+      backgroundColor: _AppTheme.surface,
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
@@ -380,9 +390,9 @@ class _StudentClassQuizzesScreenState
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.18),
+          color: Colors.white.withOpacity(0.15),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withOpacity(0.25)),
+          border: Border.all(color: _AppTheme.softPurple.withOpacity(0.35)),
         ),
         child: Column(
           children: [
@@ -392,8 +402,8 @@ class _StudentClassQuizzesScreenState
                     fontWeight: FontWeight.bold,
                     fontSize: 18)),
             Text(label,
-                style: const TextStyle(
-                    color: Colors.white70, fontSize: 11)),
+                style: TextStyle(
+                    color: Colors.white.withOpacity(0.75), fontSize: 11)),
           ],
         ),
       ),
@@ -412,16 +422,16 @@ class _StudentClassQuizzesScreenState
         padding:
             const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
-          color: isSelected ? _AppTheme.primary : Colors.white,
+          color: isSelected ? _AppTheme.primary : _AppTheme.surface,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
               color: isSelected
                   ? _AppTheme.primary
-                  : Colors.grey.shade300),
+                  : _AppTheme.softPurple.withOpacity(0.5)),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                      color: _AppTheme.primary.withOpacity(0.25),
+                      color: _AppTheme.plumShadow.withOpacity(0.22),
                       blurRadius: 8,
                       offset: const Offset(0, 2))
                 ]
@@ -446,7 +456,7 @@ class _StudentClassQuizzesScreenState
                   horizontal: 5, vertical: 1),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? Colors.white.withOpacity(0.25)
+                    ? Colors.white.withOpacity(0.22)
                     : _AppTheme.primaryLight,
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -531,9 +541,9 @@ class _StudentClassQuizzesScreenState
       badgeBorder = _AppTheme.danger.withOpacity(0.3);
     } else {
       badgeText = 'Pending';
-      badgeTextColor = _AppTheme.primary;
+      badgeTextColor = _AppTheme.highlightPurple;
       badgeBg = _AppTheme.primaryLight;
-      badgeBorder = _AppTheme.primary.withOpacity(0.3);
+      badgeBorder = _AppTheme.softPurple.withOpacity(0.5);
     }
 
     // Tap behavior
@@ -567,6 +577,8 @@ class _StudentClassQuizzesScreenState
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: onTap,
+        splashColor: _AppTheme.primaryLight,
+        highlightColor: _AppTheme.primaryLight.withOpacity(0.5),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -635,7 +647,7 @@ class _StudentClassQuizzesScreenState
               ),
 
               const SizedBox(height: 14),
-              Divider(color: Colors.grey.shade100, height: 1),
+              Divider(color: _AppTheme.softPurple.withOpacity(0.2), height: 1),
               const SizedBox(height: 12),
 
               // Meta row
@@ -729,15 +741,19 @@ class _StudentClassQuizzesScreenState
                     backgroundColor: awaitingReview
                         ? _AppTheme.warning.withOpacity(0.15)
                         : alreadyTaken
-                            ? Colors.grey.shade300
+                            ? _AppTheme.primaryLight
                             : isPastDue
                                 ? _AppTheme.danger.withOpacity(0.15)
-                                : _AppTheme.primary,
+                                : _AppTheme.accent,
                     disabledBackgroundColor: alreadyTaken
-                        ? Colors.grey.shade200
+                        ? _AppTheme.primaryLight
                         : _AppTheme.danger.withOpacity(0.1),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
+                    elevation: awaitingReview || alreadyTaken || isPastDue
+                        ? 0
+                        : 2,
+                    shadowColor: _AppTheme.accentDark.withOpacity(0.4),
                   ),
                   child: Text(
                     awaitingReview
@@ -754,7 +770,7 @@ class _StudentClassQuizzesScreenState
                               ? _AppTheme.textLight
                               : isPastDue
                                   ? _AppTheme.danger
-                                  : Colors.white,
+                                  : _AppTheme.textDark,
                       fontWeight: FontWeight.bold,
                     ),
                   ),

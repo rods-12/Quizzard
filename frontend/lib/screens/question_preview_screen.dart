@@ -116,7 +116,7 @@ class _QuestionPreviewScreenState
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Please answer the question first!'),
-                  backgroundColor: Colors.orange,
+                  backgroundColor: Color(0xFFF59E0B),
                 ),
               );
               return;
@@ -125,15 +125,20 @@ class _QuestionPreviewScreenState
           }
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor:
-              submitted ? Colors.grey : const Color(0xFF6C63FF),
+          backgroundColor: submitted
+              ? const Color(0xFFEDE7F2)
+              : const Color(0xFFF2C94C),
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12)),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          elevation: 0,
         ),
         child: Text(
           submitted ? 'Try Again' : 'Submit Answer',
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: submitted
+                ? const Color(0xFF5B2A9B)
+                : const Color(0xFF1F1235),
             fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
@@ -145,10 +150,19 @@ class _QuestionPreviewScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: const Color(0xFFFAF6EC),
       appBar: AppBar(
         title: const Text('Question Types Preview'),
-        backgroundColor: const Color(0xFF6C63FF),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF5B2A9B), Color(0xFF3A1A6B)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
@@ -157,11 +171,14 @@ class _QuestionPreviewScreenState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ── Multiple Choice ──
-            const Text('Multiple Choice',
-                style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF333333))),
+            const Text(
+              'Multiple Choice',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1F1235),
+              ),
+            ),
             const SizedBox(height: 12),
             _mcSubmitted
                 ? MultipleChoiceResultWidget(
@@ -183,14 +200,17 @@ class _QuestionPreviewScreenState
               }),
             ),
 
-            const Divider(height: 40),
+            const Divider(height: 40, color: Color(0xFFEDE7F2)),
 
             // ── True or False ──
-            const Text('True or False',
-                style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF333333))),
+            const Text(
+              'True or False',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1F1235),
+              ),
+            ),
             const SizedBox(height: 12),
             _tfSubmitted
                 ? TrueFalseResultWidget(
@@ -212,14 +232,17 @@ class _QuestionPreviewScreenState
               }),
             ),
 
-            const Divider(height: 40),
+            const Divider(height: 40, color: Color(0xFFEDE7F2)),
 
             // ── Identification ──
-            const Text('Identification',
-                style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF333333))),
+            const Text(
+              'Identification',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1F1235),
+              ),
+            ),
             const SizedBox(height: 12),
             _idSubmitted
                 ? IdentificationResultWidget(
@@ -241,14 +264,17 @@ class _QuestionPreviewScreenState
               }),
             ),
 
-            const Divider(height: 40),
+            const Divider(height: 40, color: Color(0xFFEDE7F2)),
 
             // ── Matching Type ──
-            const Text('Matching Type',
-                style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF333333))),
+            const Text(
+              'Matching Type',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1F1235),
+              ),
+            ),
             const SizedBox(height: 12),
             _matchSubmitted
                 ? MatchingResultWidget(

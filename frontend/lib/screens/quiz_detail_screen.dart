@@ -16,7 +16,7 @@ class QuizDetailScreen extends StatefulWidget {
 }
 
 class _QuizDetailScreenState extends State<QuizDetailScreen> {
-  static const Color primaryColor = Color(0xFF6C63FF);
+  static const Color primaryColor = Color(0xFF5B2A9B);
 
   List<dynamic> _questions = [];
   bool _loading = true;
@@ -55,16 +55,29 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Question'),
-        content: const Text('Are you sure you want to delete this question?'),
+        backgroundColor: const Color(0xFFFAF6EC),
+        title: const Text(
+          'Delete Question',
+          style: TextStyle(color: Color(0xFF1F1235)),
+        ),
+        content: const Text(
+          'Are you sure you want to delete this question?',
+          style: TextStyle(color: Color(0xFF1F1235)),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
+            style: TextButton.styleFrom(
+              foregroundColor: Color(0xFF5B2A9B),
+            ),
             child: const Text('Cancel'),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: Color(0xFFEF4444)),
+            ),
           ),
         ],
       ),
@@ -80,16 +93,18 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-              content: Text('Question deleted.'),
-              backgroundColor: Colors.green),
+            content: Text('Question deleted.'),
+            backgroundColor: Color(0xFF22C55E),
+          ),
         );
       }
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text(result['message']),
-              backgroundColor: Colors.red),
+            content: Text(result['message']),
+            backgroundColor: Color(0xFFEF4444),
+          ),
         );
       }
     }
@@ -129,20 +144,29 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
 
   Color _questionTypeColor(String type) {
     switch (type) {
-      case 'multiple_choice': return Colors.blue;
-      case 'true_false':      return Colors.orange;
-      case 'identification':  return Colors.purple;
-      case 'matching':        return Colors.teal;
-      default:                return Colors.grey;
+      case 'multiple_choice': return const Color(0xFF5B2A9B);
+      case 'true_false':      return const Color(0xFFF59E0B);
+      case 'identification':  return const Color(0xFFA14BC9);
+      case 'matching':        return const Color(0xFFC9A8F0);
+      default:                return const Color(0xFFA99BC4);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: const Color(0xFFFAF6EC),
       appBar: AppBar(
-        backgroundColor: primaryColor,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF5B2A9B), Color(0xFF3A1A6B)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         title: Text(widget.quizTitle, overflow: TextOverflow.ellipsis),
         actions: [
@@ -155,45 +179,54 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
         ],
       ),
       floatingActionButton: _hasAttempts
-        ? null
-        : Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              FloatingActionButton.extended(
-                heroTag: 'ai',
-                onPressed: () async {
-                  final result = await Navigator.pushNamed(
-                    context,
-                    '/ai-quiz-generate',
-                    arguments: {
-                      'quiz_id':   widget.quizId,
-                      'quiz_title': widget.quizTitle,
-                    },
-                  );
-                  if (result == true) _loadQuiz();
-                },
-                backgroundColor: const Color(0xFF6C63FF),
-                icon: const Icon(Icons.auto_awesome, color: Colors.white),
-                label: const Text('Generate with AI',
-                    style: TextStyle(color: Colors.white)),
-              ),
-              const SizedBox(height: 10),
-              FloatingActionButton.extended(
-                heroTag: 'add',
-                onPressed: _navigateToAddQuestion,
-                backgroundColor: Colors.green,
-                icon: const Icon(Icons.add, color: Colors.white),
-                label: const Text('Add Question',
-                    style: TextStyle(color: Colors.white)),
-              ),
-            ],
-          ),
+          ? null
+          : Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                FloatingActionButton.extended(
+                  heroTag: 'ai',
+                  onPressed: () async {
+                    final result = await Navigator.pushNamed(
+                      context,
+                      '/ai-quiz-generate',
+                      arguments: {
+                        'quiz_id':    widget.quizId,
+                        'quiz_title': widget.quizTitle,
+                      },
+                    );
+                    if (result == true) _loadQuiz();
+                  },
+                  backgroundColor: const Color(0xFF5B2A9B),
+                  icon: const Icon(Icons.auto_awesome, color: Color(0xFFF2C94C)),
+                  label: const Text(
+                    'Generate with AI',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                FloatingActionButton.extended(
+                  heroTag: 'add',
+                  onPressed: _navigateToAddQuestion,
+                  backgroundColor: const Color(0xFFF2C94C),
+                  icon: const Icon(Icons.add, color: Color(0xFF1F1235)),
+                  label: const Text(
+                    'Add Question',
+                    style: TextStyle(color: Color(0xFF1F1235)),
+                  ),
+                ),
+              ],
+            ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(
+              child: CircularProgressIndicator(color: Color(0xFF5B2A9B)),
+            )
           : _error != null
               ? Center(
-                  child: Text(_error!,
-                      style: const TextStyle(color: Colors.red)))
+                  child: Text(
+                    _error!,
+                    style: const TextStyle(color: Color(0xFFEF4444)),
+                  ),
+                )
               : Column(
                   children: [
                     if (_hasAttempts)
@@ -201,17 +234,20 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 12),
-                        color: Colors.orange.shade100,
+                        color: const Color(0xFFF59E0B).withOpacity(0.12),
                         child: Row(
                           children: [
-                            Icon(Icons.lock_outline,
-                                color: Colors.orange.shade800, size: 18),
+                            const Icon(
+                              Icons.lock_outline,
+                              color: Color(0xFFF59E0B),
+                              size: 18,
+                            ),
                             const SizedBox(width: 8),
-                            Expanded(
+                            const Expanded(
                               child: Text(
                                 'This quiz has been taken by students and cannot be modified.',
                                 style: TextStyle(
-                                  color: Colors.orange.shade800,
+                                  color: Color(0xFFE0A93B),
                                   fontSize: 13,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -235,13 +271,17 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.quiz_outlined, size: 80, color: Colors.grey[400]),
+          Icon(Icons.quiz_outlined, size: 80, color: const Color(0xFFC9A8F0)),
           const SizedBox(height: 16),
-          Text('No questions yet',
-              style: TextStyle(fontSize: 18, color: Colors.grey[600])),
+          const Text(
+            'No questions yet',
+            style: TextStyle(fontSize: 18, color: Color(0xFFA99BC4)),
+          ),
           const SizedBox(height: 8),
-          Text('Tap "Add Question" to get started',
-              style: TextStyle(color: Colors.grey[500])),
+          const Text(
+            'Tap "Add Question" to get started',
+            style: TextStyle(color: Color(0xFFA99BC4)),
+          ),
         ],
       ),
     );
@@ -256,8 +296,12 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
         final type = q['question_type'] ?? '';
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          color: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          elevation: 2,
+          shadowColor: const Color(0xFF2A1247).withOpacity(0.15),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -269,7 +313,7 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: _questionTypeColor(type).withOpacity(0.15),
+                        color: _questionTypeColor(type).withOpacity(0.12),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
@@ -284,8 +328,10 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                     const Spacer(),
                     Text(
                       '${q['points'] ?? 1} pt${(q['points'] ?? 1) != 1 ? 's' : ''}',
-                      style: TextStyle(
-                          fontSize: 12, color: Colors.grey[600]),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFFA99BC4),
+                      ),
                     ),
                   ],
                 ),
@@ -293,7 +339,10 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                 Text(
                   'Q${index + 1}. ${q['question_text'] ?? ''}',
                   style: const TextStyle(
-                      fontSize: 15, fontWeight: FontWeight.w600),
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF1F1235),
+                  ),
                 ),
                 if (!_hasAttempts) ...[
                   const SizedBox(height: 12),
@@ -312,18 +361,22 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                           );
                           if (result == true) _loadQuiz();
                         },
-                        icon: const Icon(Icons.edit, size: 16,
-                            color: Color(0xFF6C63FF)),
-                        label: const Text('Edit',
-                            style: TextStyle(color: Color(0xFF6C63FF))),
+                        icon: const Icon(Icons.edit,
+                            size: 16, color: Color(0xFF5B2A9B)),
+                        label: const Text(
+                          'Edit',
+                          style: TextStyle(color: Color(0xFF5B2A9B)),
+                        ),
                       ),
                       const SizedBox(width: 8),
                       TextButton.icon(
                         onPressed: () => _deleteQuestion(q['id']),
-                        icon: const Icon(Icons.delete, size: 16,
-                            color: Colors.red),
-                        label: const Text('Delete',
-                            style: TextStyle(color: Colors.red)),
+                        icon: const Icon(Icons.delete,
+                            size: 16, color: Color(0xFFEF4444)),
+                        label: const Text(
+                          'Delete',
+                          style: TextStyle(color: Color(0xFFEF4444)),
+                        ),
                       ),
                     ],
                   ),

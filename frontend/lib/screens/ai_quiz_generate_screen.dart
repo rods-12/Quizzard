@@ -16,7 +16,19 @@ class AiQuizGenerateScreen extends StatefulWidget {
 }
 
 class _AiQuizGenerateScreenState extends State<AiQuizGenerateScreen> {
-  static const Color primaryColor = Color(0xFF6C63FF);
+  // ── Brand colors ──────────────────────────────────────────────
+  static const Color primaryColor      = Color(0xFF5B2A9B);
+  static const Color primaryDark       = Color(0xFF3A1A6B);
+  static const Color primaryLight      = Color(0xFFEDE7F2);
+  static const Color accentGold        = Color(0xFFF2C94C);
+  static const Color softPurple        = Color(0xFFC9A8F0);
+  static const Color highlightPurple   = Color(0xFFA14BC9);
+  static const Color background        = Color(0xFFFAF6EC);
+  static const Color midnightPlum      = Color(0xFF1F1235);
+  static const Color mutedText         = Color(0xFF7B6F8E);
+  static const Color subtleText        = Color(0xFFA99BC4);
+  static const Color plumShadow        = Color(0xFF2A1247);
+  static const Color successGreen      = Color(0xFF22C55E);
 
   // ── Step 1 state ──────────────────────────────────────────────
   final _topicCtrl   = TextEditingController();
@@ -31,7 +43,7 @@ class _AiQuizGenerateScreenState extends State<AiQuizGenerateScreen> {
   };
 
   // ── Step state ────────────────────────────────────────────────
-  int  _step    = 1; // 1 = input, 2 = preview
+  int  _step    = 1;
   bool _loading = false;
   String? _error;
 
@@ -47,11 +59,11 @@ class _AiQuizGenerateScreenState extends State<AiQuizGenerateScreen> {
   }[t] ?? t;
 
   Color _typeColor(String t) => {
-    'multiple_choice': Colors.indigo,
-    'true_false':      Colors.orange,
-    'identification':  Colors.green,
-    'matching':        Colors.purple,
-  }[t] ?? Colors.grey;
+    'multiple_choice': primaryColor,
+    'true_false':      const Color(0xFFF59E0B),
+    'identification':  highlightPurple,
+    'matching':        softPurple,
+  }[t] ?? mutedText;
 
   // ── Generate ──────────────────────────────────────────────────
   Future<void> _generate() async {
@@ -114,7 +126,7 @@ class _AiQuizGenerateScreenState extends State<AiQuizGenerateScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('${_questions.length} question(s) saved successfully!'),
-          backgroundColor: Colors.green,
+          backgroundColor: successGreen,
         ),
       );
       Navigator.pop(context, true);
@@ -133,12 +145,23 @@ class _AiQuizGenerateScreenState extends State<AiQuizGenerateScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: background,
       appBar: AppBar(
-        backgroundColor: primaryColor,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [primaryColor, primaryDark],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
-        title: Text(_step == 1 ? '✨ Generate with AI' : 'Preview Questions',
-            overflow: TextOverflow.ellipsis),
+        title: Text(
+          _step == 1 ? '✨ Generate with AI' : 'Preview Questions',
+          overflow: TextOverflow.ellipsis,
+        ),
         actions: [
           if (_step == 2)
             TextButton.icon(
@@ -165,8 +188,10 @@ class _AiQuizGenerateScreenState extends State<AiQuizGenerateScreen> {
         children: [
           const CircularProgressIndicator(color: primaryColor),
           const SizedBox(height: 16),
-          Text(_step == 1 ? 'AI is generating your questions...' : 'Saving questions...',
-              style: TextStyle(color: Colors.grey[600], fontSize: 14)),
+          Text(
+            _step == 1 ? 'AI is generating your questions...' : 'Saving questions...',
+            style: const TextStyle(color: mutedText, fontSize: 14),
+          ),
         ],
       ),
     );
@@ -186,11 +211,12 @@ class _AiQuizGenerateScreenState extends State<AiQuizGenerateScreen> {
               margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.red.shade50,
-                border: Border.all(color: Colors.red.shade200),
+                color: const Color(0xFFEF4444).withOpacity(0.08),
+                border: Border.all(color: const Color(0xFFEF4444).withOpacity(0.4)),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Text(_error!, style: TextStyle(color: Colors.red.shade700, fontSize: 13)),
+              child: Text(_error!,
+                  style: const TextStyle(color: Color(0xFFEF4444), fontSize: 13)),
             ),
 
           // Topic
@@ -205,7 +231,7 @@ class _AiQuizGenerateScreenState extends State<AiQuizGenerateScreen> {
           // Passage
           _label('Passage / Text'),
           const SizedBox(height: 2),
-          Text('optional', style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+          Text('optional', style: TextStyle(fontSize: 12, color: subtleText)),
           const SizedBox(height: 6),
           TextField(
             controller: _passageCtrl,
@@ -242,10 +268,16 @@ class _AiQuizGenerateScreenState extends State<AiQuizGenerateScreen> {
                     const SizedBox(height: 6),
                     DropdownButtonFormField<String>(
                       value: _difficulty,
-                      decoration: _inputDec('').copyWith(contentPadding:
-                          const EdgeInsets.symmetric(horizontal: 12, vertical: 14)),
+                      dropdownColor: Colors.white,
+                      style: const TextStyle(color: midnightPlum, fontSize: 14),
+                      decoration: _inputDec('').copyWith(
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                      ),
                       items: ['easy', 'medium', 'hard'].map((d) =>
-                          DropdownMenuItem(value: d, child: Text(d[0].toUpperCase() + d.substring(1)))
+                          DropdownMenuItem(
+                            value: d,
+                            child: Text(d[0].toUpperCase() + d.substring(1)),
+                          ),
                       ).toList(),
                       onChanged: (v) => setState(() => _difficulty = v!),
                     ),
@@ -260,12 +292,17 @@ class _AiQuizGenerateScreenState extends State<AiQuizGenerateScreen> {
           _label('Question Types'),
           const SizedBox(height: 8),
           Card(
+            color: Colors.white,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shadowColor: plumShadow.withOpacity(0.12),
+            elevation: 2,
             child: Column(
               children: _types.keys.map((t) => CheckboxListTile(
-                title: Text(_typeLabel(t), style: const TextStyle(fontSize: 14)),
+                title: Text(_typeLabel(t),
+                    style: const TextStyle(fontSize: 14, color: midnightPlum)),
                 value: _types[t],
                 activeColor: primaryColor,
+                checkColor: Colors.white,
                 onChanged: (v) => setState(() => _types[t] = v!),
                 dense: true,
               )).toList(),
@@ -278,13 +315,17 @@ class _AiQuizGenerateScreenState extends State<AiQuizGenerateScreen> {
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: _generate,
-              icon: const Icon(Icons.auto_awesome, color: Colors.white),
+              icon: const Icon(Icons.auto_awesome, color: midnightPlum),
               label: const Text('Generate Questions',
-                  style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
+                  style: TextStyle(
+                      color: midnightPlum,
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold)),
               style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
+                backgroundColor: accentGold,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                elevation: 0,
               ),
             ),
           ),
@@ -301,8 +342,9 @@ class _AiQuizGenerateScreenState extends State<AiQuizGenerateScreen> {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(12),
-            color: Colors.red.shade50,
-            child: Text(_error!, style: TextStyle(color: Colors.red.shade700, fontSize: 13)),
+            color: const Color(0xFFEF4444).withOpacity(0.08),
+            child: Text(_error!,
+                style: const TextStyle(color: Color(0xFFEF4444), fontSize: 13)),
           ),
         Expanded(
           child: ListView.builder(
@@ -316,19 +358,31 @@ class _AiQuizGenerateScreenState extends State<AiQuizGenerateScreen> {
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
           decoration: BoxDecoration(
             color: Colors.white,
-            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 8, offset: const Offset(0, -2))],
+            boxShadow: [
+              BoxShadow(
+                color: plumShadow.withOpacity(0.12),
+                blurRadius: 10,
+                offset: const Offset(0, -3),
+              ),
+            ],
           ),
           child: SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: _save,
-              icon: const Icon(Icons.save, color: Colors.white),
-              label: Text('Save ${_questions.length} Question(s) to Quiz',
-                  style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
+              icon: const Icon(Icons.save, color: midnightPlum),
+              label: Text(
+                'Save ${_questions.length} Question(s) to Quiz',
+                style: const TextStyle(
+                    color: midnightPlum,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold),
+              ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
+                backgroundColor: accentGold,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                elevation: 0,
               ),
             ),
           ),
@@ -343,7 +397,10 @@ class _AiQuizGenerateScreenState extends State<AiQuizGenerateScreen> {
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
+      color: Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shadowColor: plumShadow.withOpacity(0.15),
+      elevation: 2,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -358,12 +415,18 @@ class _AiQuizGenerateScreenState extends State<AiQuizGenerateScreen> {
                     color: _typeColor(type).withOpacity(0.12),
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: Text(_typeLabel(type),
-                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: _typeColor(type))),
+                  child: Text(
+                    _typeLabel(type),
+                    style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: _typeColor(type)),
+                  ),
                 ),
                 const Spacer(),
                 IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                  icon: const Icon(Icons.delete_outline,
+                      color: Color(0xFFEF4444), size: 20),
                   tooltip: 'Remove',
                   onPressed: () => _removeQuestion(idx),
                   visualDensity: VisualDensity.compact,
@@ -375,11 +438,16 @@ class _AiQuizGenerateScreenState extends State<AiQuizGenerateScreen> {
             // Question text
             TextField(
               controller: TextEditingController(text: q['question_text'])
-                ..selection = TextSelection.collapsed(offset: (q['question_text'] as String).length),
+                ..selection = TextSelection.collapsed(
+                    offset: (q['question_text'] as String).length),
               maxLines: 2,
-              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+              style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                  color: midnightPlum),
               decoration: _inputDec('Question text').copyWith(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               ),
               onChanged: (v) => _questions[idx]['question_text'] = v,
             ),
@@ -388,20 +456,24 @@ class _AiQuizGenerateScreenState extends State<AiQuizGenerateScreen> {
             // Points
             Row(
               children: [
-                const Text('Points:', style: TextStyle(fontSize: 13, color: Colors.grey)),
+                const Text('Points:',
+                    style: TextStyle(fontSize: 13, color: mutedText)),
                 const SizedBox(width: 8),
                 SizedBox(
                   width: 60,
                   child: TextField(
                     controller: TextEditingController(text: '${q['points']}')
-                      ..selection = TextSelection.collapsed(offset: '${q['points']}'.length),
+                      ..selection = TextSelection.collapsed(
+                          offset: '${q['points']}'.length),
                     keyboardType: TextInputType.number,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 13),
+                    style: const TextStyle(fontSize: 13, color: midnightPlum),
                     decoration: _inputDec('').copyWith(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                      contentPadding:
+                          const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                     ),
-                    onChanged: (v) => _questions[idx]['points'] = int.tryParse(v) ?? 1,
+                    onChanged: (v) =>
+                        _questions[idx]['points'] = int.tryParse(v) ?? 1,
                   ),
                 ),
               ],
@@ -429,17 +501,21 @@ class _AiQuizGenerateScreenState extends State<AiQuizGenerateScreen> {
                 groupValue: opts.indexWhere((o) => o['is_correct'] == true),
                 activeColor: primaryColor,
                 onChanged: (v) => setState(() {
-                  for (var i = 0; i < opts.length; i++) opts[i]['is_correct'] = i == v;
+                  for (var i = 0; i < opts.length; i++) {
+                    opts[i]['is_correct'] = i == v;
+                  }
                 }),
                 visualDensity: VisualDensity.compact,
               ),
               Expanded(
                 child: TextField(
                   controller: TextEditingController(text: opts[oi]['option_text'])
-                    ..selection = TextSelection.collapsed(offset: (opts[oi]['option_text'] as String).length),
-                  style: const TextStyle(fontSize: 13),
+                    ..selection = TextSelection.collapsed(
+                        offset: (opts[oi]['option_text'] as String).length),
+                  style: const TextStyle(fontSize: 13, color: midnightPlum),
                   decoration: _inputDec('Option').copyWith(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                   ),
                   onChanged: (v) => opts[oi]['option_text'] = v,
                 ),
@@ -460,9 +536,11 @@ class _AiQuizGenerateScreenState extends State<AiQuizGenerateScreen> {
                 value: val == 'true',
                 groupValue: q['correct_answer'] == true,
                 activeColor: primaryColor,
-                onChanged: (v) => setState(() => _questions[idx]['correct_answer'] = v),
+                onChanged: (v) =>
+                    setState(() => _questions[idx]['correct_answer'] = v),
               ),
-              Text(val[0].toUpperCase() + val.substring(1), style: const TextStyle(fontSize: 13)),
+              Text(val[0].toUpperCase() + val.substring(1),
+                  style: const TextStyle(fontSize: 13, color: midnightPlum)),
             ],
           ),
         )).toList(),
@@ -472,11 +550,15 @@ class _AiQuizGenerateScreenState extends State<AiQuizGenerateScreen> {
     if (type == 'identification') {
       return TextField(
         controller: TextEditingController(text: q['answer'])
-          ..selection = TextSelection.collapsed(offset: (q['answer'] as String).length),
-        style: const TextStyle(fontSize: 13),
+          ..selection = TextSelection.collapsed(
+              offset: (q['answer'] as String).length),
+        style: const TextStyle(fontSize: 13, color: midnightPlum),
         decoration: _inputDec('Correct answer').copyWith(
           prefixText: 'Answer: ',
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          prefixStyle: const TextStyle(
+              color: primaryColor, fontWeight: FontWeight.w600, fontSize: 13),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         ),
         onChanged: (v) => _questions[idx]['answer'] = v,
       );
@@ -492,25 +574,29 @@ class _AiQuizGenerateScreenState extends State<AiQuizGenerateScreen> {
               Expanded(
                 child: TextField(
                   controller: TextEditingController(text: pairs[pi]['left'])
-                    ..selection = TextSelection.collapsed(offset: (pairs[pi]['left'] as String).length),
-                  style: const TextStyle(fontSize: 13),
+                    ..selection = TextSelection.collapsed(
+                        offset: (pairs[pi]['left'] as String).length),
+                  style: const TextStyle(fontSize: 13, color: midnightPlum),
                   decoration: _inputDec('Left').copyWith(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                   ),
                   onChanged: (v) => pairs[pi]['left'] = v,
                 ),
               ),
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 6),
-                child: Icon(Icons.arrow_forward, size: 16, color: Colors.grey),
+                child: Icon(Icons.arrow_forward, size: 16, color: softPurple),
               ),
               Expanded(
                 child: TextField(
                   controller: TextEditingController(text: pairs[pi]['right'])
-                    ..selection = TextSelection.collapsed(offset: (pairs[pi]['right'] as String).length),
-                  style: const TextStyle(fontSize: 13),
+                    ..selection = TextSelection.collapsed(
+                        offset: (pairs[pi]['right'] as String).length),
+                  style: const TextStyle(fontSize: 13, color: midnightPlum),
                   decoration: _inputDec('Right').copyWith(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                   ),
                   onChanged: (v) => pairs[pi]['right'] = v,
                 ),
@@ -525,27 +611,32 @@ class _AiQuizGenerateScreenState extends State<AiQuizGenerateScreen> {
   }
 
   // ── Shared UI helpers ─────────────────────────────────────────
-  Widget _label(String text) => Text(text,
-      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF333333)));
+  Widget _label(String text) => Text(
+        text,
+        style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: midnightPlum),
+      );
 
   InputDecoration _inputDec(String hint) => InputDecoration(
-    hintText: hint,
-    hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
-    filled: true,
-    fillColor: Colors.white,
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(10),
-      borderSide: const BorderSide(color: Color(0xFFDDDDDD)),
-    ),
-    enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(10),
-      borderSide: const BorderSide(color: Color(0xFFDDDDDD)),
-    ),
-    focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(10),
-      borderSide: const BorderSide(color: primaryColor, width: 1.5),
-    ),
-  );
+        hintText: hint,
+        hintStyle: const TextStyle(color: subtleText, fontSize: 13),
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: softPurple.withOpacity(0.35)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: softPurple.withOpacity(0.35)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: primaryColor, width: 1.5),
+        ),
+      );
 
   @override
   void dispose() {

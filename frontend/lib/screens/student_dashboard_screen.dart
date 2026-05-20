@@ -6,15 +6,19 @@ import 'student_quizzes_tab.dart'; // ← External file
 
 // ─── THEME CONSTANTS ─────────────────────────────────────────────────────────
 class _AppTheme {
-  static const Color primary = Color(0xFF6C63FF);
-  static const Color primaryDark = Color(0xFF4B44CC);
-  static const Color primaryLight = Color(0xFFEEEDFF);
-  static const Color accent = Color(0xFF00C9A7);
-  static const Color bg = Color(0xFFF4F6FB);
+  static const Color primary = Color(0xFF5B2A9B);
+  static const Color primaryDark = Color(0xFF3A1A6B);
+  static const Color primaryLight = Color(0xFFEDE7F2);
+  static const Color accent = Color(0xFFF2C94C);
+  static const Color accentDark = Color(0xFFE0A93B);
+  static const Color softPurple = Color(0xFFC9A8F0);
+  static const Color highlightPurple = Color(0xFFA14BC9);
+  static const Color plumShadow = Color(0xFF2A1247);
+  static const Color bg = Color(0xFFFAF6EC);
   static const Color surface = Colors.white;
-  static const Color textDark = Color(0xFF1A1D2E);
-  static const Color textMid = Color(0xFF6B7080);
-  static const Color textLight = Color(0xFFADB5BD);
+  static const Color textDark = Color(0xFF1F1235);
+  static const Color textMid = Color(0xFF7A6E99);
+  static const Color textLight = Color(0xFFA99BC4);
   static const Color success = Color(0xFF22C55E);
   static const Color warning = Color(0xFFF59E0B);
   static const Color danger = Color(0xFFEF4444);
@@ -24,7 +28,7 @@ class _AppTheme {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: plumShadow.withOpacity(0.08),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -48,7 +52,7 @@ class _AppTheme {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+          borderSide: BorderSide(color: _AppTheme.softPurple.withOpacity(0.3), width: 1),
         ),
       );
 }
@@ -97,8 +101,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Log Out', style: TextStyle(fontWeight: FontWeight.bold)),
-        content: const Text('Are you sure you want to log out?'),
+        title: const Text('Log Out', style: TextStyle(fontWeight: FontWeight.bold, color: _AppTheme.textDark)),
+        content: const Text('Are you sure you want to log out?', style: TextStyle(color: _AppTheme.textMid)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -122,7 +126,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     Navigator.pushReplacementNamed(context, '/login');
   }
 
-  // ─── Helpers from Code 2 ──────────────────────────────────────────────────
+  // ─── Helpers ──────────────────────────────────────────────────────────────
   String _getTabTitle() {
     switch (_currentIndex) {
       case 0:
@@ -164,16 +168,16 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
         child: Container(
-          color: Colors.black.withOpacity(0.25),
+          color: _AppTheme.plumShadow.withOpacity(0.28),
           child: Center(
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 22),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.92),
+                color: Colors.white.withOpacity(0.95),
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.12),
+                    color: _AppTheme.plumShadow.withOpacity(0.18),
                     blurRadius: 24,
                     offset: const Offset(0, 8),
                   ),
@@ -207,7 +211,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: _AppTheme.plumShadow.withOpacity(0.10),
             blurRadius: 20,
             offset: const Offset(0, -4),
           ),
@@ -332,8 +336,11 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _loadDashboard,
-                style: ElevatedButton.styleFrom(backgroundColor: _AppTheme.primary),
-                child: const Text('Retry', style: TextStyle(color: Colors.white)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _AppTheme.accent,
+                  foregroundColor: _AppTheme.textDark,
+                ),
+                child: const Text('Retry', style: TextStyle(color: _AppTheme.textDark, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -343,7 +350,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
 
     switch (_currentIndex) {
       case 0: return _buildHomeTab();
-      case 1: return const StudentQuizzesTab(); // ← Uses external file
+      case 1: return const StudentQuizzesTab();
       case 2: return _buildClassesTab();
       case 3: return _buildProfileTab();
       default: return _buildHomeTab();
@@ -368,7 +375,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
 
     return RefreshIndicator(
       onRefresh: _loadDashboard,
-      color: _AppTheme.primary,
+      color: _AppTheme.accent,
+      backgroundColor: _AppTheme.surface,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         child: Column(
@@ -416,12 +424,11 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                           ],
                         ),
                       ),
-                      // Profile avatar from Code 2 logic
                       GestureDetector(
                         onTap: _logout,
                         child: Container(
                           decoration: BoxDecoration(
-                            border: Border.all(color: Colors.white.withOpacity(0.4), width: 2),
+                            border: Border.all(color: _AppTheme.softPurple.withOpacity(0.6), width: 2),
                             shape: BoxShape.circle,
                           ),
                           child: CircleAvatar(
@@ -557,9 +564,9 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.18),
+          color: Colors.white.withOpacity(0.15),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.white.withOpacity(0.25), width: 1),
+          border: Border.all(color: _AppTheme.softPurple.withOpacity(0.35), width: 1),
         ),
         child: Column(
           children: [
@@ -587,7 +594,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(color: _AppTheme.plumShadow.withOpacity(0.07), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
       child: Column(
@@ -630,6 +637,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       decoration: _AppTheme.cardDecoration,
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
+        splashColor: _AppTheme.primaryLight,
+        highlightColor: _AppTheme.primaryLight.withOpacity(0.5),
         onTap: alreadyTaken
             ? null
             : () => Navigator.pushNamed(
@@ -648,7 +657,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                   color: isDone
                       ? _AppTheme.success.withOpacity(0.1)
                       : isPending
-                          ? const Color(0xFFF59E0B).withOpacity(0.1)
+                          ? _AppTheme.warning.withOpacity(0.1)
                           : _AppTheme.primaryLight,
                   borderRadius: BorderRadius.circular(13),
                 ),
@@ -661,7 +670,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                   color: isDone
                       ? _AppTheme.success
                       : isPending
-                          ? const Color(0xFFF59E0B)
+                          ? _AppTheme.warning
                           : _AppTheme.primary,
                   size: 26,
                 ),
@@ -695,10 +704,10 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                       ),
                     ] else if (isPending) ...[
                       const SizedBox(height: 4),
-                      const Text(
+                      Text(
                         'Pending teacher review',
                         style: TextStyle(
-                            color: Color(0xFFF59E0B),
+                            color: _AppTheme.warning,
                             fontSize: 12,
                             fontWeight: FontWeight.w600),
                       ),
@@ -708,43 +717,38 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
               ),
               if (!alreadyTaken)
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                   decoration: BoxDecoration(
-                    color: _AppTheme.primary,
+                    color: _AppTheme.accent,
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: const Text('Take',
                       style: TextStyle(
-                          color: Colors.white,
+                          color: _AppTheme.textDark,
                           fontWeight: FontWeight.bold,
                           fontSize: 12)),
                 )
               else if (isPending)
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF59E0B).withOpacity(0.1),
+                    color: _AppTheme.warning.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                        color: const Color(0xFFF59E0B).withOpacity(0.3)),
+                    border: Border.all(color: _AppTheme.warning.withOpacity(0.3)),
                   ),
-                  child: const Text('Pending',
+                  child: Text('Pending',
                       style: TextStyle(
-                          color: Color(0xFFF59E0B),
+                          color: _AppTheme.warning,
                           fontWeight: FontWeight.bold,
                           fontSize: 12)),
                 )
               else
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                   decoration: BoxDecoration(
                     color: _AppTheme.success.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                        color: _AppTheme.success.withOpacity(0.3)),
+                    border: Border.all(color: _AppTheme.success.withOpacity(0.3)),
                   ),
                   child: const Text('Done',
                       style: TextStyle(
@@ -778,7 +782,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             Text(message, textAlign: TextAlign.center, style: const TextStyle(color: _AppTheme.textMid, fontSize: 16, fontWeight: FontWeight.w500)),
             if (subMessage != null) ...[
               const SizedBox(height: 4),
-              Text(subMessage, textAlign: TextAlign.center, style: TextStyle(color: _AppTheme.textLight, fontSize: 13)),
+              Text(subMessage, textAlign: TextAlign.center, style: const TextStyle(color: _AppTheme.textLight, fontSize: 13)),
             ],
           ],
         ),
@@ -859,7 +863,7 @@ class _StudentClassesTabState extends State<_StudentClassesTab> {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Join a Class', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Join a Class', style: TextStyle(fontWeight: FontWeight.bold, color: _AppTheme.textDark)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -871,15 +875,21 @@ class _StudentClassesTabState extends State<_StudentClassesTab> {
             TextField(
               controller: codeController,
               textCapitalization: TextCapitalization.characters,
-              style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 2),
+              style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 2, color: _AppTheme.textDark),
               decoration: InputDecoration(
                 labelText: 'Class Code',
+                labelStyle: const TextStyle(color: _AppTheme.textMid),
                 hintText: 'e.g. Y9ZJAV',
+                hintStyle: const TextStyle(color: _AppTheme.textLight),
                 prefixIcon: const Icon(Icons.key_rounded, color: _AppTheme.primary),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: const BorderSide(color: _AppTheme.primary, width: 2),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: _AppTheme.softPurple.withOpacity(0.4)),
                 ),
               ),
             ),
@@ -888,15 +898,16 @@ class _StudentClassesTabState extends State<_StudentClassesTab> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text('Cancel', style: TextStyle(color: _AppTheme.textMid)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: _AppTheme.primary,
+              backgroundColor: _AppTheme.accent,
+              foregroundColor: _AppTheme.textDark,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            child: const Text('Join', style: TextStyle(color: Colors.white)),
+            child: const Text('Join', style: TextStyle(color: _AppTheme.textDark, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -937,12 +948,12 @@ class _StudentClassesTabState extends State<_StudentClassesTab> {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Leave Class', style: TextStyle(fontWeight: FontWeight.bold)),
-        content: Text('Are you sure you want to leave "${cls['name']}"?'),
+        title: const Text('Leave Class', style: TextStyle(fontWeight: FontWeight.bold, color: _AppTheme.textDark)),
+        content: Text('Are you sure you want to leave "${cls['name']}"?', style: const TextStyle(color: _AppTheme.textMid)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text('Cancel', style: TextStyle(color: _AppTheme.textMid)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -977,9 +988,10 @@ class _StudentClassesTabState extends State<_StudentClassesTab> {
       backgroundColor: _AppTheme.bg,
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _joinClass,
-        backgroundColor: _AppTheme.primary,
-        icon: const Icon(Icons.add_rounded, color: Colors.white),
-        label: const Text('Join Class', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        backgroundColor: _AppTheme.accent,
+        foregroundColor: _AppTheme.textDark,
+        icon: const Icon(Icons.add_rounded, color: _AppTheme.textDark),
+        label: const Text('Join Class', style: TextStyle(color: _AppTheme.textDark, fontWeight: FontWeight.bold)),
         elevation: 4,
       ),
       body: Stack(
@@ -996,16 +1008,16 @@ class _StudentClassesTabState extends State<_StudentClassesTab> {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
         child: Container(
-          color: Colors.black.withOpacity(0.25),
+          color: _AppTheme.plumShadow.withOpacity(0.28),
           child: Center(
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 22),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.92),
+                color: Colors.white.withOpacity(0.95),
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.12),
+                    color: _AppTheme.plumShadow.withOpacity(0.18),
                     blurRadius: 24,
                     offset: const Offset(0, 8),
                   ),
@@ -1084,8 +1096,11 @@ class _StudentClassesTabState extends State<_StudentClassesTab> {
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _loadClasses,
-                style: ElevatedButton.styleFrom(backgroundColor: _AppTheme.primary),
-                child: const Text('Retry', style: TextStyle(color: Colors.white)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _AppTheme.accent,
+                  foregroundColor: _AppTheme.textDark,
+                ),
+                child: const Text('Retry', style: TextStyle(color: _AppTheme.textDark, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -1095,7 +1110,8 @@ class _StudentClassesTabState extends State<_StudentClassesTab> {
 
     return RefreshIndicator(
       onRefresh: _loadClasses,
-      color: _AppTheme.primary,
+      color: _AppTheme.accent,
+      backgroundColor: _AppTheme.surface,
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
@@ -1214,14 +1230,14 @@ class _StudentClassesTabState extends State<_StudentClassesTab> {
   }
 
   Widget _buildClassCard(Map<String, dynamic> cls) {
-    // Generate a consistent color per class based on name
+    // Generate a consistent color per class based on name — purples/magentas palette
     final colors = [
-      const Color(0xFF6C63FF),
-      const Color(0xFF00C9A7),
-      const Color(0xFFFF6B6B),
-      const Color(0xFFF59E0B),
-      const Color(0xFF3B82F6),
-      const Color(0xFF8B5CF6),
+      const Color(0xFF5B2A9B), // Royal Purple
+      const Color(0xFFA14BC9), // Mystic Magenta
+      const Color(0xFF3A1A6B), // Deep Violet
+      const Color(0xFFC9A8F0), // Soft Purple
+      const Color(0xFF7B3FC4), // Mid Purple
+      const Color(0xFF8B2FC9), // Vivid Purple
     ];
     final colorIndex = cls['name'].toString().codeUnitAt(0) % colors.length;
     final classColor = colors[colorIndex];
@@ -1231,6 +1247,8 @@ class _StudentClassesTabState extends State<_StudentClassesTab> {
       decoration: _AppTheme.cardDecoration,
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
+        splashColor: _AppTheme.primaryLight,
+        highlightColor: _AppTheme.primaryLight.withOpacity(0.5),
         onTap: () => Navigator.pushNamed(
           context,
           '/student-class-quizzes',
@@ -1306,7 +1324,7 @@ class _StudentClassesTabState extends State<_StudentClassesTab> {
                     ],
                   ),
                   const SizedBox(height: 10),
-                  Divider(color: Colors.grey.shade100, height: 1),
+                  Divider(color: _AppTheme.softPurple.withOpacity(0.2), height: 1),
                   const SizedBox(height: 10),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1334,8 +1352,8 @@ class _StudentClassesTabState extends State<_StudentClassesTab> {
                           color: classColor,
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: Row(
-                          children: const [
+                        child: const Row(
+                          children: [
                             Text('View Quizzes', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
                             SizedBox(width: 4),
                             Icon(Icons.arrow_forward_rounded, size: 13, color: Colors.white),

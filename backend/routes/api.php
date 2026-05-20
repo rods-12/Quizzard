@@ -72,6 +72,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/classes/{classId}/quizzes/{quizId}/results', [ClassController::class, 'classQuizResults']);
     Route::get('/classes/{classId}/students/performance', [ClassController::class, 'studentPerformance']);
     Route::get('/classes/{classId}/students/export-performance', [ClassController::class, 'exportStudentPerformance']);
+    Route::delete('/classes/{classId}/students/{studentId}', [ClassController::class, 'removeStudent']);
 
     // Quiz CRUD
     Route::get('/quizzes',                           [QuizController::class, 'index']);

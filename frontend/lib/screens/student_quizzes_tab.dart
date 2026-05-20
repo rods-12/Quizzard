@@ -4,25 +4,29 @@ import '../services/auth_service.dart';
 
 // ─── THEME CONSTANTS ─────────────────────────────────────────────────────────
 class _AppTheme {
-  static const Color primary = Color(0xFF6C63FF);
-  static const Color primaryDark = Color(0xFF4B44CC);
-  static const Color primaryLight = Color(0xFFEEEDFF);
-  static const Color bg = Color(0xFFF4F6FB);
-  static const Color surface = Colors.white;
-  static const Color textDark = Color(0xFF1A1D2E);
-  static const Color textMid = Color(0xFF6B7080);
-  static const Color textLight = Color(0xFFADB5BD);
-  static const Color success = Color(0xFF22C55E);
-  static const Color warning = Color(0xFFF59E0B);
-  static const Color danger = Color(0xFFEF4444);
-  static const Color review = Color(0xFF3B82F6); // blue for under_review
+  static const Color primary      = Color(0xFF5B2A9B);
+  static const Color primaryDark  = Color(0xFF3A1A6B);
+  static const Color primaryLight = Color(0xFFEDE7F2);
+  static const Color softPurple   = Color(0xFFC9A8F0);
+  static const Color highlight    = Color(0xFFA14BC9);
+  static const Color accent       = Color(0xFFF2C94C);
+  static const Color bg           = Color(0xFFFAF6EC);
+  static const Color surface      = Colors.white;
+  static const Color textDark     = Color(0xFF1F1235);
+  static const Color textMid      = Color(0xFF7A6E8A);
+  static const Color textLight    = Color(0xFFA99BC4);
+  static const Color plumShadow   = Color(0xFF2A1247);
+  static const Color success      = Color(0xFF22C55E);
+  static const Color warning      = Color(0xFFF59E0B);
+  static const Color danger       = Color(0xFFEF4444);
+  static const Color review       = Color(0xFFA14BC9); // mystic magenta for under_review
 
   static BoxDecoration get cardDecoration => BoxDecoration(
         color: surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: plumShadow.withOpacity(0.10),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -152,9 +156,11 @@ class _StudentQuizzesTabState extends State<StudentQuizzesTab>
               ElevatedButton(
                 onPressed: _loadQuizzes,
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: _AppTheme.primary),
+                  backgroundColor: _AppTheme.accent,
+                  foregroundColor: _AppTheme.textDark,
+                ),
                 child: const Text('Retry',
-                    style: TextStyle(color: Colors.white)),
+                    style: TextStyle(fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -169,7 +175,7 @@ class _StudentQuizzesTabState extends State<StudentQuizzesTab>
           padding: const EdgeInsets.fromLTRB(20, 50, 20, 16),
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [_AppTheme.primary, _AppTheme.primaryDark],
+              colors: [Color(0xFF5B2A9B), Color(0xFF3A1A6B)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -193,8 +199,7 @@ class _StudentQuizzesTabState extends State<StudentQuizzesTab>
               const SizedBox(height: 4),
               Text(
                 '${_quizzes.length} total · ${_doneQuizzes.length} completed · ${_assignedQuizzes.length} pending',
-                style:
-                    const TextStyle(color: Colors.white70, fontSize: 13),
+                style: TextStyle(color: Colors.white.withOpacity(0.75), fontSize: 13),
               ),
               const SizedBox(height: 16),
               Container(
@@ -500,7 +505,7 @@ class _StudentQuizzesTabState extends State<StudentQuizzesTab>
               ),
 
               const SizedBox(height: 14),
-              Divider(color: Colors.grey.shade100, height: 1),
+              Divider(color: _AppTheme.primaryLight, height: 1),
               const SizedBox(height: 12),
 
               // Meta row
@@ -556,12 +561,12 @@ class _StudentQuizzesTabState extends State<StudentQuizzesTab>
                     backgroundColor: awaitingReview
                         ? _AppTheme.warning.withOpacity(0.15)
                         : alreadyTaken
-                            ? Colors.grey.shade200
+                            ? _AppTheme.primaryLight
                             : isPastDue
                                 ? _AppTheme.danger.withOpacity(0.1)
-                                : _AppTheme.primary,
+                                : _AppTheme.accent,
                     disabledBackgroundColor: alreadyTaken
-                        ? Colors.grey.shade100
+                        ? _AppTheme.primaryLight
                         : _AppTheme.danger.withOpacity(0.05),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -583,7 +588,7 @@ class _StudentQuizzesTabState extends State<StudentQuizzesTab>
                               ? _AppTheme.textLight
                               : isPastDue
                                   ? _AppTheme.danger
-                                  : Colors.white,
+                                  : _AppTheme.textDark,
                       fontWeight: FontWeight.bold,
                     ),
                   ),

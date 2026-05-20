@@ -1,6 +1,27 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 
+// ── Quizzard Brand Palette ──────────────────────────────────────────────────
+class _Q {
+  static const primary        = Color(0xFF5B2A9B); // Royal Purple
+  static const primaryDark    = Color(0xFF3A1A6B); // Deep Violet
+  static const primaryLight   = Color(0xFFEDE7F2); // Wizard Beard White
+  static const gold           = Color(0xFFF2C94C); // Enchanted Gold
+  static const goldDark       = Color(0xFFE0A93B); // Warm Amber
+  static const softPurple     = Color(0xFFC9A8F0); // Light Lilac
+  static const magenta        = Color(0xFFA14BC9); // Mystic Magenta
+  static const background     = Color(0xFFFAF6EC); // Parchment Cream
+  static const surface        = Color(0xFFFFFFFF); // Card / Surface
+  static const textPrimary    = Color(0xFF1F1235); // Midnight Plum
+  static const textMuted      = Color(0xFF7B6F96); // Muted Purple-Gray
+  static const textSubtle     = Color(0xFFA99BC4); // Muted Lavender
+  static const plumShadow     = Color(0xFF2A1247); // Deep dark shadow
+  static const success        = Color(0xFF22C55E);
+  static const warning        = Color(0xFFF59E0B);
+  static const danger         = Color(0xFFEF4444);
+}
+// ───────────────────────────────────────────────────────────────────────────
+
 class QuizResultsScreen extends StatefulWidget {
   final int quizId;
   final String quizTitle;
@@ -16,7 +37,6 @@ class QuizResultsScreen extends StatefulWidget {
 }
 
 class _QuizResultsScreenState extends State<QuizResultsScreen> {
-  static const Color _green = Color(0xFF4CAF50);
   static const double _passPercentage = 60;
 
   bool _isLoading = true;
@@ -31,11 +51,11 @@ class _QuizResultsScreenState extends State<QuizResultsScreen> {
 
   final List<Map<String, String>> _filterOptions = const [
     {'value': 'highest', 'label': 'Highest Score'},
-    {'value': 'lowest', 'label': 'Lowest Score'},
-    {'value': 'newest', 'label': 'Newest'},
-    {'value': 'oldest', 'label': 'Oldest'},
-    {'value': 'passed', 'label': 'Passed Only'},
-    {'value': 'failed', 'label': 'Failed Only'},
+    {'value': 'lowest',  'label': 'Lowest Score'},
+    {'value': 'newest',  'label': 'Newest'},
+    {'value': 'oldest',  'label': 'Oldest'},
+    {'value': 'passed',  'label': 'Passed Only'},
+    {'value': 'failed',  'label': 'Failed Only'},
   ];
 
   @override
@@ -102,7 +122,7 @@ class _QuizResultsScreenState extends State<QuizResultsScreen> {
 
     if (query.isNotEmpty) {
       working = working.where((item) {
-        final studentName = (item['student_name'] ?? '').toString().toLowerCase();
+        final studentName  = (item['student_name']  ?? '').toString().toLowerCase();
         final studentEmail = (item['student_email'] ?? '').toString().toLowerCase();
         return studentName.contains(query) || studentEmail.contains(query);
       }).toList();
@@ -206,21 +226,21 @@ class _QuizResultsScreenState extends State<QuizResultsScreen> {
   }
 
   Color _getScoreColor(int percentage) {
-    if (percentage >= 80) return Colors.green;
-    if (percentage >= 60) return Colors.orange;
-    return Colors.red;
+    if (percentage >= 80) return _Q.success;
+    if (percentage >= 60) return _Q.warning;
+    return _Q.danger;
   }
 
   Color _getMedalColor(int rank) {
     switch (rank) {
       case 1:
-        return const Color(0xFFFFD700);
+        return const Color(0xFFFFD700); // Gold
       case 2:
-        return const Color(0xFFC0C0C0);
+        return const Color(0xFFC0C0C0); // Silver
       case 3:
-        return const Color(0xFFCD7F32);
+        return const Color(0xFFCD7F32); // Bronze
       default:
-        return _green;
+        return _Q.magenta;
     }
   }
 
@@ -256,14 +276,28 @@ class _QuizResultsScreenState extends State<QuizResultsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: _Q.background,
       appBar: AppBar(
         title: Text(
           widget.quizTitle,
-          style: const TextStyle(fontSize: 16),
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
-        backgroundColor: _green,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [_Q.primary, _Q.primaryDark],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
+        elevation: 0,
       ),
       body: _buildBody(),
     );
@@ -272,7 +306,7 @@ class _QuizResultsScreenState extends State<QuizResultsScreen> {
   Widget _buildBody() {
     if (_isLoading) {
       return const Center(
-        child: CircularProgressIndicator(color: _green),
+        child: CircularProgressIndicator(color: _Q.primary),
       );
     }
 
@@ -283,16 +317,23 @@ class _QuizResultsScreenState extends State<QuizResultsScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 60, color: Colors.red),
+              const Icon(Icons.error_outline, size: 60, color: _Q.danger),
               const SizedBox(height: 16),
               Text(
                 _errorMessage!,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.red),
+                style: const TextStyle(color: _Q.danger),
               ),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _loadResults,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _Q.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
                 child: const Text('Retry'),
               ),
             ],
@@ -301,23 +342,28 @@ class _QuizResultsScreenState extends State<QuizResultsScreen> {
       );
     }
 
-    final totalAttempts = _toInt(_data!['total_attempts']);
-    final averagePercentage = (_data!['average_percentage'] ?? 0).toString();
-    final passCount = _data!['pass_count'] ?? _getPassCount();
-    final failCount = _data!['fail_count'] ?? _getFailCount();
+    final totalAttempts      = _toInt(_data!['total_attempts']);
+    final averagePercentage  = (_data!['average_percentage'] ?? 0).toString();
+    final passCount          = _data!['pass_count'] ?? _getPassCount();
+    final failCount          = _data!['fail_count'] ?? _getFailCount();
 
     return RefreshIndicator(
       onRefresh: _loadResults,
-      color: _green,
+      color: _Q.primary,
       child: Column(
         children: [
+          // ── Hero stats banner ──────────────────────────────────────────
           Container(
             width: double.infinity,
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
             decoration: const BoxDecoration(
-              color: _green,
+              gradient: LinearGradient(
+                colors: [_Q.primary, _Q.primaryDark],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
               borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(24),
+                bottomLeft:  Radius.circular(24),
                 bottomRight: Radius.circular(24),
               ),
             ),
@@ -366,25 +412,26 @@ class _QuizResultsScreenState extends State<QuizResultsScreen> {
             ),
           ),
 
+          // ── Search & filter ────────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Column(
               children: [
                 TextField(
                   controller: _searchController,
+                  style: const TextStyle(color: _Q.textPrimary),
                   decoration: InputDecoration(
                     hintText: 'Search student name or email...',
-                    prefixIcon: const Icon(Icons.search, color: _green),
+                    hintStyle: const TextStyle(color: _Q.textSubtle),
+                    prefixIcon: const Icon(Icons.search, color: _Q.primary),
                     suffixIcon: _searchController.text.isEmpty
                         ? null
                         : IconButton(
-                            onPressed: () {
-                              _searchController.clear();
-                            },
-                            icon: const Icon(Icons.clear),
+                            onPressed: () => _searchController.clear(),
+                            icon: const Icon(Icons.clear, color: _Q.textMuted),
                           ),
                     filled: true,
-                    fillColor: Colors.white,
+                    fillColor: _Q.surface,
                     contentPadding: const EdgeInsets.symmetric(vertical: 14),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
@@ -392,28 +439,30 @@ class _QuizResultsScreenState extends State<QuizResultsScreen> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(color: _green, width: 1.5),
+                      borderSide: const BorderSide(color: _Q.primary, width: 1.5),
                     ),
                   ),
                 ),
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    const Icon(Icons.filter_list, color: _green, size: 20),
+                    const Icon(Icons.filter_list, color: _Q.primary, size: 20),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: _Q.surface,
                           borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: Colors.grey.shade300),
+                          border: Border.all(color: _Q.softPurple.withOpacity(0.5)),
                         ),
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<String>(
                             value: _selectedFilter,
                             isExpanded: true,
-                            icon: const Icon(Icons.keyboard_arrow_down),
+                            icon: const Icon(Icons.keyboard_arrow_down, color: _Q.primary),
+                            style: const TextStyle(color: _Q.textPrimary, fontSize: 14),
+                            dropdownColor: _Q.surface,
                             items: _filterOptions.map((option) {
                               return DropdownMenuItem<String>(
                                 value: option['value'],
@@ -422,9 +471,7 @@ class _QuizResultsScreenState extends State<QuizResultsScreen> {
                             }).toList(),
                             onChanged: (value) {
                               if (value == null) return;
-                              setState(() {
-                                _selectedFilter = value;
-                              });
+                              setState(() => _selectedFilter = value);
                               _applySearchAndFilter();
                             },
                           ),
@@ -437,6 +484,7 @@ class _QuizResultsScreenState extends State<QuizResultsScreen> {
             ),
           ),
 
+          // ── Results list ───────────────────────────────────────────────
           Expanded(
             child: _visibleResults.isEmpty
                 ? _buildEmptyState()
@@ -444,21 +492,21 @@ class _QuizResultsScreenState extends State<QuizResultsScreen> {
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                     itemCount: _visibleResults.length,
                     itemBuilder: (context, index) {
-                      final result = _visibleResults[index];
+                      final result     = _visibleResults[index];
                       final percentage = _toInt(result['percentage']);
                       final scoreColor = _getScoreColor(percentage);
-                      final rank = _toInt(result['rank']);
+                      final rank       = _toInt(result['rank']);
                       final medalColor = _getMedalColor(rank);
-                      final isPassed = result['is_passed'] == true;
+                      final isPassed   = result['is_passed'] == true;
 
                       return GestureDetector(
                         onTap: () => Navigator.pushNamed(
                           context,
                           '/student-attempt-detail',
                           arguments: {
-                            'quiz_id': widget.quizId,
-                            'quiz_title': widget.quizTitle,
-                            'attempt_id': result['attempt_id'],
+                            'quiz_id':      widget.quizId,
+                            'quiz_title':   widget.quizTitle,
+                            'attempt_id':   result['attempt_id'],
                             'student_name': result['student_name'],
                           },
                         ),
@@ -466,23 +514,28 @@ class _QuizResultsScreenState extends State<QuizResultsScreen> {
                           margin: const EdgeInsets.only(bottom: 12),
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: rank <= 3 ? medalColor.withOpacity(0.08) : Colors.white,
+                            color: rank <= 3
+                                ? medalColor.withOpacity(0.08)
+                                : _Q.surface,
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: rank <= 3 ? medalColor.withOpacity(0.45) : Colors.transparent,
+                              color: rank <= 3
+                                  ? medalColor.withOpacity(0.45)
+                                  : _Q.softPurple.withOpacity(0.25),
                               width: 1.2,
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
+                                color: _Q.plumShadow.withOpacity(0.07),
+                                blurRadius: 10,
+                                offset: const Offset(0, 3),
                               ),
                             ],
                           ),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              // Rank medal column
                               Column(
                                 children: [
                                   Container(
@@ -503,7 +556,8 @@ class _QuizResultsScreenState extends State<QuizResultsScreen> {
                                   ),
                                   const SizedBox(height: 6),
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 4),
                                     decoration: BoxDecoration(
                                       color: medalColor,
                                       borderRadius: BorderRadius.circular(20),
@@ -521,18 +575,20 @@ class _QuizResultsScreenState extends State<QuizResultsScreen> {
                               ),
                               const SizedBox(width: 12),
 
+                              // Avatar
                               CircleAvatar(
-                                backgroundColor: _green.withOpacity(0.1),
+                                backgroundColor: _Q.primary.withOpacity(0.12),
                                 child: Text(
                                   _safeInitial(result['student_name']?.toString()),
                                   style: const TextStyle(
-                                    color: _green,
+                                    color: _Q.primary,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ),
                               const SizedBox(width: 12),
 
+                              // Student info
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -542,15 +598,15 @@ class _QuizResultsScreenState extends State<QuizResultsScreen> {
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 15,
-                                        color: Color(0xFF333333),
+                                        color: _Q.textPrimary,
                                       ),
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
                                       result['student_email']?.toString() ?? 'No email',
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         fontSize: 12,
-                                        color: Colors.grey.shade600,
+                                        color: _Q.textSubtle,
                                       ),
                                     ),
                                     const SizedBox(height: 6),
@@ -560,13 +616,16 @@ class _QuizResultsScreenState extends State<QuizResultsScreen> {
                                         children: [
                                           _buildStatusChip(
                                             label: isPassed ? 'Pass' : 'Fail',
-                                            color: isPassed ? Colors.green : Colors.red,
-                                            icon: isPassed ? Icons.check_circle : Icons.cancel,
+                                            color: isPassed ? _Q.success : _Q.danger,
+                                            icon: isPassed
+                                                ? Icons.check_circle
+                                                : Icons.cancel,
                                           ),
                                           const SizedBox(width: 8),
                                           _buildStatusChip(
-                                            label: 'Completed ${_formatDate(result['completed_at']?.toString())}',
-                                            color: Colors.blueGrey,
+                                            label:
+                                                'Completed ${_formatDate(result['completed_at']?.toString())}',
+                                            color: _Q.textMuted,
                                             icon: Icons.calendar_today,
                                           ),
                                         ],
@@ -578,11 +637,13 @@ class _QuizResultsScreenState extends State<QuizResultsScreen> {
 
                               const SizedBox(width: 8),
 
+                              // Score badge
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 6),
                                     decoration: BoxDecoration(
                                       color: scoreColor.withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(20),
@@ -602,13 +663,14 @@ class _QuizResultsScreenState extends State<QuizResultsScreen> {
                                   const SizedBox(height: 6),
                                   Text(
                                     '${result['score']}/${result['total_points']} pts',
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       fontSize: 11,
-                                      color: Colors.grey.shade500,
+                                      color: _Q.textSubtle,
                                     ),
                                   ),
                                   const SizedBox(height: 6),
-                                  const Icon(Icons.chevron_right, color: Colors.grey),
+                                  const Icon(Icons.chevron_right,
+                                      color: _Q.textSubtle),
                                 ],
                               ),
                             ],
@@ -635,7 +697,7 @@ class _QuizResultsScreenState extends State<QuizResultsScreen> {
             Icon(
               hasQuery ? Icons.search_off : Icons.inbox,
               size: 60,
-              color: Colors.grey,
+              color: _Q.textSubtle,
             ),
             const SizedBox(height: 12),
             Text(
@@ -643,7 +705,7 @@ class _QuizResultsScreenState extends State<QuizResultsScreen> {
                   ? 'No students matched your search or filter.'
                   : 'No students have taken this quiz yet.',
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.grey),
+              style: const TextStyle(color: _Q.textMuted),
             ),
           ],
         ),
@@ -668,7 +730,7 @@ class _QuizResultsScreenState extends State<QuizResultsScreen> {
         children: [
           Icon(icon, size: 13, color: color),
           const SizedBox(width: 4),
-          Flexible(  // ← Changed from bare Text to Flexible
+          Flexible(
             child: Text(
               label,
               style: TextStyle(
@@ -676,7 +738,7 @@ class _QuizResultsScreenState extends State<QuizResultsScreen> {
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
               ),
-              overflow: TextOverflow.ellipsis,  // ← Truncate with ...
+              overflow: TextOverflow.ellipsis,
               maxLines: 1,
             ),
           ),
@@ -722,8 +784,8 @@ class _QuizResultsScreenState extends State<QuizResultsScreen> {
     if (dateString == null) return 'N/A';
     try {
       final date = DateTime.parse(dateString).toLocal();
-      final mm = date.month.toString().padLeft(2, '0');
-      final dd = date.day.toString().padLeft(2, '0');
+      final mm   = date.month.toString().padLeft(2, '0');
+      final dd   = date.day.toString().padLeft(2, '0');
       final yyyy = date.year.toString();
       return '$mm/$dd/$yyyy';
     } catch (e) {

@@ -22,6 +22,22 @@ class ClassQuizResultsScreen extends StatefulWidget {
 }
 
 class _ClassQuizResultsScreenState extends State<ClassQuizResultsScreen> {
+  // ── Quizzard Brand Colors ──────────────────────────────────────
+  static const Color primaryColor       = Color(0xFF5B2A9B); // Royal Purple
+  static const Color primaryDark        = Color(0xFF3A1A6B); // Deep Violet
+  static const Color primaryLight       = Color(0xFFEDE7F2); // Wizard Beard White
+  static const Color accentGold         = Color(0xFFF2C94C); // Enchanted Gold
+  static const Color softPurple         = Color(0xFFC9A8F0); // Light Lilac
+  static const Color highlightPurple    = Color(0xFFA14BC9); // Mystic Magenta
+  static const Color background         = Color(0xFFFAF6EC); // Parchment Cream
+  static const Color midnightPlum       = Color(0xFF1F1235); // Primary Text
+  static const Color mutedLavender      = Color(0xFFA99BC4); // Subtle Text
+  static const Color plumShadow         = Color(0xFF2A1247); // Deep dark
+  static const Color successColor       = Color(0xFF22C55E);
+  static const Color warningColor       = Color(0xFFF59E0B);
+  static const Color dangerColor        = Color(0xFFEF4444);
+  // ──────────────────────────────────────────────────────────────
+
   bool _isLoading = true;
   String? _errorMessage;
   Map<String, dynamic>? _resultsData;
@@ -141,15 +157,13 @@ class _ClassQuizResultsScreenState extends State<ClassQuizResultsScreen> {
   }
 
   Color _getStatusColor(Map<String, dynamic> student) {
-    return student['has_taken'] == true
-        ? const Color(0xFF4CAF50)
-        : Colors.grey;
+    return student['has_taken'] == true ? successColor : mutedLavender;
   }
 
   Color _getPercentageColor(double percentage) {
-    if (percentage >= 75) return const Color(0xFF4CAF50);
-    if (percentage >= 50) return Colors.orange;
-    return Colors.red;
+    if (percentage >= 75) return successColor;
+    if (percentage >= 50) return warningColor;
+    return dangerColor;
   }
 
   // ── Widget Builders ──
@@ -195,7 +209,7 @@ class _ClassQuizResultsScreenState extends State<ClassQuizResultsScreen> {
         text,
         style: TextStyle(
           fontSize: 12,
-          color: color ?? const Color(0xFF333333),
+          color: color ?? midnightPlum,
           fontWeight: fontWeight ?? FontWeight.normal,
         ),
         overflow: TextOverflow.ellipsis,
@@ -211,7 +225,7 @@ class _ClassQuizResultsScreenState extends State<ClassQuizResultsScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: plumShadow.withOpacity(0.10),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -234,7 +248,7 @@ class _ClassQuizResultsScreenState extends State<ClassQuizResultsScreen> {
             label,
             style: TextStyle(
               fontSize: 10,
-              color: Colors.grey.shade600,
+              color: mutedLavender,
             ),
             textAlign: TextAlign.center,
           ),
@@ -246,8 +260,19 @@ class _ClassQuizResultsScreenState extends State<ClassQuizResultsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: background,
       appBar: AppBar(
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [primaryColor, primaryDark],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.white,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -262,8 +287,6 @@ class _ClassQuizResultsScreenState extends State<ClassQuizResultsScreen> {
             ),
           ],
         ),
-        backgroundColor: const Color(0xFF4CAF50),
-        foregroundColor: Colors.white,
         actions: [
           IconButton(
             icon: const Icon(Icons.download),
@@ -282,7 +305,7 @@ class _ClassQuizResultsScreenState extends State<ClassQuizResultsScreen> {
           _buildBody(),
           if (_isExporting)
             Container(
-              color: Colors.black.withOpacity(0.5),
+              color: plumShadow.withOpacity(0.6),
               child: const Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -325,14 +348,14 @@ class _ClassQuizResultsScreenState extends State<ClassQuizResultsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Excel file downloaded successfully!'),
-            backgroundColor: Color(0xFF4CAF50),
+            backgroundColor: successColor,
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(res['message'] ?? 'Download failed'),
-            backgroundColor: Colors.red,
+            backgroundColor: dangerColor,
           ),
         );
       }
@@ -341,7 +364,7 @@ class _ClassQuizResultsScreenState extends State<ClassQuizResultsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error: $e'),
-          backgroundColor: Colors.red,
+          backgroundColor: dangerColor,
         ),
       );
     } finally {
@@ -352,7 +375,7 @@ class _ClassQuizResultsScreenState extends State<ClassQuizResultsScreen> {
   Widget _buildBody() {
     if (_isLoading) {
       return const Center(
-        child: CircularProgressIndicator(color: Color(0xFF4CAF50)),
+        child: CircularProgressIndicator(color: primaryColor),
       );
     }
 
@@ -363,16 +386,23 @@ class _ClassQuizResultsScreenState extends State<ClassQuizResultsScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 60, color: Colors.red),
+              const Icon(Icons.error_outline, size: 60, color: dangerColor),
               const SizedBox(height: 16),
               Text(
                 _errorMessage!,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.red),
+                style: const TextStyle(color: dangerColor),
               ),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _loadResults,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: accentGold,
+                  foregroundColor: midnightPlum,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
                 child: const Text('Retry'),
               ),
             ],
@@ -386,11 +416,11 @@ class _ClassQuizResultsScreenState extends State<ClassQuizResultsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.people_outline, size: 70, color: Colors.grey.shade400),
+            Icon(Icons.people_outline, size: 70, color: softPurple),
             const SizedBox(height: 16),
             Text(
               'No students in this class.',
-              style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+              style: TextStyle(fontSize: 16, color: mutedLavender),
             ),
           ],
         ),
@@ -404,7 +434,7 @@ class _ClassQuizResultsScreenState extends State<ClassQuizResultsScreen> {
 
     return RefreshIndicator(
       onRefresh: _loadResults,
-      color: const Color(0xFF4CAF50),
+      color: primaryColor,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         child: Column(
@@ -421,7 +451,7 @@ class _ClassQuizResultsScreenState extends State<ClassQuizResultsScreen> {
                           'Total Students',
                           _studentResults.length.toString(),
                           Icons.people,
-                          const Color(0xFF6C63FF),
+                          primaryColor,
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -430,7 +460,7 @@ class _ClassQuizResultsScreenState extends State<ClassQuizResultsScreen> {
                           'Taken',
                           takenCount.toString(),
                           Icons.check_circle,
-                          const Color(0xFF4CAF50),
+                          successColor,
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -439,7 +469,7 @@ class _ClassQuizResultsScreenState extends State<ClassQuizResultsScreen> {
                           'Not Taken',
                           notTakenCount.toString(),
                           Icons.cancel,
-                          Colors.grey,
+                          mutedLavender,
                         ),
                       ),
                     ],
@@ -452,7 +482,7 @@ class _ClassQuizResultsScreenState extends State<ClassQuizResultsScreen> {
                           'Average Score',
                           '${averageScore.toStringAsFixed(1)} / ${_totalPoints.toStringAsFixed(0)}',
                           Icons.calculate,
-                          Colors.orange,
+                          highlightPurple,
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -462,10 +492,10 @@ class _ClassQuizResultsScreenState extends State<ClassQuizResultsScreen> {
                           '${averagePercentage.toStringAsFixed(1)}%',
                           Icons.percent,
                           averagePercentage >= 75
-                              ? const Color(0xFF4CAF50)
+                              ? successColor
                               : averagePercentage >= 50
-                                  ? Colors.orange
-                                  : Colors.red,
+                                  ? warningColor
+                                  : dangerColor,
                         ),
                       ),
                     ],
@@ -482,7 +512,7 @@ class _ClassQuizResultsScreenState extends State<ClassQuizResultsScreen> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: plumShadow.withOpacity(0.10),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -498,7 +528,13 @@ class _ClassQuizResultsScreenState extends State<ClassQuizResultsScreen> {
                       children: [
                         // Table Header
                         Container(
-                          color: const Color(0xFF4CAF50),
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [primaryColor, primaryDark],
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                            ),
+                          ),
                           child: Row(
                             children: [
                               SizedBox(width: 120, child: _buildSortableHeader('Student ID', 'student_id')),
@@ -517,7 +553,7 @@ class _ClassQuizResultsScreenState extends State<ClassQuizResultsScreen> {
                           itemCount: _studentResults.length,
                           separatorBuilder: (_, __) => Divider(
                             height: 1,
-                            color: Colors.grey.shade200,
+                            color: softPurple.withOpacity(0.25),
                           ),
                           itemBuilder: (context, index) {
                             final student = _studentResults[index];
@@ -528,7 +564,7 @@ class _ClassQuizResultsScreenState extends State<ClassQuizResultsScreen> {
                             return Container(
                               color: index % 2 == 0
                                   ? Colors.white
-                                  : const Color(0xFFFAFAFA),
+                                  : primaryLight.withOpacity(0.35),
                               child: Row(
                                 children: [
                                   SizedBox(
@@ -556,8 +592,8 @@ class _ClassQuizResultsScreenState extends State<ClassQuizResultsScreen> {
                                       _formatScore(student),
                                       fontWeight: FontWeight.w600,
                                       color: student['has_taken'] == true
-                                          ? const Color(0xFF333333)
-                                          : Colors.grey,
+                                          ? midnightPlum
+                                          : mutedLavender,
                                     ),
                                   ),
                                   SizedBox(
@@ -577,7 +613,7 @@ class _ClassQuizResultsScreenState extends State<ClassQuizResultsScreen> {
                                         padding: const EdgeInsets.symmetric(
                                             horizontal: 8, vertical: 4),
                                         decoration: BoxDecoration(
-                                          color: statusColor.withOpacity(0.1),
+                                          color: statusColor.withOpacity(0.12),
                                           borderRadius: BorderRadius.circular(8),
                                         ),
                                         child: Text(

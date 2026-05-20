@@ -22,7 +22,7 @@ class AuthService {
       print('URL: $baseUrl/login');
       final response = await http.post(
         Uri.parse('$baseUrl/login'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {'Content-Type': 'application/json','Accept': 'application/json',},
         body: jsonEncode({'email': email, 'password': password}),
       );
       print('STATUS: ${response.statusCode}');
@@ -42,6 +42,8 @@ class AuthService {
         return {'success': false, 'message': data['message']};
       }
     } catch (e) {
+      print('ERROR TYPE: ${e.runtimeType}');
+      print('ERROR: $e');
       return {'success': false, 'message': 'Cannot connect to server. Please check your connection.'};
     }
   }

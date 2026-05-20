@@ -36,6 +36,7 @@ $viewUserId = $request->input('view_user');
 
         $query = User::query()
             ->where('role', $type)
+            ->withCount(['quizzes', 'taughtClasses', 'enrolledClasses', 'quizAttempts'])
             ->when($status !== 'all', function ($q) use ($status) {
                 $q->where('status', $status);
             })
@@ -81,6 +82,7 @@ $viewUserId = $request->input('view_user');
 
         if (!empty($viewUserId) && ctype_digit((string) $viewUserId)) {
             $selectedUser = User::query()
+                ->withCount(['quizzes', 'taughtClasses', 'enrolledClasses', 'quizAttempts'])
                 ->where('id', (int) $viewUserId)
                 ->whereIn('role', $allowedTypes)
                 ->first();

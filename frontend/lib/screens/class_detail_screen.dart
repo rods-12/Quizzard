@@ -22,6 +22,22 @@ class ClassDetailScreen extends StatefulWidget {
 
 class _ClassDetailScreenState extends State<ClassDetailScreen>
     with SingleTickerProviderStateMixin {
+  // ── Quizzard Brand Colors ──────────────────────────────────────
+  static const Color primaryColor    = Color(0xFF5B2A9B); // Royal Purple
+  static const Color primaryDark     = Color(0xFF3A1A6B); // Deep Violet
+  static const Color primaryLight    = Color(0xFFEDE7F2); // Wizard Beard White
+  static const Color accentGold      = Color(0xFFF2C94C); // Enchanted Gold
+  static const Color softPurple      = Color(0xFFC9A8F0); // Light Lilac
+  static const Color highlightPurple = Color(0xFFA14BC9); // Mystic Magenta
+  static const Color background      = Color(0xFFFAF6EC); // Parchment Cream
+  static const Color midnightPlum    = Color(0xFF1F1235); // Primary Text
+  static const Color mutedLavender   = Color(0xFFA99BC4); // Subtle Text
+  static const Color plumShadow      = Color(0xFF2A1247); // Deep dark
+  static const Color successColor    = Color(0xFF22C55E);
+  static const Color warningColor    = Color(0xFFF59E0B);
+  static const Color dangerColor     = Color(0xFFEF4444);
+  // ──────────────────────────────────────────────────────────────
+
   // ── Core state ──────────────────────────────────────────────────────────────
   late TabController _tabController;
   bool _isLoading = true;
@@ -164,12 +180,11 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Class code "$code" copied to clipboard!'),
-        backgroundColor: Colors.green,
+        backgroundColor: successColor,
       ),
     );
   }
 
-  /// Pick date + time for a deadline.
   Future<DateTime?> _pickDueDate({DateTime? initialDate}) async {
     final date = await showDatePicker(
       context: context,
@@ -202,7 +217,8 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
           builder: (context, setState) => AlertDialog(
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            title: const Text('Edit Due Date'),
+            title: const Text('Edit Due Date',
+                style: TextStyle(color: midnightPlum)),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -213,20 +229,24 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                     'Due: ${selectedDueDate!.toLocal().toString().substring(0, 16)}',
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF4CAF50),
+                      color: primaryColor,
                     ),
                   )
                 else
-                  const Text(
+                  Text(
                     'No deadline currently set',
-                    style: TextStyle(color: Colors.grey),
+                    style: TextStyle(color: mutedLavender),
                   ),
                 const SizedBox(height: 8),
                 OutlinedButton.icon(
-                  icon: const Icon(Icons.calendar_today),
-                  label: Text(selectedDueDate == null
-                      ? 'Pick Due Date'
-                      : 'Change Due Date'),
+                  icon: const Icon(Icons.calendar_today, color: primaryColor),
+                  label: Text(
+                    selectedDueDate == null ? 'Pick Due Date' : 'Change Due Date',
+                    style: const TextStyle(color: primaryColor),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: primaryColor),
+                  ),
                   onPressed: () async {
                     final picked =
                         await _pickDueDate(initialDate: selectedDueDate);
@@ -237,17 +257,22 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                   TextButton(
                     onPressed: () => setState(() => selectedDueDate = null),
                     child: const Text('Clear Deadline',
-                        style: TextStyle(color: Colors.red)),
+                        style: TextStyle(color: dangerColor)),
                   ),
               ],
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel'),
+                child: Text('Cancel',
+                    style: TextStyle(color: mutedLavender)),
               ),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context, true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: accentGold,
+                  foregroundColor: midnightPlum,
+                ),
                 child: const Text('Save'),
               ),
             ],
@@ -274,19 +299,18 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Due date updated successfully!'),
-          backgroundColor: Colors.green,
+          backgroundColor: successColor,
         ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(result['message'] ?? 'Failed to update due date'),
-          backgroundColor: Colors.red,
+          backgroundColor: dangerColor,
         ),
       );
     }
   }
-
 
   Future<void> _editGradingMode(Map<String, dynamic> quiz) async {
     final currentMode = quiz['pivot']?['grading_mode'] ?? 'automatic';
@@ -297,13 +321,16 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setDialogState) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            title: const Text('Edit Grading Mode'),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16)),
+            title: const Text('Edit Grading Mode',
+                style: TextStyle(color: midnightPlum)),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Change how student answers are graded for this class.'),
+                const Text(
+                    'Change how student answers are graded for this class.'),
                 const SizedBox(height: 16),
                 _GradingModeSelector(
                   value: selectedMode,
@@ -314,13 +341,16 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel'),
+                child: Text('Cancel',
+                    style: TextStyle(color: mutedLavender)),
               ),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context, true),
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4CAF50)),
-                child: const Text('Save', style: TextStyle(color: Colors.white)),
+                  backgroundColor: accentGold,
+                  foregroundColor: midnightPlum,
+                ),
+                child: const Text('Save'),
               ),
             ],
           ),
@@ -342,21 +372,21 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
       _loadClassDetail();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Grading mode updated to ${selectedMode == 'manual' ? 'Manual' : 'Automatic'}!'),
-          backgroundColor: Colors.green,
+          content: Text(
+              'Grading mode updated to ${selectedMode == 'manual' ? 'Manual' : 'Automatic'}!'),
+          backgroundColor: successColor,
         ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(result['message'] ?? 'Failed to update grading mode'),
-          backgroundColor: Colors.red,
+          content:
+              Text(result['message'] ?? 'Failed to update grading mode'),
+          backgroundColor: dangerColor,
         ),
       );
     }
   }
-
-
 
   void _goToReviewSubmissions(Map<String, dynamic> quiz) async {
     await Navigator.pushNamed(
@@ -371,9 +401,6 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
     );
     _loadClassDetail();
   }
-
-
-
 
   // ── Assign existing quiz ────────────────────────────────────────────────────
 
@@ -394,9 +421,8 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
     if (availableQuizzes.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content:
-              Text('All your quizzes are already assigned to this class.'),
-          backgroundColor: Colors.orange,
+          content: Text('All your quizzes are already assigned to this class.'),
+          backgroundColor: warningColor,
         ),
       );
       return;
@@ -407,7 +433,8 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
       builder: (context) => AlertDialog(
         shape:
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Assign Quiz'),
+        title: const Text('Assign Quiz',
+            style: TextStyle(color: midnightPlum)),
         content: SizedBox(
           width: double.maxFinite,
           child: ListView.builder(
@@ -416,17 +443,17 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
             itemBuilder: (context, index) {
               final quiz = availableQuizzes[index];
               return ListTile(
-                title: Text(quiz['title']),
+                title: Text(quiz['title'],
+                    style: const TextStyle(color: midnightPlum)),
                 subtitle: Text(
                   quiz['is_published'] == true ? 'Published' : 'Draft',
                   style: TextStyle(
                     color: quiz['is_published'] == true
-                        ? Colors.green
-                        : Colors.grey,
+                        ? successColor
+                        : mutedLavender,
                   ),
                 ),
-                leading:
-                    const Icon(Icons.quiz, color: Color(0xFF4CAF50)),
+                leading: const Icon(Icons.quiz, color: primaryColor),
                 onTap: () =>
                     Navigator.pop(context, Map<String, dynamic>.from(quiz)),
               );
@@ -436,7 +463,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text('Cancel', style: TextStyle(color: mutedLavender)),
           ),
         ],
       ),
@@ -444,7 +471,6 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
 
     if (selectedQuiz == null || !mounted) return;
 
-    // ── Due date + grading mode dialog ──
     DateTime? selectedDueDate;
     String selectedGradingMode = 'automatic';
 
@@ -455,18 +481,18 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
           builder: (context, setDialogState) => AlertDialog(
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16)),
-            title: const Text('Quiz Settings'),
+            title: const Text('Quiz Settings',
+                style: TextStyle(color: midnightPlum)),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ── Grading mode ──
                 const Text(
                   'Grading Mode',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 13,
-                    color: Color(0xFF333333),
+                    color: midnightPlum,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -476,13 +502,12 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                       setDialogState(() => selectedGradingMode = v),
                 ),
                 const SizedBox(height: 20),
-                // ── Due date ──
                 const Text(
                   'Due Date (Optional)',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 13,
-                    color: Color(0xFF333333),
+                    color: midnightPlum,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -493,15 +518,21 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                       'Due: ${selectedDueDate!.toLocal().toString().substring(0, 16)}',
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF4CAF50),
+                        color: primaryColor,
                       ),
                     ),
                   ),
                 OutlinedButton.icon(
-                  icon: const Icon(Icons.calendar_today),
-                  label: Text(selectedDueDate == null
-                      ? 'Pick Due Date'
-                      : 'Change Due Date'),
+                  icon: const Icon(Icons.calendar_today, color: primaryColor),
+                  label: Text(
+                    selectedDueDate == null
+                        ? 'Pick Due Date'
+                        : 'Change Due Date',
+                    style: const TextStyle(color: primaryColor),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: primaryColor),
+                  ),
                   onPressed: () async {
                     final picked = await _pickDueDate();
                     if (picked != null) {
@@ -514,21 +545,22 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                     onPressed: () =>
                         setDialogState(() => selectedDueDate = null),
                     child: const Text('Clear',
-                        style: TextStyle(color: Colors.red)),
+                        style: TextStyle(color: dangerColor)),
                   ),
               ],
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel'),
+                child: Text('Cancel', style: TextStyle(color: mutedLavender)),
               ),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context, true),
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4CAF50)),
-                child: const Text('Assign',
-                    style: TextStyle(color: Colors.white)),
+                  backgroundColor: accentGold,
+                  foregroundColor: midnightPlum,
+                ),
+                child: const Text('Assign'),
               ),
             ],
           ),
@@ -558,14 +590,14 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Quiz assigned successfully!'),
-          backgroundColor: Colors.green,
+          backgroundColor: successColor,
         ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(assignResult['message']),
-          backgroundColor: Colors.red,
+          backgroundColor: dangerColor,
         ),
       );
     }
@@ -575,19 +607,22 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Remove Quiz'),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Remove Quiz',
+            style: TextStyle(color: midnightPlum)),
         content: Text('Remove "${quiz['title']}" from this class?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text('Cancel', style: TextStyle(color: mutedLavender)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child:
-                const Text('Remove', style: TextStyle(color: Colors.white)),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: dangerColor,
+                foregroundColor: Colors.white),
+            child: const Text('Remove'),
           ),
         ],
       ),
@@ -605,7 +640,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Quiz removed from class!'),
-          backgroundColor: Colors.green,
+          backgroundColor: successColor,
         ),
       );
     }
@@ -627,20 +662,77 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
         res['success']
             ? const SnackBar(
                 content: Text('Excel file downloaded successfully!'),
-                backgroundColor: Color(0xFF4CAF50),
+                backgroundColor: successColor,
               )
             : SnackBar(
                 content: Text(res['message'] ?? 'Download failed'),
-                backgroundColor: Colors.red,
+                backgroundColor: dangerColor,
               ),
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        SnackBar(
+            content: Text('Error: $e'), backgroundColor: dangerColor),
       );
     } finally {
       if (mounted) setState(() => _isExportingStudents = false);
+    }
+  }
+
+  Future<void> _removeStudent(Map<String, dynamic> student) async {
+    final name = '${student['first_name'] ?? ''} ${student['surname'] ?? ''}'.trim();
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Remove Student', style: TextStyle(color: midnightPlum)),
+        content: Text(
+          'Remove "$name" from this class?\n\nTheir quiz attempts and scores will be kept.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Cancel', style: TextStyle(color: mutedLavender)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: dangerColor,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    final userId = student['user_id'] ?? student['id'];
+
+    final result = await AuthService.authDelete(
+      '/classes/${widget.classId}/students/$userId',
+    );
+
+    if (!mounted) return;
+
+    if (result['success'] == true) {
+      _loadStudentPerformance();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('$name removed from class.'),
+          backgroundColor: successColor,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message'] ?? 'Failed to remove student.'),
+          backgroundColor: dangerColor,
+        ),
+      );
     }
   }
 
@@ -663,6 +755,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
+      backgroundColor: Colors.white,
       builder: (context) => Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -674,12 +767,12 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
               style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF333333)),
+                  color: midnightPlum),
             ),
             const SizedBox(height: 8),
             Text(
               'Choose how you want to add a quiz to this class.',
-              style: TextStyle(color: Colors.grey.shade600),
+              style: TextStyle(color: mutedLavender),
             ),
             const SizedBox(height: 24),
             ListTile(
@@ -691,19 +784,21 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF6C63FF).withOpacity(0.1),
+                  color: primaryColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child:
-                    const Icon(Icons.add_circle, color: Color(0xFF6C63FF)),
+                child: const Icon(Icons.add_circle, color: primaryColor),
               ),
               title: const Text('Create New Quiz',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: const Text(
-                  'Create a brand new quiz and assign it to this class'),
-              trailing: const Icon(Icons.chevron_right),
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold, color: midnightPlum)),
+              subtitle: Text(
+                  'Create a brand new quiz and assign it to this class',
+                  style: TextStyle(color: mutedLavender)),
+              trailing:
+                  const Icon(Icons.chevron_right, color: mutedLavender),
             ),
-            const Divider(),
+            Divider(color: softPurple.withOpacity(0.3)),
             ListTile(
               onTap: () async {
                 Navigator.pop(context);
@@ -713,17 +808,20 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF4CAF50).withOpacity(0.1),
+                  color: highlightPurple.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(Icons.playlist_add,
-                    color: Color(0xFF4CAF50)),
+                    color: highlightPurple),
               ),
               title: const Text('Assign Existing Quiz',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: const Text(
-                  'Pick from your existing quizzes and assign to this class'),
-              trailing: const Icon(Icons.chevron_right),
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold, color: midnightPlum)),
+              subtitle: Text(
+                  'Pick from your existing quizzes and assign to this class',
+                  style: TextStyle(color: mutedLavender)),
+              trailing:
+                  const Icon(Icons.chevron_right, color: mutedLavender),
             ),
             const SizedBox(height: 16),
           ],
@@ -743,16 +841,24 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
       builder: (context) => AlertDialog(
         shape:
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Create New Quiz'),
+        title: const Text('Create New Quiz',
+            style: TextStyle(color: midnightPlum)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: nameController,
               maxLength: 100,
+              style: const TextStyle(color: midnightPlum),
               decoration: InputDecoration(
                 labelText: 'Quiz Title',
+                labelStyle: const TextStyle(color: mutedLavender),
                 hintText: 'e.g. Chapter 1 Quiz',
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide:
+                      const BorderSide(color: primaryColor, width: 2),
+                ),
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12)),
               ),
@@ -762,8 +868,15 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
               controller: descController,
               maxLength: 200,
               maxLines: 3,
+              style: const TextStyle(color: midnightPlum),
               decoration: InputDecoration(
                 labelText: 'Description (optional)',
+                labelStyle: const TextStyle(color: mutedLavender),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide:
+                      const BorderSide(color: primaryColor, width: 2),
+                ),
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12)),
               ),
@@ -773,14 +886,15 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text('Cancel', style: TextStyle(color: mutedLavender)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF6C63FF)),
-            child:
-                const Text('Create', style: TextStyle(color: Colors.white)),
+              backgroundColor: accentGold,
+              foregroundColor: midnightPlum,
+            ),
+            child: const Text('Create'),
           ),
         ],
       ),
@@ -793,7 +907,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Quiz title is required!'),
-          backgroundColor: Colors.orange,
+          backgroundColor: warningColor,
         ),
       );
       return;
@@ -809,7 +923,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(createResult['message']),
-          backgroundColor: Colors.red,
+          backgroundColor: dangerColor,
         ),
       );
       return;
@@ -817,7 +931,6 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
 
     final newQuizId = createResult['data']['data']['id'];
 
-    // ── Grading mode dialog for new quiz ──
     String selectedGradingMode = 'automatic';
 
     if (!mounted) return;
@@ -828,7 +941,8 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
           builder: (context, setDialogState) => AlertDialog(
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16)),
-            title: const Text('Grading Mode'),
+            title: const Text('Grading Mode',
+                style: TextStyle(color: midnightPlum)),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -845,14 +959,16 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel'),
+                child: Text('Cancel',
+                    style: TextStyle(color: mutedLavender)),
               ),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context, true),
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4CAF50)),
-                child: const Text('Assign',
-                    style: TextStyle(color: Colors.white)),
+                  backgroundColor: accentGold,
+                  foregroundColor: midnightPlum,
+                ),
+                child: const Text('Assign'),
               ),
             ],
           ),
@@ -877,7 +993,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Quiz created and assigned to class!'),
-          backgroundColor: Colors.green,
+          backgroundColor: successColor,
         ),
       );
       await Navigator.pushNamed(
@@ -893,7 +1009,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(assignResult['message']),
-          backgroundColor: Colors.red,
+          backgroundColor: dangerColor,
         ),
       );
     }
@@ -904,9 +1020,9 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
   // ─────────────────────────────────────────────────────────────────────────────
 
   Color _getGradeColor(double percentage) {
-    if (percentage >= 75) return const Color(0xFF4CAF50);
-    if (percentage >= 50) return Colors.orange;
-    return Colors.red;
+    if (percentage >= 75) return successColor;
+    if (percentage >= 50) return warningColor;
+    return dangerColor;
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -916,16 +1032,27 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: background,
       appBar: AppBar(
-        title: Text(widget.className, style: const TextStyle(fontSize: 16)),
-        backgroundColor: const Color(0xFF4CAF50),
+        title: Text(widget.className,
+            style: const TextStyle(fontSize: 16, color: Colors.white)),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [primaryColor, primaryDark],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: Colors.white,
+          indicatorColor: accentGold,
+          indicatorWeight: 3,
           labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
+          unselectedLabelColor: Colors.white60,
           tabs: const [
             Tab(icon: Icon(Icons.people), text: 'Students'),
             Tab(icon: Icon(Icons.quiz), text: 'Quizzes'),
@@ -939,7 +1066,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
   Widget _buildBody() {
     if (_isLoading) {
       return const Center(
-        child: CircularProgressIndicator(color: Color(0xFF4CAF50)),
+        child: CircularProgressIndicator(color: primaryColor),
       );
     }
 
@@ -950,14 +1077,18 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 60, color: Colors.red),
+              const Icon(Icons.error_outline, size: 60, color: dangerColor),
               const SizedBox(height: 16),
               Text(_errorMessage!,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.red)),
+                  style: const TextStyle(color: dangerColor)),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _loadClassDetail,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: accentGold,
+                  foregroundColor: midnightPlum,
+                ),
                 child: const Text('Retry'),
               ),
             ],
@@ -975,22 +1106,20 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
         // ── Class code banner ──
         Container(
           width: double.infinity,
-          padding:
-              const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          color: const Color(0xFF4CAF50).withOpacity(0.1),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          color: primaryColor.withOpacity(0.08),
           child: Row(
             children: [
-              const Icon(Icons.key, color: Color(0xFF4CAF50), size: 20),
+              const Icon(Icons.key, color: primaryColor, size: 20),
               const SizedBox(width: 8),
               Text(
                 'Class Code: ',
-                style: TextStyle(
-                    color: Colors.grey.shade600, fontSize: 14),
+                style: TextStyle(color: mutedLavender, fontSize: 14),
               ),
               Text(
                 classCode,
                 style: const TextStyle(
-                  color: Color(0xFF4CAF50),
+                  color: primaryColor,
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
                   letterSpacing: 2,
@@ -999,8 +1128,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
               const Spacer(),
               IconButton(
                 onPressed: _copyClassCode,
-                icon: const Icon(Icons.copy,
-                    color: Color(0xFF4CAF50), size: 20),
+                icon: const Icon(Icons.copy, color: primaryColor, size: 20),
                 tooltip: 'Copy code',
               ),
             ],
@@ -1035,7 +1163,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
 
     if (_isLoadingStudents) {
       return const Center(
-        child: CircularProgressIndicator(color: Color(0xFF4CAF50)),
+        child: CircularProgressIndicator(color: primaryColor),
       );
     }
 
@@ -1046,14 +1174,18 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 60, color: Colors.red),
+              const Icon(Icons.error_outline, size: 60, color: dangerColor),
               const SizedBox(height: 16),
               Text(_studentsError!,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.red)),
+                  style: const TextStyle(color: dangerColor)),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _loadStudentPerformance,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: accentGold,
+                  foregroundColor: midnightPlum,
+                ),
                 child: const Text('Retry'),
               ),
             ],
@@ -1067,28 +1199,26 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.people_outline,
-                size: 70, color: Colors.grey.shade400),
+            Icon(Icons.people_outline, size: 70, color: softPurple),
             const SizedBox(height: 16),
             Text('No students yet.',
-                style: TextStyle(
-                    fontSize: 16, color: Colors.grey.shade600)),
+                style: TextStyle(fontSize: 16, color: mutedLavender)),
             const SizedBox(height: 8),
             Text(
               'Share the class code with your students!',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey.shade500),
+              style: TextStyle(color: mutedLavender),
             ),
             const SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: _copyClassCode,
-              icon: const Icon(Icons.copy, color: Colors.white),
+              icon: const Icon(Icons.copy, color: midnightPlum),
               label: Text(
                 'Copy Code: ${_classData!['class_code']}',
-                style: const TextStyle(color: Colors.white),
+                style: const TextStyle(color: midnightPlum),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF4CAF50),
+                backgroundColor: accentGold,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
               ),
@@ -1106,7 +1236,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
 
     return RefreshIndicator(
       onRefresh: _loadStudentPerformance,
-      color: const Color(0xFF4CAF50),
+      color: primaryColor,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         child: Column(
@@ -1121,7 +1251,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                       'Total Students',
                       totalStudents.toString(),
                       Icons.people,
-                      const Color(0xFF6C63FF),
+                      primaryColor,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -1130,7 +1260,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                       'Total Quizzes',
                       totalQuizzes.toString(),
                       Icons.quiz,
-                      const Color(0xFF4CAF50),
+                      highlightPurple,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -1140,10 +1270,10 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                       '${classAverage.toStringAsFixed(1)}%',
                       Icons.percent,
                       classAverage >= 75
-                          ? const Color(0xFF4CAF50)
+                          ? successColor
                           : classAverage >= 50
-                              ? Colors.orange
-                              : Colors.red,
+                              ? warningColor
+                              : dangerColor,
                     ),
                   ),
                 ],
@@ -1164,15 +1294,16 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                           width: 18,
                           height: 18,
                           child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white),
+                              strokeWidth: 2, color: midnightPlum),
                         )
-                      : const Icon(Icons.download, color: Colors.white),
+                      : const Icon(Icons.download, color: midnightPlum),
                   label: Text(
                     _isExportingStudents ? 'Exporting...' : 'Export to Excel',
-                    style: const TextStyle(color: Colors.white),
+                    style: const TextStyle(color: midnightPlum),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4CAF50),
+                    backgroundColor: accentGold,
+                    disabledBackgroundColor: accentGold.withOpacity(0.6),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
@@ -1185,14 +1316,13 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
 
             // ── Performance table ──
             Container(
-              margin: const EdgeInsets.symmetric(
-                  horizontal: 16, vertical: 8),
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: plumShadow.withOpacity(0.10),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -1208,7 +1338,13 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                       children: [
                         // Header row
                         Container(
-                          color: const Color(0xFF4CAF50),
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [primaryColor, primaryDark],
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                            ),
+                          ),
                           child: Row(
                             children: [
                               SizedBox(
@@ -1236,6 +1372,21 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                                 child: _buildStudentSortableHeader(
                                     'Overall Grade', 'overall_percentage'),
                               ),
+                              SizedBox(
+                                width: 60,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                                  child: Text(
+                                    'Action',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              
                             ],
                           ),
                         ),
@@ -1245,16 +1396,15 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                           physics: const NeverScrollableScrollPhysics(),
                           itemCount: _studentResults.length,
                           separatorBuilder: (_, __) => Divider(
-                              height: 1, color: Colors.grey.shade200),
+                              height: 1,
+                              color: softPurple.withOpacity(0.25)),
                           itemBuilder: (context, index) {
                             final student = _studentResults[index];
                             final percentage =
                                 (student['overall_percentage'] ?? 0)
                                     .toDouble();
-                            final gradeColor =
-                                _getGradeColor(percentage);
-                            final quizzesTaken =
-                                student['quizzes_taken'] ?? 0;
+                            final gradeColor = _getGradeColor(percentage);
+                            final quizzesTaken = student['quizzes_taken'] ?? 0;
                             final totalQuizCount =
                                 student['total_quizzes'] ?? 0;
                             final hasTakenAny =
@@ -1263,15 +1413,13 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                             return Container(
                               color: index % 2 == 0
                                   ? Colors.white
-                                  : const Color(0xFFFAFAFA),
+                                  : primaryLight.withOpacity(0.35),
                               child: Row(
                                 children: [
                                   SizedBox(
                                     width: 120,
                                     child: _buildStudentDataCell(
-                                      student['student_id']
-                                              ?.toString() ??
-                                          '-',
+                                      student['student_id']?.toString() ?? '-',
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
@@ -1293,8 +1441,8 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                                       '$quizzesTaken / $totalQuizCount',
                                       fontWeight: FontWeight.w600,
                                       color: hasTakenAny
-                                          ? const Color(0xFF333333)
-                                          : Colors.grey,
+                                          ? midnightPlum
+                                          : mutedLavender,
                                     ),
                                   ),
                                   SizedBox(
@@ -1303,12 +1451,10 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                                       padding: const EdgeInsets.symmetric(
                                           horizontal: 8, vertical: 8),
                                       child: Container(
-                                        padding:
-                                            const EdgeInsets.symmetric(
-                                                horizontal: 8, vertical: 4),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 8, vertical: 4),
                                         decoration: BoxDecoration(
-                                          color: gradeColor
-                                              .withOpacity(0.1),
+                                          color: gradeColor.withOpacity(0.1),
                                           borderRadius:
                                               BorderRadius.circular(8),
                                         ),
@@ -1321,6 +1467,17 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                                             color: gradeColor,
                                           ),
                                         ),
+                                      ),
+                                    ),
+                                  ),
+
+                                  SizedBox(
+                                    width: 60,
+                                    child: Center(
+                                      child: IconButton(
+                                        icon: const Icon(Icons.person_remove, color: dangerColor, size: 18),
+                                        tooltip: 'Remove student',
+                                        onPressed: () => _removeStudent(student),
                                       ),
                                     ),
                                   ),
@@ -1354,26 +1511,25 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.quiz_outlined,
-                        size: 70, color: Colors.grey.shade400),
+                    Icon(Icons.quiz_outlined, size: 70, color: softPurple),
                     const SizedBox(height: 16),
                     Text(
                       'No quizzes assigned yet.',
-                      style: TextStyle(
-                          fontSize: 16, color: Colors.grey.shade600),
+                      style:
+                          TextStyle(fontSize: 16, color: mutedLavender),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'Tap the button below to add a quiz!',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.grey.shade500),
+                      style: TextStyle(color: mutedLavender),
                     ),
                   ],
                 ),
               )
             : RefreshIndicator(
                 onRefresh: _loadClassDetail,
-                color: const Color(0xFF4CAF50),
+                color: primaryColor,
                 child: ListView.builder(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
                   itemCount: quizzes.length,
@@ -1391,10 +1547,11 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
           bottom: 16,
           child: FloatingActionButton.extended(
             onPressed: _showQuizOptions,
-            backgroundColor: const Color(0xFF4CAF50),
-            icon: const Icon(Icons.add, color: Colors.white),
+            backgroundColor: accentGold,
+            foregroundColor: midnightPlum,
+            icon: const Icon(Icons.add),
             label: const Text('Add Quiz',
-                style: TextStyle(color: Colors.white)),
+                style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ),
       ],
@@ -1409,7 +1566,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
     final dueDate = quiz['pivot']?['due_date'];
     final parsedDue = dueDate != null ? DateTime.tryParse(dueDate) : null;
     final isOverdue = parsedDue != null && parsedDue.isBefore(DateTime.now());
-    final dueDateColor = isOverdue ? Colors.red : Colors.orange.shade700;
+    final dueDateColor = isOverdue ? dangerColor : warningColor;
 
     final gradingMode = quiz['pivot']?['grading_mode'] ?? 'automatic';
     final isManual = gradingMode == 'manual';
@@ -1420,6 +1577,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
       shape:
           RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       elevation: 2,
+      shadowColor: plumShadow.withOpacity(0.15),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: () async {
@@ -1444,10 +1602,10 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF4CAF50).withOpacity(0.1),
+                      color: primaryColor.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.quiz, color: Color(0xFF4CAF50)),
+                    child: const Icon(Icons.quiz, color: primaryColor),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -1459,7 +1617,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 15,
-                            color: Color(0xFF333333),
+                            color: midnightPlum,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -1468,21 +1626,17 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                           spacing: 6,
                           runSpacing: 4,
                           children: [
-                            // Published / Draft badge
                             _buildBadge(
                               label: quiz['is_published'] == true
                                   ? 'Published'
                                   : 'Draft',
                               color: quiz['is_published'] == true
-                                  ? Colors.green
-                                  : Colors.grey,
+                                  ? successColor
+                                  : mutedLavender,
                             ),
-                            // Grading mode badge
                             _buildBadge(
                               label: isManual ? 'Manual' : 'Auto',
-                              color: isManual
-                                  ? const Color(0xFF6C63FF)
-                                  : const Color(0xFF4CAF50),
+                              color: isManual ? highlightPurple : primaryColor,
                               icon: isManual
                                   ? Icons.rate_review_outlined
                                   : Icons.bolt,
@@ -1492,8 +1646,8 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                         const SizedBox(height: 4),
                         Text(
                           '${quiz['questions_count'] ?? 0} questions',
-                          style: TextStyle(
-                              fontSize: 12, color: Colors.grey.shade600),
+                          style:
+                              TextStyle(fontSize: 12, color: mutedLavender),
                         ),
                         const SizedBox(height: 4),
                         if (parsedDue != null)
@@ -1513,16 +1667,16 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                             ],
                           )
                         else
-                          const Row(
+                          Row(
                             children: [
                               Icon(Icons.info_outline,
-                                  size: 13, color: Colors.grey),
-                              SizedBox(width: 4),
+                                  size: 13, color: mutedLavender),
+                              const SizedBox(width: 4),
                               Text(
                                 'No deadline set',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: Colors.grey,
+                                  color: mutedLavender,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -1531,10 +1685,10 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                       ],
                     ),
                   ),
-                  const Icon(Icons.chevron_right, color: Colors.grey),
+                  Icon(Icons.chevron_right, color: mutedLavender),
                 ],
               ),
-              const Divider(height: 20),
+              Divider(height: 20, color: softPurple.withOpacity(0.3)),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -1547,19 +1701,14 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
-                            Icons.lock_outline,
-                            size: 14,
-                            color: Colors.orange.shade700,
-                          ),
+                          Icon(Icons.lock_outline,
+                              size: 14, color: warningColor),
                           const SizedBox(width: 4),
                           Text(
-                            isManual
-                                ? 'Locked · Manual'
-                                : 'Has attempts',
+                            isManual ? 'Locked · Manual' : 'Has attempts',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.orange.shade700,
+                              color: warningColor,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -1571,12 +1720,13 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
 
                   // ── Actions menu ──
                   PopupMenuButton<String>(
-                    icon: const Icon(Icons.more_vert, color: Colors.grey),
+                    icon: Icon(Icons.more_vert, color: mutedLavender),
                     onSelected: (value) {
                       if (value == 'view_results') _viewClassQuizResults(quiz);
                       if (value == 'edit_due') _editDueDate(quiz);
                       if (value == 'edit_grading_mode') _editGradingMode(quiz);
-                      if (value == 'review_submissions') _goToReviewSubmissions(quiz); 
+                      if (value == 'review_submissions')
+                        _goToReviewSubmissions(quiz);
                       if (value == 'remove') _unassignQuiz(quiz);
                     },
                     itemBuilder: (context) => [
@@ -1585,7 +1735,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                         child: Row(
                           children: [
                             Icon(Icons.bar_chart,
-                                size: 18, color: Color(0xFF6C63FF)),
+                                size: 18, color: primaryColor),
                             SizedBox(width: 8),
                             Text('View Results'),
                           ],
@@ -1596,7 +1746,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                         child: Row(
                           children: [
                             Icon(Icons.edit_calendar,
-                                size: 18, color: Color(0xFF4CAF50)),
+                                size: 18, color: highlightPurple),
                             SizedBox(width: 8),
                             Text('Edit Due Date'),
                           ],
@@ -1606,7 +1756,8 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                         value: 'edit_grading_mode',
                         child: Row(
                           children: [
-                            Icon(Icons.tune, size: 18, color: Color(0xFF6C63FF)),
+                            Icon(Icons.tune,
+                                size: 18, color: primaryColor),
                             SizedBox(width: 8),
                             Text('Edit Grading Mode'),
                           ],
@@ -1617,10 +1768,12 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                           value: 'review_submissions',
                           child: Row(
                             children: [
-                              Icon(Icons.rate_review_outlined, size: 18, color: Color(0xFF6C63FF)),
+                              Icon(Icons.rate_review_outlined,
+                                  size: 18, color: highlightPurple),
                               SizedBox(width: 8),
                               Text('Review Submissions',
-                                  style: TextStyle(color: Color(0xFF6C63FF))),
+                                  style:
+                                      TextStyle(color: highlightPurple)),
                             ],
                           ),
                         ),
@@ -1630,19 +1783,15 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                           child: Row(
                             children: [
                               Icon(Icons.remove_circle,
-                                  size: 18, color: Colors.red),
+                                  size: 18, color: dangerColor),
                               SizedBox(width: 8),
                               Text('Remove',
-                                  style: TextStyle(color: Colors.red)),
+                                  style: TextStyle(color: dangerColor)),
                             ],
                           ),
                         ),
                     ],
                   ),
-                 
-
-
-
                 ],
               ),
             ],
@@ -1696,7 +1845,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: plumShadow.withOpacity(0.10),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -1714,8 +1863,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
           const SizedBox(height: 4),
           Text(
             label,
-            style:
-                TextStyle(fontSize: 10, color: Colors.grey.shade600),
+            style: TextStyle(fontSize: 10, color: mutedLavender),
             textAlign: TextAlign.center,
           ),
         ],
@@ -1728,8 +1876,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
     return InkWell(
       onTap: () => _onStudentSort(column),
       child: Container(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -1763,13 +1910,12 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
   Widget _buildStudentDataCell(String text,
       {Color? color, FontWeight? fontWeight}) {
     return Padding(
-      padding:
-          const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
       child: Text(
         text,
         style: TextStyle(
           fontSize: 12,
-          color: color ?? const Color(0xFF333333),
+          color: color ?? midnightPlum,
           fontWeight: fontWeight ?? FontWeight.normal,
         ),
         overflow: TextOverflow.ellipsis,
@@ -1791,6 +1937,9 @@ class _GradingModeSelector extends StatelessWidget {
     required this.onChanged,
   });
 
+  static const Color primaryColor    = Color(0xFF5B2A9B);
+  static const Color highlightPurple = Color(0xFFA14BC9);
+
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -1800,7 +1949,7 @@ class _GradingModeSelector extends StatelessWidget {
             label: 'Automatic',
             description: 'Instant scoring',
             icon: Icons.bolt,
-            color: const Color(0xFF4CAF50),
+            color: primaryColor,
             selected: value == 'automatic',
             onTap: () => onChanged('automatic'),
           ),
@@ -1811,7 +1960,7 @@ class _GradingModeSelector extends StatelessWidget {
             label: 'Manual',
             description: 'Teacher reviews',
             icon: Icons.rate_review_outlined,
-            color: const Color(0xFF6C63FF),
+            color: highlightPurple,
             selected: value == 'manual',
             onTap: () => onChanged('manual'),
           ),
@@ -1828,6 +1977,9 @@ class _ModeOption extends StatelessWidget {
   final Color color;
   final bool selected;
   final VoidCallback onTap;
+
+  static const Color mutedLavender = Color(0xFFA99BC4);
+  static const Color primaryLight  = Color(0xFFEDE7F2);
 
   const _ModeOption({
     required this.label,
@@ -1846,30 +1998,33 @@ class _ModeOption extends StatelessWidget {
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: selected ? color.withOpacity(0.1) : Colors.grey.shade100,
+          color: selected ? color.withOpacity(0.1) : primaryLight.withOpacity(0.4),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: selected ? color : Colors.grey.shade300,
+            color: selected ? color : mutedLavender.withOpacity(0.5),
             width: selected ? 2 : 1,
           ),
         ),
         child: Column(
           children: [
-            Icon(icon, color: selected ? color : Colors.grey, size: 22),
+            Icon(icon,
+                color: selected ? color : mutedLavender, size: 22),
             const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.bold,
-                color: selected ? color : Colors.grey.shade600,
+                color: selected ? color : mutedLavender,
               ),
             ),
             Text(
               description,
               style: TextStyle(
                 fontSize: 10,
-                color: selected ? color.withOpacity(0.8) : Colors.grey.shade500,
+                color: selected
+                    ? color.withOpacity(0.8)
+                    : mutedLavender.withOpacity(0.8),
               ),
               textAlign: TextAlign.center,
             ),
