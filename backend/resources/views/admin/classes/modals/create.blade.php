@@ -1,5 +1,3 @@
-@php $isSuperAdmin = isset($isSuperAdmin) ? $isSuperAdmin : (auth()->check() && auth()->user()->role === 'superadmin'); @endphp
-
 <div id="createClassModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
 
     <div class="relative w-full max-w-2xl rounded-3xl bg-white p-6 shadow-2xl">
@@ -66,10 +64,10 @@
     rows="4"
     class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
     placeholder="Enter class description (optional)"
-    maxlength="50"
-    oninput="this.value.length >= 50 ? document.getElementById('createDescError').classList.remove('hidden') : document.getElementById('createDescError').classList.add('hidden')"
+    maxlength="150"
+    oninput="this.value.length >= 150 ? document.getElementById('createDescError').classList.remove('hidden') : document.getElementById('createDescError').classList.add('hidden')"
 ></textarea>
-<p id="createDescError" class="mt-1 hidden text-xs font-medium text-red-500">That's too long! Make it less than 50 characters.</p>
+<p id="createDescError" class="mt-1 hidden text-xs font-medium text-red-500">That's too long! Make it less than 150 characters.</p>
             </div>
 
             <div class="flex justify-end gap-3 pt-2">

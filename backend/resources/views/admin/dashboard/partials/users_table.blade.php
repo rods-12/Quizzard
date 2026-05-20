@@ -3,7 +3,7 @@
         ? $isSuperAdmin
         : (auth()->check() && auth()->user()->role === 'superadmin');
 @endphp
-//users._table.blade.php//
+{{-- //users._table.blade.php// --}}
 <div class="overflow-x-auto p-2">
     <table class="min-w-full table-fixed border-separate border-spacing-y-3 text-sm text-slate-700">
         <thead class="text-left text-xs font-bold uppercase tracking-wide text-slate-600">

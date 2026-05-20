@@ -107,18 +107,6 @@ class StudentProfileSummarySheet implements
         ];
     }
 
-    private static function formatDuration(int $seconds): string
-    {
-        $hours = intdiv($seconds, 3600);
-        $minutes = intdiv($seconds % 3600, 60);
-        $remainingSeconds = $seconds % 60;
-
-        if ($hours > 0) {
-            return "{$hours}h {$minutes}m";
-        }
-
-        return $minutes > 0 ? "{$minutes}m {$remainingSeconds}s" : "{$remainingSeconds}s";
-    }
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -160,7 +148,7 @@ class StudentProfileAttemptsSheet implements
     public function headings(): array
     {
         return [
-            ['QUIZ ATTEMPT HISTORY — ' . strtoupper($this->student->full_name)],
+            ['QUIZ ATTEMPT HISTORY - ' . strtoupper($this->student->full_name ?: $this->student->name ?: $this->student->email)],
             ['Generated: ' . now()->format('F d, Y h:i A')],
             [''],
             ['Quiz', 'Class', 'Score', 'Percentage', 'Status', 'Date', 'Duration'],
@@ -188,6 +176,19 @@ class StudentProfileAttemptsSheet implements
                 'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
             ],
         ];
+    }
+
+    private static function formatDuration(int $seconds): string
+    {
+        $hours = intdiv($seconds, 3600);
+        $minutes = intdiv($seconds % 3600, 60);
+        $remainingSeconds = $seconds % 60;
+
+        if ($hours > 0) {
+            return "{$hours}h {$minutes}m";
+        }
+
+        return $minutes > 0 ? "{$minutes}m {$remainingSeconds}s" : "{$remainingSeconds}s";
     }
 }
 
@@ -222,7 +223,7 @@ class StudentProfileWeakAreasSheet implements
     public function headings(): array
     {
         return [
-            ['WEAK AREAS — ' . strtoupper($this->student->full_name)],
+            ['WEAK AREAS - ' . strtoupper($this->student->full_name ?: $this->student->name ?: $this->student->email)],
             ['Questions this student answers incorrectly most often'],
             [''],
             ['Question', 'Quiz', 'Times Wrong', 'Times Seen', 'Error Rate'],

@@ -21,7 +21,7 @@
 
         <label class="flex flex-col gap-1">
             <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">Date Range</span>
-            <select name="date_mode" class="{{ $controlClass }} min-w-[140px]" data-date-mode>
+            <select name="date_mode" class="{{ $controlClass }} min-w-[140px]" data-date-mode data-compact-select>
                 <option value="all" {{ $dateMode === 'all' ? 'selected' : '' }}>All Time</option>
                 <option value="range" {{ $dateMode === 'range' ? 'selected' : '' }}>Custom Range</option>
             </select>
@@ -30,12 +30,14 @@
         <label class="flex flex-col gap-1" data-date-field>
             <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">From</span>
             <input type="date" name="date_from" value="{{ old('date_from', $filters['date_from'] ?? '') }}"
+                   min="2010-01-01" max="2026-12-31"
                    class="{{ $controlClass }}" data-date-input>
         </label>
 
         <label class="flex flex-col gap-1" data-date-field>
             <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">To</span>
             <input type="date" name="date_to" value="{{ old('date_to', $filters['date_to'] ?? '') }}"
+                   min="2010-01-01" max="2026-12-31"
                    class="{{ $controlClass }}" data-date-input>
         </label>
 
@@ -83,6 +85,10 @@
                     const year = value.split('-')[0] || '';
                     return /^\d{4}$/.test(year);
                 };
+                const withinAllowedYearRange = (value) => {
+                    if (!value) return false;
+                    return value >= '2010-01-01' && value <= '2026-12-31';
+                };
                 const validate = () => {
                     const currentState = new FormData(form);
                     let changed = false;
@@ -104,6 +110,8 @@
                         message = 'Choose both start and end dates, or use All Time.';
                     } else if (!validFourDigitYear(from.value) || !validFourDigitYear(to.value)) {
                         message = 'Years must be exactly 4 digits.';
+                    } else if (!withinAllowedYearRange(from.value) || !withinAllowedYearRange(to.value)) {
+                        message = 'Dates must be between 2010 and 2026.';
                     } else if (to.value < from.value) {
                         message = 'End date must be the same as or after the start date.';
                     }
@@ -129,6 +137,22 @@
                     }
                 });
                 syncDateFields();
+            });
+
+            document.querySelectorAll('[data-compact-select]').forEach((select) => {
+                const close = () => {
+                    select.size = 1;
+                    select.classList.remove('shadow-lg');
+                };
+                const open = () => {
+                    select.size = Math.min(select.options.length, 8);
+                    select.classList.add('shadow-lg');
+                };
+
+                select.addEventListener('focus', open);
+                select.addEventListener('mousedown', open);
+                select.addEventListener('change', close);
+                select.addEventListener('blur', close);
             });
         </script>
     @endpush

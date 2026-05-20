@@ -97,6 +97,6 @@ jobs:
         working-directory: backend
         run: npm run build
 
-      - name: Run tests
+      - name: Run PHPUnit tests
         working-directory: backend
-        run: php artisan test
+        run: ./vendor/bin/phpunit

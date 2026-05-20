@@ -40,6 +40,7 @@
                 </form>
                 {{-- Export --}}
                 <a href="{{ route('admin.analytics.classes.export', request()->query()) }}"
+                   data-no-loading="true"
                    class="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500 transition">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -54,9 +55,9 @@
     @include('admin.analytics.partials.nav')
     @php
         $teacherOptions = $teachers->map(fn($teacher) => '<option value="' . e($teacher->id) . '"' . (($filters['teacher_id'] ?? null) == $teacher->id ? ' selected' : '') . '>' . e($teacher->name ?: $teacher->email) . '</option>')->implode('');
-        $teacherFilter = '<label class="flex min-w-[190px] flex-col gap-1"><span class="text-xs font-semibold uppercase tracking-wide text-slate-500">Teacher</span><select name="teacher_id" class="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-800 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"><option value="">All Teachers</option>' . $teacherOptions . '</select></label>';
+        $teacherFilter = '<label class="flex min-w-[190px] flex-col gap-1"><span class="text-xs font-semibold uppercase tracking-wide text-slate-500">Teacher</span><select name="teacher_id" data-compact-select class="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-800 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"><option value="">All Teachers</option>' . $teacherOptions . '</select></label>';
     @endphp
-    @include('admin.analytics.partials.filter-bar', ['routeName' => 'admin.analytics.classes', 'filters' => $filters, 'extraFields' => $teacherFilter])
+    @include('admin.analytics.partials.filter-bar', ['routeName' => 'admin.analytics.classes', 'filters' => $filters, 'extraFields' => $teacherFilter, 'showSearch' => false])
 
     {{-- ===== KPI STRIP ===== --}}
     <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -130,12 +131,12 @@
                         @endphp
                         <tr class="hover:bg-slate-50 transition {{ $rowBg }}">
                             <td class="px-4 py-3 text-center font-bold text-lg">{{ $medal }}</td>
-                            <td class="px-4 py-3">
+                            <td class="max-w-[220px] px-4 py-3">
                                 <a href="{{ route('admin.analytics.classes.show', $class->id) }}"
-                                   class="font-semibold text-blue-600 hover:underline">{{ $class->name }}</a>
-                                <p class="text-xs text-slate-400">{{ $class->students_count ?? 0 }} students</p>
+                                   class="block truncate font-semibold text-blue-600 hover:underline" title="{{ $class->name }}">{{ $class->name }}</a>
+                                <p class="truncate text-xs text-slate-400">{{ $class->students_count ?? 0 }} students</p>
                             </td>
-                            <td class="px-4 py-3 text-slate-600">{{ $class->teacher_name ?? '—' }}</td>
+                            <td class="max-w-[180px] truncate px-4 py-3 text-slate-600" title="{{ $class->teacher_name ?? '—' }}">{{ $class->teacher_name ?? '—' }}</td>
                             <td class="px-4 py-3 text-right">
                                 <span class="font-semibold text-emerald-600">{{ number_format($class->pass_rate ?? 0, 1) }}%</span>
                             </td>
@@ -170,12 +171,12 @@
                         @forelse($bottomClasses as $i => $class)
                         <tr class="hover:bg-red-50 transition">
                             <td class="px-4 py-3 text-center font-bold text-slate-500">#{{ $i+1 }}</td>
-                            <td class="px-4 py-3">
+                            <td class="max-w-[220px] px-4 py-3">
                                 <a href="{{ route('admin.analytics.classes.show', $class->id) }}"
-                                   class="font-semibold text-blue-600 hover:underline">{{ $class->name }}</a>
-                                <p class="text-xs text-slate-400">{{ $class->students_count ?? 0 }} students</p>
+                                   class="block truncate font-semibold text-blue-600 hover:underline" title="{{ $class->name }}">{{ $class->name }}</a>
+                                <p class="truncate text-xs text-slate-400">{{ $class->students_count ?? 0 }} students</p>
                             </td>
-                            <td class="px-4 py-3 text-slate-600">{{ $class->teacher_name ?? '—' }}</td>
+                            <td class="max-w-[180px] truncate px-4 py-3 text-slate-600" title="{{ $class->teacher_name ?? '—' }}">{{ $class->teacher_name ?? '—' }}</td>
                             <td class="px-4 py-3 text-right">
                                 <span class="font-semibold text-red-500">{{ number_format($class->pass_rate ?? 0, 1) }}%</span>
                             </td>
@@ -205,14 +206,14 @@
                 <input type="text" name="search" value="{{ $filters['search'] ?? '' }}"
                        placeholder="Search class or teacher…"
                        class="rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 w-52">
-                <select name="sort" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+                <select name="sort" data-compact-select class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
                     <option value="pass_rate"    {{ ($filters['sort'] ?? '') === 'pass_rate'    ? 'selected' : '' }}>Sort: Pass Rate</option>
                     <option value="avg_score"    {{ ($filters['sort'] ?? '') === 'avg_score'    ? 'selected' : '' }}>Sort: Avg Score</option>
                     <option value="total_attempts"{{ ($filters['sort'] ?? '') === 'total_attempts'? 'selected' : '' }}>Sort: Attempts</option>
                     <option value="students_count"{{ ($filters['sort'] ?? '') === 'students_count'? 'selected' : '' }}>Sort: Students</option>
                     <option value="name"         {{ ($filters['sort'] ?? '') === 'name'         ? 'selected' : '' }}>Sort: Name</option>
                 </select>
-                <select name="direction" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+                <select name="direction" data-compact-select class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
                     <option value="desc" {{ ($filters['direction'] ?? 'desc') === 'desc' ? 'selected' : '' }}>↓ Desc</option>
                     <option value="asc"  {{ ($filters['direction'] ?? 'desc') === 'asc'  ? 'selected' : '' }}>↑ Asc</option>
                 </select>
@@ -227,8 +228,8 @@
             <table class="w-full text-xs">
                 <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
                     <tr>
-                        <th class="px-4 py-3 text-left">Class</th>
-                        <th class="px-4 py-3 text-left">Teacher</th>
+                        <th class="w-[28%] px-4 py-3 text-left">Class</th>
+                        <th class="w-[18%] px-4 py-3 text-left">Teacher</th>
                         <th class="px-4 py-3 text-left">Latest Attempt</th>
                         <th class="px-4 py-3 text-right">Students</th>
                         <th class="px-4 py-3 text-right">Quizzes</th>
@@ -246,11 +247,11 @@
                     @endphp
                     <tr class="cursor-pointer hover:bg-slate-50 transition"
                         onclick="window.showPageLoadingOverlay && window.showPageLoadingOverlay('Loading class analytics...'); window.location='{{ route('admin.analytics.classes.show', $class->id) }}'">
-                        <td class="px-4 py-3">
-                            <span class="font-semibold text-slate-800">{{ $class->name }}</span>
-                            <p class="text-xs text-slate-400">{{ $class->class_code ?? '' }}</p>
+                        <td class="max-w-[260px] px-4 py-3">
+                            <span class="block truncate font-semibold text-slate-800" title="{{ $class->name }}">{{ $class->name }}</span>
+                            <p class="truncate text-xs text-slate-400" title="{{ $class->class_code ?? '' }}">{{ $class->class_code ?? '' }}</p>
                         </td>
-                        <td class="px-4 py-3 text-slate-600">{{ $class->teacher_name ?? '—' }}</td>
+                        <td class="max-w-[200px] truncate px-4 py-3 text-slate-600" title="{{ $class->teacher_name ?? '—' }}">{{ $class->teacher_name ?? '—' }}</td>
                         <td class="px-4 py-3 text-slate-600">{{ $class->latest_attempt_at ? \Carbon\Carbon::parse($class->latest_attempt_at)->format('M d, Y') : 'No attempts' }}</td>
                         <td class="px-4 py-3 text-right text-slate-700">{{ number_format($class->students_count ?? 0) }}</td>
                         <td class="px-4 py-3 text-right text-slate-700">{{ number_format($class->quizzes_count ?? 0) }}</td>
