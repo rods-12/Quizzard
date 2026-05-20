@@ -13,7 +13,7 @@
     </div>
 
     @include('admin.analytics.partials.nav')
-    @include('admin.analytics.partials.filter-bar', ['routeName' => 'admin.analytics.teachers', 'filters' => $filters])
+    @include('admin.analytics.partials.filter-bar', ['routeName' => 'admin.analytics.teachers', 'filters' => $filters, 'showSearch' => false])
 
     @include('admin.analytics.partials.stat-grid', [
         'items' => [
@@ -47,9 +47,38 @@
     </section>
 
     <section class="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-200">
-        <div class="border-b border-slate-100 px-6 py-4">
-            <h2 class="text-lg font-bold text-slate-900">All Teachers</h2>
-            <p class="mt-1 text-sm text-slate-500">Includes active teachers only.</p>
+        <div class="flex flex-col gap-3 border-b border-slate-100 px-6 py-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+                <h2 class="text-lg font-bold text-slate-900">All Teachers</h2>
+                <p class="mt-1 text-sm text-slate-500">Includes active teachers only.</p>
+            </div>
+            <form method="GET" action="{{ route('admin.analytics.teachers') }}" class="flex flex-wrap items-center gap-2">
+                @foreach($filters as $key => $value)
+                    @if($value !== null && $value !== '' && $key !== 'search' && $key !== 'sort' && $key !== 'direction')
+                        <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                    @endif
+                @endforeach
+                <input type="search"
+                       name="search"
+                       value="{{ $filters['search'] ?? '' }}"
+                       maxlength="100"
+                       placeholder="Search teacher..."
+                       class="w-56 rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+                <select name="sort" data-compact-select class="rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+                    <option value="pass_rate" {{ ($filters['sort'] ?? 'pass_rate') === 'pass_rate' ? 'selected' : '' }}>Sort: Pass Rate</option>
+                    <option value="avg_score" {{ ($filters['sort'] ?? '') === 'avg_score' ? 'selected' : '' }}>Sort: Avg Score</option>
+                    <option value="total_attempts" {{ ($filters['sort'] ?? '') === 'total_attempts' ? 'selected' : '' }}>Sort: Attempts</option>
+                    <option value="quizzes_count" {{ ($filters['sort'] ?? '') === 'quizzes_count' ? 'selected' : '' }}>Sort: Quizzes</option>
+                    <option value="name" {{ ($filters['sort'] ?? '') === 'name' ? 'selected' : '' }}>Sort: Name</option>
+                </select>
+                <select name="direction" data-compact-select class="rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+                    <option value="desc" {{ ($filters['direction'] ?? 'desc') === 'desc' ? 'selected' : '' }}>Desc</option>
+                    <option value="asc" {{ ($filters['direction'] ?? 'desc') === 'asc' ? 'selected' : '' }}>Asc</option>
+                </select>
+                <button type="submit" class="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-500">
+                    Search
+                </button>
+            </form>
         </div>
 
         @if($teachers->isEmpty())

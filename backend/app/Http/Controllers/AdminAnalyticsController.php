@@ -990,8 +990,9 @@ class AdminAnalyticsController extends Controller
         try {
             $filters = $this->analyticsFilters($request);
             $filters['sort'] = $filters['sort'] ?: 'pass_rate';
+            $summaryFilters = array_merge($filters, ['search' => null]);
 
-            $teachersForKpi = $this->teacherAnalyticsQuery($filters)->get();
+            $teachersForKpi = $this->teacherAnalyticsQuery($summaryFilters)->get();
             $kpis = [
                 'total_teachers' => $teachersForKpi->count(),
                 'total_quizzes' => $teachersForKpi->sum('quizzes_count'),
@@ -1069,8 +1070,8 @@ class AdminAnalyticsController extends Controller
     {
         $rules = array_merge([
             'date_mode'  => ['nullable', 'in:all,range'],
-            'date_from'  => ['nullable', 'date_format:Y-m-d', 'regex:/^\d{4}-\d{2}-\d{2}$/'],
-            'date_to'    => ['nullable', 'date_format:Y-m-d', 'regex:/^\d{4}-\d{2}-\d{2}$/', 'after_or_equal:date_from'],
+            'date_from'  => ['nullable', 'date_format:Y-m-d', 'regex:/^\d{4}-\d{2}-\d{2}$/', 'after_or_equal:2010-01-01', 'before_or_equal:2026-12-31'],
+            'date_to'    => ['nullable', 'date_format:Y-m-d', 'regex:/^\d{4}-\d{2}-\d{2}$/', 'after_or_equal:date_from', 'before_or_equal:2026-12-31'],
             'search'     => ['nullable', 'string', 'max:100'],
             'sort'       => ['nullable', 'string', 'max:50'],
             'direction'  => ['nullable', 'in:asc,desc'],

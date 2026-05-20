@@ -15,8 +15,8 @@
                 <div class="hidden lg:flex flex-col justify-between border-r border-white/10 bg-slate-900/70 p-10">
                     <div>
                         <div class="flex items-center gap-4">
-                            <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/95 p-2 shadow-xl ring-1 ring-white/10">
-                                <img src="{{ asset('images/quizzard-logo.png') }}" alt="Quizzard" class="max-h-full max-w-full object-contain">
+                            <div class="flex h-28 w-32 items-center justify-center overflow-hidden">
+                                <img src="{{ asset('images/quizzard-logo.png') }}" alt="Quizzard" class="h-full w-full scale-125 object-contain drop-shadow-[0_10px_18px_rgba(0,0,0,0.35)]">
                             </div>
                             <div class="inline-flex items-center gap-2 rounded-full border border-blue-400/30 bg-blue-500/10 px-4 py-1.5 text-sm font-medium text-blue-200">
                                 Quizzard Management Portal
@@ -53,9 +53,6 @@
                     <div class="mx-auto w-full max-w-md">
                         <div class="mb-8">
                             <div class="mb-5 flex items-center gap-3">
-                                <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-50 p-1.5 shadow-sm ring-1 ring-slate-200">
-                                    <img src="{{ asset('images/quizzard-logo.png') }}" alt="Quizzard" class="max-h-full max-w-full object-contain">
-                                </div>
                                 <p class="text-sm font-semibold uppercase tracking-[0.2em] text-blue-600">
                                     Quizzard
                                 </p>

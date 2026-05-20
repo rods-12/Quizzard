@@ -177,6 +177,7 @@
                 var href = link.getAttribute('href') || '';
                 if (!href || href.charAt(0) === '#' || href.indexOf('javascript:') === 0) return;
                 if (link.closest('[data-no-page-loading]')) return;
+                if (/\/admin\/analytics\/.*\/export(?:\?|$)/.test(href) || /\/admin\/analytics\/[^?]*export(?:\?|$)/.test(href)) return;
 
                 window.showPageLoadingOverlay(link.dataset.loadingText || 'Loading page...');
             });

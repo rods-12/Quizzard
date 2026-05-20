@@ -23,6 +23,7 @@
             </div>
             <div class="flex flex-wrap items-center gap-3">
                 <a href="{{ route('admin.analytics.students.export', array_merge(request()->query(), [])) }}"
+                   data-no-loading="true"
                    class="rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold px-4 py-2 transition flex items-center gap-2">
                     ⬇ Export Excel
                 </a>
@@ -33,17 +34,21 @@
     @include('admin.analytics.partials.nav')
     @php
         $filterControlClass = 'rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-700 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100';
-        $gradeOptions = $gradeLevels->map(fn($grade) => '<option value="' . e($grade) . '"' . (($filters['grade_level'] ?? null) == $grade ? ' selected' : '') . '>Grade ' . e($grade) . '</option>')->implode('');
+        $gradeOptions = $gradeLevels->map(function ($grade) use ($filters) {
+            $gradeLabel = preg_replace('/^grade\s+/i', '', (string) $grade);
+            return '<option value="' . e($grade) . '"' . (($filters['grade_level'] ?? null) == $grade ? ' selected' : '') . '>Grade ' . e($gradeLabel) . '</option>';
+        })->implode('');
         $quizOptions = $quizzesForFilter->map(fn($quiz) => '<option value="' . e($quiz->id) . '"' . (($filters['quiz_id'] ?? null) == $quiz->id ? ' selected' : '') . '>' . e($quiz->title) . '</option>')->implode('');
         $classOptions = $classesForFilter->map(fn($class) => '<option value="' . e($class->id) . '"' . (($filters['class_id'] ?? null) == $class->id ? ' selected' : '') . '>' . e($class->name) . '</option>')->implode('');
-        $extraFields = '<label class="flex min-w-[150px] flex-col gap-1"><span class="text-xs font-semibold uppercase tracking-wide text-slate-500">Grade</span><select name="grade_level" class="' . $filterControlClass . '"><option value="">All Grades</option>' . $gradeOptions . '</select></label>'
-            . '<label class="flex min-w-[220px] flex-col gap-1"><span class="text-xs font-semibold uppercase tracking-wide text-slate-500">Quiz Basis</span><select name="quiz_id" class="' . $filterControlClass . '"><option value="">All Quizzes</option>' . $quizOptions . '</select></label>'
-            . '<label class="flex min-w-[220px] flex-col gap-1"><span class="text-xs font-semibold uppercase tracking-wide text-slate-500">Class Basis</span><select name="class_id" class="' . $filterControlClass . '"><option value="">All Classes</option>' . $classOptions . '</select></label>';
+        $extraFields = '<label class="flex min-w-[150px] flex-col gap-1"><span class="text-xs font-semibold uppercase tracking-wide text-slate-500">Grade</span><select name="grade_level" data-compact-select class="' . $filterControlClass . '"><option value="">All Grades</option>' . $gradeOptions . '</select></label>'
+            . '<label class="flex min-w-[220px] flex-col gap-1"><span class="text-xs font-semibold uppercase tracking-wide text-slate-500">Quiz Basis</span><select name="quiz_id" data-compact-select class="' . $filterControlClass . '"><option value="">All Quizzes</option>' . $quizOptions . '</select></label>'
+            . '<label class="flex min-w-[220px] flex-col gap-1"><span class="text-xs font-semibold uppercase tracking-wide text-slate-500">Class Basis</span><select name="class_id" data-compact-select class="' . $filterControlClass . '"><option value="">All Classes</option>' . $classOptions . '</select></label>';
     @endphp
     @include('admin.analytics.partials.filter-bar', [
         'routeName' => 'admin.analytics.students',
         'filters' => $filters,
         'extraFields' => $extraFields,
+        'showSearch' => false,
     ])
 
     <div class="rounded-2xl border border-blue-200 bg-blue-50 px-5 py-4 text-sm text-blue-800">
@@ -112,9 +117,9 @@
                                     {{ $medal['emoji'] ?: $i + 1 }}
                                 </span>
                             </td>
-                            <td class="px-4 py-3">
-                                <p class="font-semibold text-slate-800">{{ $student->full_name }}</p>
-                                <p class="text-xs text-slate-400">{{ $student->email }}</p>
+                            <td class="max-w-[240px] px-4 py-3">
+                                <p class="truncate font-semibold text-slate-800" title="{{ $student->full_name }}">{{ $student->full_name }}</p>
+                                <p class="truncate text-xs text-slate-400" title="{{ $student->email }}">{{ $student->email }}</p>
                             </td>
                             <td class="px-4 py-3 text-center text-slate-600">{{ $student->grade_level ?? '—' }}</td>
                             <td class="px-4 py-3 text-center">
@@ -166,9 +171,9 @@
                                     {{ $i + 1 }}
                                 </span>
                             </td>
-                            <td class="px-4 py-3">
-                                <p class="font-semibold text-slate-800">{{ $student->full_name }}</p>
-                                <p class="text-xs text-slate-400">{{ $student->email }}</p>
+                            <td class="max-w-[240px] px-4 py-3">
+                                <p class="truncate font-semibold text-slate-800" title="{{ $student->full_name }}">{{ $student->full_name }}</p>
+                                <p class="truncate text-xs text-slate-400" title="{{ $student->email }}">{{ $student->email }}</p>
                             </td>
                             <td class="px-4 py-3 text-center text-slate-600">{{ $student->grade_level ?? '—' }}</td>
                             <td class="px-4 py-3 text-center">
@@ -236,7 +241,7 @@
                     <input type="text" name="search" value="{{ request('search') }}"
                            placeholder="Search student…"
                            class="rounded-xl border border-slate-200 text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-48">
-                    <select name="sort" class="rounded-xl border border-slate-200 text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <select name="sort" data-compact-select class="rounded-xl border border-slate-200 text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="avg_score_desc" {{ request('sort','avg_score_desc') == 'avg_score_desc' ? 'selected' : '' }}>Avg Score ↓</option>
                         <option value="avg_score_asc" {{ request('sort') == 'avg_score_asc' ? 'selected' : '' }}>Avg Score ↑</option>
                         <option value="pass_rate_desc" {{ request('sort') == 'pass_rate_desc' ? 'selected' : '' }}>Pass Rate ↓</option>
@@ -265,14 +270,14 @@
                     @forelse($allStudents as $student)
                     <tr class="hover:bg-slate-50 transition cursor-pointer"
                         onclick="window.showPageLoadingOverlay && window.showPageLoadingOverlay('Loading student analytics...'); window.location='{{ route('admin.analytics.students.show', $student->id) }}'">
-                        <td class="px-4 py-3">
+                        <td class="max-w-[280px] px-4 py-3">
                             <div class="flex items-center gap-3">
                                 <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs flex-shrink-0">
                                     {{ strtoupper(substr($student->full_name, 0, 1)) }}
                                 </div>
-                                <div>
-                                    <p class="font-semibold text-slate-800">{{ $student->full_name }}</p>
-                                    <p class="text-xs text-slate-400">{{ $student->email }}</p>
+                                <div class="min-w-0">
+                                    <p class="truncate font-semibold text-slate-800" title="{{ $student->full_name }}">{{ $student->full_name }}</p>
+                                    <p class="truncate text-xs text-slate-400" title="{{ $student->email }}">{{ $student->email }}</p>
                                     <p class="text-[11px] text-slate-500">Latest: {{ $student->latest_attempt_at ? \Carbon\Carbon::parse($student->latest_attempt_at)->format('M d, Y') : 'No attempts' }}</p>
                                 </div>
                             </div>
@@ -398,7 +403,7 @@ const gradeData   = @json(array_values($gradePerformance));
 new Chart(document.getElementById('gradeChart'), {
     type: 'bar',
     data: {
-        labels: gradeLabels.map(g => 'Grade ' + g),
+        labels: gradeLabels.map(g => 'Grade ' + String(g).replace(/^grade\s+/i, '')),
         datasets: [{
             label: 'Avg Score %',
             data: gradeData,

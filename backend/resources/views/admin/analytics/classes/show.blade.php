@@ -24,6 +24,7 @@
                 </p>
             </div>
             <a href="{{ route('admin.analytics.classes.show.export', $classroom->id) }}"
+               data-no-loading="true"
                class="self-start flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500 transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -104,9 +105,9 @@
                         @endphp
                         <tr class="hover:bg-slate-50 transition {{ $rowBg }}">
                             <td class="px-4 py-3 text-center font-bold text-lg">{{ $medal }}</td>
-                            <td class="px-4 py-3">
+                            <td class="max-w-[240px] px-4 py-3">
                                 <a href="{{ route('admin.analytics.students.show', $student->id) }}"
-                                   class="font-semibold text-blue-600 hover:underline">
+                                   class="block truncate font-semibold text-blue-600 hover:underline" title="{{ trim(($student->first_name ?? '') . ' ' . ($student->surname ?? '')) }}">
                                     {{ $student->first_name }} {{ $student->surname }}
                                 </a>
                             </td>
@@ -141,9 +142,9 @@
                     <tbody class="divide-y divide-slate-100">
                         @forelse($bottomStudents as $student)
                         <tr class="hover:bg-red-50 transition">
-                            <td class="px-4 py-3">
+                            <td class="max-w-[240px] px-4 py-3">
                                 <a href="{{ route('admin.analytics.students.show', $student->id) }}"
-                                   class="font-semibold text-blue-600 hover:underline">
+                                   class="block truncate font-semibold text-blue-600 hover:underline" title="{{ trim(($student->first_name ?? '') . ' ' . ($student->surname ?? '')) }}">
                                     {{ $student->first_name }} {{ $student->surname }}
                                 </a>
                             </td>
@@ -185,7 +186,7 @@
                         $prColor = $pr > 75 ? 'text-emerald-600 bg-emerald-50' : ($pr > 40 ? 'text-amber-600 bg-amber-50' : 'text-red-600 bg-red-50');
                     @endphp
                     <tr class="hover:bg-slate-50 transition">
-                        <td class="px-4 py-3 font-semibold text-slate-800">{{ $quiz->title }}</td>
+                        <td class="max-w-[320px] truncate px-4 py-3 font-semibold text-slate-800" title="{{ $quiz->title }}">{{ $quiz->title }}</td>
                         <td class="px-4 py-3 text-right text-slate-600">{{ number_format($quiz->total_attempts ?? 0) }}</td>
                         <td class="px-4 py-3 text-right font-semibold text-slate-800">{{ number_format($quiz->avg_score ?? 0, 1) }}%</td>
                         <td class="px-4 py-3 text-right">

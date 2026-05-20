@@ -32,6 +32,7 @@
             </div>
             <div class="flex flex-wrap gap-3">
                 <a href="{{ route('admin.analytics.students.show.export', $student->id) }}"
+                   data-no-loading="true"
                    class="rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold px-4 py-2 transition flex items-center gap-2">
                     ⬇ Export Report
                 </a>
@@ -132,10 +133,10 @@
                     @forelse($attempts as $attempt)
                     @php $pct = $attempt->total_points > 0 ? ($attempt->score / $attempt->total_points) * 100 : 0; @endphp
                     <tr class="hover:bg-slate-50 transition">
-                        <td class="px-4 py-3">
-                            <p class="font-semibold text-slate-800">{{ $attempt->quiz->title ?? 'Deleted Quiz' }}</p>
+                        <td class="max-w-[300px] px-4 py-3">
+                            <p class="truncate font-semibold text-slate-800" title="{{ $attempt->quiz->title ?? 'Deleted Quiz' }}">{{ $attempt->quiz->title ?? 'Deleted Quiz' }}</p>
                         </td>
-                        <td class="px-4 py-3 text-slate-500 text-xs">
+                        <td class="max-w-[220px] truncate px-4 py-3 text-slate-500 text-xs" title="{{ $attempt->quiz?->classes->first()?->name ?? '—' }}">
                             {{ $attempt->quiz?->classes->first()?->name ?? '—' }}
                         </td>
                         <td class="px-4 py-3 text-center text-slate-700">
@@ -212,10 +213,10 @@
                 <tbody class="divide-y divide-slate-100">
                     @foreach($weakAreas as $item)
                     <tr class="hover:bg-red-50 transition">
-                        <td class="px-4 py-3 text-slate-700 max-w-xs">
-                            <p class="truncate">{{ $item->question_text }}</p>
+                        <td class="max-w-[420px] px-4 py-3 text-slate-700">
+                            <p class="truncate" title="{{ $item->question_text }}">{{ $item->question_text }}</p>
                         </td>
-                        <td class="px-4 py-3 text-center text-slate-500 text-xs">{{ $item->quiz_title }}</td>
+                        <td class="max-w-[220px] truncate px-4 py-3 text-center text-slate-500 text-xs" title="{{ $item->quiz_title }}">{{ $item->quiz_title }}</td>
                         <td class="px-4 py-3 text-center font-bold text-red-600">{{ $item->wrong_count }}</td>
                         <td class="px-4 py-3 text-center text-slate-600">{{ $item->total_seen }}</td>
                         <td class="px-4 py-3 text-center">
