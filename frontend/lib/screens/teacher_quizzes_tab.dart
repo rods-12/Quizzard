@@ -4,27 +4,30 @@ import '../services/auth_service.dart';
 
 // ─── THEME ────────────────────────────────────────────────────────────────────
 class _T {
-  static const Color primary = Color(0xFF2ECC71);
-  static const Color primaryDark = Color(0xFF1BA35A);
-  static const Color primaryLight = Color(0xFFE8F8F0);
-  static const Color accent = Color(0xFF6C63FF);
-  static const Color accentLight = Color(0xFFEEEDFF);
-  static const Color bg = Color(0xFFF4F7F5);
+  static const Color primary = Color(0xFF5B2A9B);
+  static const Color primaryDark = Color(0xFF3A1A6B);
+  static const Color primaryLight = Color(0xFFEDE7F2);
+  static const Color accent = Color(0xFFF2C94C);
+  static const Color accentDark = Color(0xFFE0A93B);
+  static const Color softPurple = Color(0xFFC9A8F0);
+  static const Color highlightPurple = Color(0xFFA14BC9);
+  static const Color bg = Color(0xFFFAF6EC);
   static const Color surface = Colors.white;
-  static const Color textDark = Color(0xFF1A2E22);
-  static const Color textMid = Color(0xFF6B7580);
-  static const Color textLight = Color(0xFFADB5BD);
+  static const Color textDark = Color(0xFF1F1235);
+  static const Color textMid = Color(0xFF7A6E8A);
+  static const Color textLight = Color(0xFFA99BC4);
   static const Color success = Color(0xFF22C55E);
   static const Color warning = Color(0xFFF59E0B);
   static const Color danger = Color(0xFFEF4444);
   static const Color orange = Color(0xFFF97316);
+  static const Color plumShadow = Color(0xFF2A1247);
 
   static BoxDecoration get card => BoxDecoration(
         color: surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: plumShadow.withOpacity(0.08),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -32,7 +35,7 @@ class _T {
       );
 
   static LinearGradient get headerGradient => const LinearGradient(
-        colors: [Color(0xFF2ECC71), Color(0xFF1BA35A)],
+        colors: [Color(0xFF5B2A9B), Color(0xFF3A1A6B)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       );
@@ -156,10 +159,13 @@ class _TeacherQuizzesTabState extends State<TeacherQuizzesTab> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Delete Quiz', style: TextStyle(fontWeight: FontWeight.bold)),
-        content: Text('Are you sure you want to delete "${quiz['title']}"? This cannot be undone.'),
+        title: const Text('Delete Quiz', style: TextStyle(fontWeight: FontWeight.bold, color: _T.textDark)),
+        content: Text('Are you sure you want to delete "${quiz['title']}"? This cannot be undone.', style: const TextStyle(color: _T.textMid)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel', style: TextStyle(color: _T.primary)),
+          ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: _T.danger, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
             onPressed: () => Navigator.pop(ctx, true),
@@ -195,19 +201,23 @@ class _TeacherQuizzesTabState extends State<TeacherQuizzesTab> {
 
   Future<bool> _showPublishConfirmation(String quizTitle, bool isCurrentlyPublished) async {
     final actionLabel = isCurrentlyPublished ? 'Unpublish' : 'Publish';
-    final color = isCurrentlyPublished ? _T.orange : _T.success;
+    final color = isCurrentlyPublished ? _T.orange : _T.primary;
     final result = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('$actionLabel Quiz?', style: const TextStyle(fontWeight: FontWeight.bold)),
+        title: Text('$actionLabel Quiz?', style: const TextStyle(fontWeight: FontWeight.bold, color: _T.textDark)),
         content: Text(
           isCurrentlyPublished
               ? 'Students will no longer be able to access "$quizTitle".'
               : 'Students will be able to see and take "$quizTitle".',
+          style: const TextStyle(color: _T.textMid),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel', style: TextStyle(color: _T.primary)),
+          ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: color, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
             onPressed: () => Navigator.of(ctx).pop(true),
@@ -236,7 +246,7 @@ class _TeacherQuizzesTabState extends State<TeacherQuizzesTab> {
 
     return RefreshIndicator(
       onRefresh: () async => _loadQuizzes(),
-      color: _T.primary,
+      color: _T.accent,
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
@@ -250,6 +260,13 @@ class _TeacherQuizzesTabState extends State<TeacherQuizzesTab> {
                   bottomLeft: Radius.circular(32),
                   bottomRight: Radius.circular(32),
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: _T.plumShadow.withOpacity(0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -407,7 +424,7 @@ class _TeacherQuizzesTabState extends State<TeacherQuizzesTab> {
           ),
         ),
         const Spacer(),
-        const CircularProgressIndicator(color: _T.primary, strokeWidth: 3),
+        const CircularProgressIndicator(color: _T.accent, strokeWidth: 3),
         const SizedBox(height: 16),
         const Text('Loading quizzes...', style: TextStyle(color: _T.textMid, fontSize: 14)),
         const Spacer(),
@@ -420,13 +437,13 @@ class _TeacherQuizzesTabState extends State<TeacherQuizzesTab> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.18),
+          color: Colors.white.withOpacity(0.15),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: Colors.white.withOpacity(0.25)),
         ),
         child: Column(
           children: [
-            Icon(icon, color: Colors.white, size: 20),
+            Icon(icon, color: _T.accent, size: 20),
             const SizedBox(height: 6),
             Text(value, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
             Text(label, style: const TextStyle(color: Colors.white70, fontSize: 10)),
@@ -446,8 +463,10 @@ class _TeacherQuizzesTabState extends State<TeacherQuizzesTab> {
         decoration: BoxDecoration(
           color: isSelected ? _T.primary : Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isSelected ? _T.primary : Colors.grey.shade300),
-          boxShadow: isSelected ? [BoxShadow(color: _T.primary.withOpacity(0.25), blurRadius: 8, offset: const Offset(0, 2))] : [],
+          border: Border.all(color: isSelected ? _T.primary : _T.softPurple.withOpacity(0.5)),
+          boxShadow: isSelected
+              ? [BoxShadow(color: _T.primary.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 2))]
+              : [],
         ),
         child: Text(
           label,
@@ -499,7 +518,14 @@ class _TeacherQuizzesTabState extends State<TeacherQuizzesTab> {
                     width: 46,
                     height: 46,
                     decoration: BoxDecoration(
-                      color: isPublished ? _T.primary : Colors.grey.shade300,
+                      gradient: isPublished
+                          ? const LinearGradient(
+                              colors: [Color(0xFF5B2A9B), Color(0xFF3A1A6B)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            )
+                          : null,
+                      color: isPublished ? null : Colors.grey.shade300,
                       borderRadius: BorderRadius.circular(13),
                     ),
                     child: const Icon(Icons.quiz_rounded, color: Colors.white, size: 24),
@@ -521,9 +547,9 @@ class _TeacherQuizzesTabState extends State<TeacherQuizzesTab> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
-                      color: isPublished ? _T.primary.withOpacity(0.12) : Colors.grey.withOpacity(0.12),
+                      color: isPublished ? _T.primary.withOpacity(0.10) : Colors.grey.withOpacity(0.10),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: isPublished ? _T.primary.withOpacity(0.3) : Colors.grey.withOpacity(0.3)),
+                      border: Border.all(color: isPublished ? _T.primary.withOpacity(0.35) : Colors.grey.withOpacity(0.3)),
                     ),
                     child: Text(
                       isPublished ? 'Published' : 'Draft',
@@ -550,7 +576,7 @@ class _TeacherQuizzesTabState extends State<TeacherQuizzesTab> {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  Divider(color: Colors.grey.shade100, height: 1),
+                  Divider(color: _T.primaryLight, height: 1),
                   const SizedBox(height: 12),
 
                   // ── Action buttons ──
@@ -568,14 +594,14 @@ class _TeacherQuizzesTabState extends State<TeacherQuizzesTab> {
                         _buildActionBtn(
                           icon: Icons.analytics_outlined,
                           label: 'Analytics',
-                          color: _T.accent,
+                          color: _T.highlightPurple,
                           onTap: () => Navigator.pushNamed(context, '/quiz-analytics', arguments: {'quiz_id': quizId, 'quiz_title': title}),
                         ),
                         const SizedBox(width: 8),
                         if (!hasAttempts) ...[
                           _buildIconBtn(
                             icon: Icons.edit_rounded,
-                            color: _T.accent,
+                            color: _T.highlightPurple,
                             tooltip: 'Edit',
                             onTap: () async {
                               final result = await Navigator.pushNamed(
@@ -597,7 +623,7 @@ class _TeacherQuizzesTabState extends State<TeacherQuizzesTab> {
                         ],
                         _buildIconBtn(
                           icon: Icons.download_rounded,
-                          color: _T.orange,
+                          color: _T.accentDark,
                           tooltip: 'Export',
                           onTap: () async {
                             widget.onExportStart();
@@ -654,8 +680,9 @@ class _TeacherQuizzesTabState extends State<TeacherQuizzesTab> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withOpacity(0.10),
           borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: color.withOpacity(0.2)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -678,8 +705,9 @@ class _TeacherQuizzesTabState extends State<TeacherQuizzesTab> {
           width: 36,
           height: 36,
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withOpacity(0.10),
             borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: color.withOpacity(0.2)),
           ),
           child: Icon(icon, size: 18, color: color),
         ),

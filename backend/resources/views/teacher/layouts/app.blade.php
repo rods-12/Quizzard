@@ -13,28 +13,28 @@
     <style>
         /* ── Design tokens ──────────────────────────────────────── */
         :root {
-            --bg:          #0f1117;
-            --surface:     #181c27;
-            --surface-2:   #1e2333;
-            --surface-3:   #252a3a;
-            --border:      rgba(255,255,255,0.07);
-            --border-md:   rgba(255,255,255,0.11);
-            --text:        #e8eaf2;
-            --text-2:      #9298b0;
-            --text-3:      #5b6282;
-            --accent:      #4ade80;
-            --accent-dim:  #22c55e;
-            --accent-bg:   rgba(74,222,128,0.08);
-            --accent-bg2:  rgba(74,222,128,0.14);
-            --danger:      #f87171;
-            --warn:        #fbbf24;
-            --info:        #60a5fa;
+            --bg:          #FAF6EC;
+            --surface:     #FFFFFF;
+            --surface-2:   #F3EEF9;
+            --surface-3:   #EDE7F2;
+            --border:      rgba(91,42,155,0.10);
+            --border-md:   rgba(91,42,155,0.18);
+            --text:        #1F1235;
+            --text-2:      #6B5A8A;
+            --text-3:      #A99BC4;
+            --accent:      #F2C94C;
+            --accent-dim:  #E0A93B;
+            --accent-bg:   rgba(242,201,76,0.10);
+            --accent-bg2:  rgba(242,201,76,0.18);
+            --danger:      #EF4444;
+            --warn:        #F59E0B;
+            --info:        #A14BC9;
             --radius:      14px;
             --radius-sm:   9px;
             --sidebar-w:   252px;
             --font:        'DM Sans', sans-serif;
             --mono:        'DM Mono', monospace;
-            --shadow-card: 0 1px 3px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.25);
+            --shadow-card: 0 1px 3px rgba(42,18,71,0.08), 0 8px 24px rgba(42,18,71,0.12);
         }
 
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -52,8 +52,8 @@
         /* ── Scrollbar ──────────────────────────────────────────── */
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: var(--border-md); border-radius: 99px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
+        ::-webkit-scrollbar-thumb { background: rgba(91,42,155,0.18); border-radius: 99px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(91,42,155,0.32); }
 
         /* ── App shell ──────────────────────────────────────────── */
         /*
@@ -117,9 +117,9 @@
         }
         .nav-link:hover { background: var(--surface-3); color: var(--text); }
         .nav-link.active {
-            background: var(--accent-bg2);
-            color: var(--accent);
-            box-shadow: inset 0 0 0 1px rgba(74,222,128,0.18);
+            background: var(--surface-3);
+            color: #5B2A9B;
+            box-shadow: inset 0 0 0 1px rgba(91,42,155,0.18);
         }
         .nav-link svg { opacity: 0.6; flex-shrink: 0; transition: opacity 0.15s; }
         .nav-link:hover svg, .nav-link.active svg { opacity: 1; }
@@ -147,16 +147,16 @@
             font-weight: 600;
             letter-spacing: 0.01em;
         }
-        .badge-green  { background: rgba(74,222,128,0.12);  color: #4ade80; border: 1px solid rgba(74,222,128,0.22); }
-        .badge-amber  { background: rgba(251,191,36,0.12);  color: #fbbf24; border: 1px solid rgba(251,191,36,0.22); }
-        .badge-rose   { background: rgba(248,113,113,0.12); color: #f87171; border: 1px solid rgba(248,113,113,0.22); }
-        .badge-sky    { background: rgba(96,165,250,0.12);  color: #60a5fa; border: 1px solid rgba(96,165,250,0.22); }
-        .badge-slate  { background: rgba(148,163,184,0.10); color: #94a3b8; border: 1px solid rgba(148,163,184,0.2); }
+        .badge-green  { background: rgba(34,197,94,0.10);   color: #22C55E; border: 1px solid rgba(34,197,94,0.22); }
+        .badge-amber  { background: rgba(242,201,76,0.12);  color: #E0A93B; border: 1px solid rgba(242,201,76,0.28); }
+        .badge-rose   { background: rgba(239,68,68,0.10);   color: #EF4444; border: 1px solid rgba(239,68,68,0.22); }
+        .badge-sky    { background: rgba(161,75,201,0.10);  color: #A14BC9; border: 1px solid rgba(161,75,201,0.22); }
+        .badge-slate  { background: rgba(169,155,196,0.12); color: #A99BC4; border: 1px solid rgba(169,155,196,0.22); }
 
         /* ── Score colours ──────────────────────────────────────── */
-        .score-high  { background: rgba(74,222,128,0.12);  color: #4ade80; border: 1px solid rgba(74,222,128,0.2); }
-        .score-mid   { background: rgba(251,191,36,0.12);  color: #fbbf24; border: 1px solid rgba(251,191,36,0.2); }
-        .score-low   { background: rgba(248,113,113,0.12); color: #f87171; border: 1px solid rgba(248,113,113,0.2); }
+        .score-high  { background: rgba(34,197,94,0.10);   color: #22C55E; border: 1px solid rgba(34,197,94,0.2); }
+        .score-mid   { background: rgba(242,201,76,0.12);  color: #E0A93B; border: 1px solid rgba(242,201,76,0.25); }
+        .score-low   { background: rgba(239,68,68,0.10);   color: #EF4444; border: 1px solid rgba(239,68,68,0.2); }
         .score-none  { background: var(--surface-3); color: var(--text-3); border: 1px solid var(--border); }
 
         /* ── Buttons ─────────────────────────────────────────────── */
@@ -177,8 +177,8 @@
             white-space: nowrap;
             font-family: var(--font);
         }
-        .btn-primary { background: var(--accent); color: #0b1a0e; }
-        .btn-primary:hover { background: #6ee7a0; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(74,222,128,0.25); }
+        .btn-primary { background: #F2C94C; color: #1F1235; }
+        .btn-primary:hover { background: #E0A93B; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(242,201,76,0.35); }
         .btn-secondary { background: var(--surface-3); color: var(--text-2); border: 1px solid var(--border-md); }
         .btn-secondary:hover { background: var(--surface-2); color: var(--text); }
         .btn-ghost { background: transparent; color: var(--text-2); border: 1px solid var(--border-md); }
@@ -200,10 +200,10 @@
         }
 
         /* ── Attention panels ────────────────────────────────────── */
-        .attention-amber { background: rgba(251,191,36,0.05);   border-color: rgba(251,191,36,0.2); }
-        .attention-rose  { background: rgba(248,113,113,0.05);  border-color: rgba(248,113,113,0.2); }
-        .attention-sky   { background: rgba(96,165,250,0.05);   border-color: rgba(96,165,250,0.2); }
-        .attention-slate { background: rgba(148,163,184,0.04);  border-color: rgba(148,163,184,0.15); }
+        .attention-amber { background: rgba(242,201,76,0.06);  border-color: rgba(242,201,76,0.25); }
+        .attention-rose  { background: rgba(239,68,68,0.05);   border-color: rgba(239,68,68,0.2); }
+        .attention-sky   { background: rgba(161,75,201,0.06);  border-color: rgba(161,75,201,0.2); }
+        .attention-slate { background: rgba(169,155,196,0.06); border-color: rgba(169,155,196,0.18); }
 
         /* ── Utilities ───────────────────────────────────────────── */
         .num     { font-family: var(--mono); font-variant-numeric: tabular-nums; }
@@ -212,7 +212,7 @@
         /* ── Overlay ─────────────────────────────────────────────── */
         #sidebar-overlay {
             backdrop-filter: blur(3px);
-            background: rgba(0,0,0,0.55);
+            background: rgba(42,18,71,0.45);
         }
     </style>
 </head>
@@ -225,9 +225,10 @@
                    padding:12px 16px; position:sticky; top:0; z-index:50;
                    background:var(--surface); border-bottom:1px solid var(--border);">
         <div style="display:flex; align-items:center; gap:10px;">
-            <div style="height:28px; width:28px; border-radius:8px; background:var(--accent);
+            <div style="height:28px; width:28px; border-radius:8px;
+                        background:linear-gradient(135deg,#5B2A9B,#3A1A6B);
                         display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                <svg style="width:15px;height:15px;" fill="none" stroke="#0b1a0e" viewBox="0 0 24 24" stroke-width="2.5">
+                <svg style="width:15px;height:15px;" fill="none" stroke="#F2C94C" viewBox="0 0 24 24" stroke-width="2.5">
                     <path stroke-linecap="round" stroke-linejoin="round"
                           d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                 </svg>
@@ -255,9 +256,10 @@
             {{-- Brand --}}
             <div style="padding:22px 20px 20px; border-bottom:1px solid var(--border); flex-shrink:0;">
                 <div style="display:flex; align-items:center; gap:10px;">
-                    <div style="height:32px; width:32px; border-radius:10px; background:var(--accent);
+                    <div style="height:32px; width:32px; border-radius:10px;
+                                background:linear-gradient(135deg,#5B2A9B,#3A1A6B);
                                 display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                        <svg style="width:17px;height:17px;" fill="none" stroke="#0b1a0e" viewBox="0 0 24 24" stroke-width="2.5">
+                        <svg style="width:17px;height:17px;" fill="none" stroke="#F2C94C" viewBox="0 0 24 24" stroke-width="2.5">
                             <path stroke-linecap="round" stroke-linejoin="round"
                                   d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                         </svg>
@@ -309,8 +311,9 @@
                     <div style="height:32px; width:32px; border-radius:9px; flex-shrink:0;
                                 display:flex; align-items:center; justify-content:center;
                                 font-size:12px; font-weight:700;
-                                background:var(--accent-bg2); color:var(--accent);
-                                border:1px solid rgba(74,222,128,0.2);">
+                                background:linear-gradient(135deg,#5B2A9B,#3A1A6B);
+                                color:#F2C94C;
+                                border:1px solid rgba(91,42,155,0.25);">
                         {{ strtoupper(substr(auth()->user()->name ?? 'T', 0, 1)) }}
                     </div>
                     <div style="min-width:0; flex:1;">

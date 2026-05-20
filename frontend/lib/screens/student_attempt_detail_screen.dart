@@ -30,6 +30,19 @@ class _StudentAttemptDetailScreenState
   String? _errorMessage;
   Map<String, dynamic>? _data;
 
+  // ── Brand palette ──────────────────────────────────────────────
+  static const Color _primaryPurple    = Color(0xFF5B2A9B);
+  static const Color _deepViolet       = Color(0xFF3A1A6B);
+  static const Color _primaryLight     = Color(0xFFEDE7F2);
+  static const Color _softPurple       = Color(0xFFC9A8F0);
+  static const Color _parchment        = Color(0xFFFAF6EC);
+  static const Color _midnightPlum     = Color(0xFF1F1235);
+  static const Color _mutedLavender    = Color(0xFFA99BC4);
+  static const Color _plumShadow       = Color(0x402A1247);
+  static const Color _success          = Color(0xFF22C55E);
+  static const Color _danger           = Color(0xFFEF4444);
+  // ───────────────────────────────────────────────────────────────
+
   @override
   void initState() {
     super.initState();
@@ -57,9 +70,9 @@ class _StudentAttemptDetailScreenState
   }
 
   Color _getScoreColor(int percentage) {
-    if (percentage >= 80) return const Color(0xFF2E7D32);
-    if (percentage >= 60) return const Color(0xFFF9A825);
-    return const Color(0xFFC62828);
+    if (percentage >= 80) return _success;
+    if (percentage >= 60) return const Color(0xFFF59E0B);
+    return _danger;
   }
 
   Widget _buildResultWidget(Map<String, dynamic> question) {
@@ -125,11 +138,12 @@ class _StudentAttemptDetailScreenState
     final percentage = attempt != null ? attempt['percentage'] as int : 0;
     final bool isPassed = percentage >= 60;
 
-    final Color themeColor =
-        isPassed ? const Color(0xFF2E7D32) : const Color(0xFFC62828);
+    // Passed → Royal Purple gradient; Failed → Danger-tinted deep violet
+    final Color heroTop    = isPassed ? _primaryPurple : const Color(0xFF7B1A1A);
+    final Color heroBottom = isPassed ? _deepViolet    : const Color(0xFF3A0A0A);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: _parchment,
       appBar: AppBar(
         title: Text(
           widget.studentName,
@@ -138,7 +152,16 @@ class _StudentAttemptDetailScreenState
             fontWeight: FontWeight.w600,
           ),
         ),
-        backgroundColor: themeColor,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [heroTop, heroBottom],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         elevation: 0,
       ),
@@ -149,7 +172,7 @@ class _StudentAttemptDetailScreenState
   Widget _buildBody() {
     if (_isLoading) {
       return const Center(
-        child: CircularProgressIndicator(color: Color(0xFF4CAF50)),
+        child: CircularProgressIndicator(color: _primaryPurple),
       );
     }
 
@@ -160,16 +183,23 @@ class _StudentAttemptDetailScreenState
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 60, color: Colors.red),
+              const Icon(Icons.error_outline, size: 60, color: _danger),
               const SizedBox(height: 16),
               Text(
                 _errorMessage!,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.red),
+                style: const TextStyle(color: _danger),
               ),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _loadDetail,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _primaryPurple,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
                 child: const Text('Retry'),
               ),
             ],
@@ -185,10 +215,13 @@ class _StudentAttemptDetailScreenState
     final scoreColor = _getScoreColor(percentage);
 
     final bool isPassed = percentage >= 60;
-    final Color themeColor =
-        isPassed ? const Color(0xFF2E7D32) : const Color(0xFFC62828);
-    final Color lightThemeColor =
-        isPassed ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE);
+
+    // Hero gradient
+    final Color heroTop    = isPassed ? _primaryPurple : const Color(0xFF7B1A1A);
+    final Color heroBottom = isPassed ? _deepViolet    : const Color(0xFF3A0A0A);
+
+    // Pass/fail accent for badge & borders
+    final Color statusColor = isPassed ? _success : _danger;
 
     final int correctCount =
         questionResults.where((q) => q['is_correct'] == true).length;
@@ -214,17 +247,22 @@ class _StudentAttemptDetailScreenState
     return SingleChildScrollView(
       child: Column(
         children: [
+          // ── Hero header ──────────────────────────────────────────
           Container(
             width: double.infinity,
             decoration: BoxDecoration(
-              color: themeColor,
+              gradient: LinearGradient(
+                colors: [heroTop, heroBottom],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
               borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(28),
                 bottomRight: Radius.circular(28),
               ),
               boxShadow: [
                 BoxShadow(
-                  color: themeColor.withOpacity(0.22),
+                  color: _plumShadow,
                   blurRadius: 18,
                   offset: const Offset(0, 8),
                 ),
@@ -234,6 +272,7 @@ class _StudentAttemptDetailScreenState
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
               child: Column(
                 children: [
+                  // Avatar
                   CircleAvatar(
                     radius: 34,
                     backgroundColor: Colors.white.withOpacity(0.18),
@@ -260,13 +299,14 @@ class _StudentAttemptDetailScreenState
                   Text(
                     student['email'],
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.white70,
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.70),
                       fontSize: 13,
                     ),
                   ),
                   const SizedBox(height: 20),
 
+                  // Pass / Fail badge
                   Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -279,14 +319,14 @@ class _StudentAttemptDetailScreenState
                       children: [
                         Icon(
                           isPassed ? Icons.check_circle : Icons.cancel,
-                          color: themeColor,
+                          color: statusColor,
                           size: 18,
                         ),
                         const SizedBox(width: 8),
                         Text(
                           isPassed ? 'PASSED' : 'FAILED',
                           style: TextStyle(
-                            color: themeColor,
+                            color: statusColor,
                             fontWeight: FontWeight.bold,
                             letterSpacing: 0.6,
                           ),
@@ -296,6 +336,7 @@ class _StudentAttemptDetailScreenState
                   ),
                   const SizedBox(height: 20),
 
+                  // Score circle
                   Container(
                     width: 132,
                     height: 132,
@@ -304,7 +345,7 @@ class _StudentAttemptDetailScreenState
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.10),
+                          color: _plumShadow,
                           blurRadius: 18,
                           offset: const Offset(0, 8),
                         ),
@@ -326,7 +367,7 @@ class _StudentAttemptDetailScreenState
                           '${attempt['score']}/${attempt['total_points']}',
                           style: const TextStyle(
                             fontSize: 13,
-                            color: Colors.grey,
+                            color: _mutedLavender,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -338,14 +379,15 @@ class _StudentAttemptDetailScreenState
                   Text(
                     performanceMessage,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.90),
                       fontSize: 13,
                       height: 1.45,
                     ),
                   ),
                   const SizedBox(height: 20),
 
+                  // Summary cards row
                   Row(
                     children: [
                       Expanded(
@@ -353,7 +395,7 @@ class _StudentAttemptDetailScreenState
                           label: 'Correct',
                           value: correctCount.toString(),
                           icon: Icons.check_circle,
-                          iconColor: const Color(0xFF2E7D32),
+                          iconColor: _success,
                         ),
                       ),
                       const SizedBox(width: 10),
@@ -362,7 +404,7 @@ class _StudentAttemptDetailScreenState
                           label: 'Wrong',
                           value: wrongCount.toString(),
                           icon: Icons.cancel,
-                          iconColor: const Color(0xFFC62828),
+                          iconColor: _danger,
                         ),
                       ),
                       const SizedBox(width: 10),
@@ -371,7 +413,7 @@ class _StudentAttemptDetailScreenState
                           label: 'Total',
                           value: totalCount.toString(),
                           icon: Icons.quiz,
-                          iconColor: themeColor,
+                          iconColor: _softPurple,
                         ),
                       ),
                     ],
@@ -381,6 +423,7 @@ class _StudentAttemptDetailScreenState
             ),
           ),
 
+          // ── Question result cards ─────────────────────────────────
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
             child: Column(
@@ -397,9 +440,16 @@ class _StudentAttemptDetailScreenState
                     borderRadius: BorderRadius.circular(18),
                     border: Border.all(
                       color: isCorrect
-                          ? Colors.green.withOpacity(0.20)
-                          : Colors.red.withOpacity(0.20),
+                          ? _success.withOpacity(0.25)
+                          : _danger.withOpacity(0.25),
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: _plumShadow,
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -410,9 +460,13 @@ class _StudentAttemptDetailScreenState
                             width: 34,
                             height: 34,
                             decoration: BoxDecoration(
-                              color: isCorrect
-                                  ? const Color(0xFF2E7D32)
-                                  : const Color(0xFFC62828),
+                              gradient: LinearGradient(
+                                colors: isCorrect
+                                    ? [_success, const Color(0xFF16A34A)]
+                                    : [_danger, const Color(0xFFB91C1C)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
                               shape: BoxShape.circle,
                             ),
                             child: Center(
@@ -430,9 +484,7 @@ class _StudentAttemptDetailScreenState
                           Text(
                             isCorrect ? 'Correct Answer' : 'Incorrect Answer',
                             style: TextStyle(
-                              color: isCorrect
-                                  ? const Color(0xFF2E7D32)
-                                  : const Color(0xFFC62828),
+                              color: isCorrect ? _success : _danger,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -462,6 +514,13 @@ class _StudentAttemptDetailScreenState
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: _plumShadow,
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -472,7 +531,7 @@ class _StudentAttemptDetailScreenState
             style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF222222),
+              color: _midnightPlum,
             ),
           ),
           const SizedBox(height: 4),
@@ -480,7 +539,7 @@ class _StudentAttemptDetailScreenState
             label,
             style: const TextStyle(
               fontSize: 12,
-              color: Colors.grey,
+              color: _mutedLavender,
               fontWeight: FontWeight.w500,
             ),
           ),

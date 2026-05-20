@@ -16,8 +16,21 @@ class QuizAnalyticsScreen extends StatefulWidget {
 }
 
 class _QuizAnalyticsScreenState extends State<QuizAnalyticsScreen> {
-  static const Color _purple = Color(0xFF6C63FF);
-  static const Color _green = Color(0xFF4CAF50);
+  // ── Brand colors ──────────────────────────────────────────────
+  static const Color primaryColor    = Color(0xFF5B2A9B);
+  static const Color primaryDark     = Color(0xFF3A1A6B);
+  static const Color primaryLight    = Color(0xFFEDE7F2);
+  static const Color accentGold      = Color(0xFFF2C94C);
+  static const Color softPurple      = Color(0xFFC9A8F0);
+  static const Color highlightPurple = Color(0xFFA14BC9);
+  static const Color background      = Color(0xFFFAF6EC);
+  static const Color midnightPlum    = Color(0xFF1F1235);
+  static const Color mutedText       = Color(0xFF7B6F8E);
+  static const Color subtleText      = Color(0xFFA99BC4);
+  static const Color plumShadow      = Color(0xFF2A1247);
+  static const Color successGreen    = Color(0xFF22C55E);
+  static const Color warningAmber    = Color(0xFFF59E0B);
+  static const Color dangerRed       = Color(0xFFEF4444);
 
   bool _isLoading = true;
   String? _errorMessage;
@@ -67,22 +80,31 @@ class _QuizAnalyticsScreenState extends State<QuizAnalyticsScreen> {
   Color _difficultyColor(String difficulty) {
     switch (difficulty.toLowerCase()) {
       case 'easy':
-        return Colors.green;
+        return successGreen;
       case 'moderate':
-        return Colors.orange;
+        return warningAmber;
       case 'hard':
-        return Colors.red;
+        return dangerRed;
       default:
-        return Colors.blueGrey;
+        return mutedText;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: background,
       appBar: AppBar(
-        backgroundColor: _purple,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [primaryColor, primaryDark],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         title: Text(
           '${widget.quizTitle} Analytics',
@@ -97,7 +119,7 @@ class _QuizAnalyticsScreenState extends State<QuizAnalyticsScreen> {
   Widget _buildBody() {
     if (_isLoading) {
       return const Center(
-        child: CircularProgressIndicator(color: _purple),
+        child: CircularProgressIndicator(color: primaryColor),
       );
     }
 
@@ -108,23 +130,23 @@ class _QuizAnalyticsScreenState extends State<QuizAnalyticsScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.analytics_outlined, size: 64, color: Colors.grey),
+              const Icon(Icons.analytics_outlined, size: 64, color: subtleText),
               const SizedBox(height: 16),
               Text(
                 _errorMessage!,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.red),
+                style: const TextStyle(color: dangerRed),
               ),
               const SizedBox(height: 16),
               ElevatedButton.icon(
                 onPressed: _loadAnalytics,
-                icon: const Icon(Icons.refresh, color: Colors.white),
+                icon: const Icon(Icons.refresh, color: midnightPlum),
                 label: const Text(
                   'Retry',
-                  style: TextStyle(color: Colors.white),
+                  style: TextStyle(color: midnightPlum),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _purple,
+                  backgroundColor: accentGold,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -151,7 +173,7 @@ class _QuizAnalyticsScreenState extends State<QuizAnalyticsScreen> {
 
     return RefreshIndicator(
       onRefresh: _loadAnalytics,
-      color: _purple,
+      color: primaryColor,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
@@ -183,14 +205,14 @@ class _QuizAnalyticsScreenState extends State<QuizAnalyticsScreen> {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [_purple, Color(0xFF8B85FF)],
+          colors: [primaryColor, primaryDark],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: _purple.withOpacity(0.18),
+            color: plumShadow.withOpacity(0.22),
             blurRadius: 14,
             offset: const Offset(0, 6),
           ),
@@ -229,7 +251,7 @@ class _QuizAnalyticsScreenState extends State<QuizAnalyticsScreen> {
       style: const TextStyle(
         fontSize: 17,
         fontWeight: FontWeight.bold,
-        color: Color(0xFF333333),
+        color: midnightPlum,
       ),
     );
   }
@@ -244,7 +266,7 @@ class _QuizAnalyticsScreenState extends State<QuizAnalyticsScreen> {
                 icon: Icons.bar_chart,
                 label: 'Average Score',
                 value: _formatNumber(summary['average_score'] ?? 0),
-                color: _purple,
+                color: primaryColor,
               ),
             ),
             const SizedBox(width: 10),
@@ -253,7 +275,7 @@ class _QuizAnalyticsScreenState extends State<QuizAnalyticsScreen> {
                 icon: Icons.emoji_events,
                 label: 'Highest',
                 value: _formatNumber(summary['highest_score'] ?? 0),
-                color: Colors.green,
+                color: successGreen,
               ),
             ),
           ],
@@ -266,7 +288,7 @@ class _QuizAnalyticsScreenState extends State<QuizAnalyticsScreen> {
                 icon: Icons.trending_down,
                 label: 'Lowest',
                 value: _formatNumber(summary['lowest_score'] ?? 0),
-                color: Colors.red,
+                color: dangerRed,
               ),
             ),
             const SizedBox(width: 10),
@@ -275,7 +297,7 @@ class _QuizAnalyticsScreenState extends State<QuizAnalyticsScreen> {
                 icon: Icons.people,
                 label: 'Attempts',
                 value: _formatNumber(summary['attempt_count'] ?? 0, decimals: 0),
-                color: Colors.blue,
+                color: highlightPurple,
               ),
             ),
           ],
@@ -288,7 +310,7 @@ class _QuizAnalyticsScreenState extends State<QuizAnalyticsScreen> {
                 icon: Icons.check_circle,
                 label: 'Pass Rate',
                 value: '${_formatNumber(summary['pass_rate'] ?? 0)}%',
-                color: _green,
+                color: successGreen,
               ),
             ),
             const SizedBox(width: 10),
@@ -297,7 +319,7 @@ class _QuizAnalyticsScreenState extends State<QuizAnalyticsScreen> {
                 icon: Icons.show_chart,
                 label: 'Std. Deviation',
                 value: _formatNumber(summary['standard_deviation'] ?? 0),
-                color: Colors.orange,
+                color: warningAmber,
               ),
             ),
           ],
@@ -320,7 +342,7 @@ class _QuizAnalyticsScreenState extends State<QuizAnalyticsScreen> {
         border: Border.all(color: color.withOpacity(0.14)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: plumShadow.withOpacity(0.07),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -339,7 +361,7 @@ class _QuizAnalyticsScreenState extends State<QuizAnalyticsScreen> {
             style: const TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF222222),
+              color: midnightPlum,
             ),
           ),
           const SizedBox(height: 4),
@@ -348,7 +370,7 @@ class _QuizAnalyticsScreenState extends State<QuizAnalyticsScreen> {
             textAlign: TextAlign.center,
             style: const TextStyle(
               fontSize: 12,
-              color: Colors.grey,
+              color: mutedText,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -387,7 +409,7 @@ class _QuizAnalyticsScreenState extends State<QuizAnalyticsScreen> {
             textAlign: TextAlign.center,
             style: const TextStyle(
               fontSize: 11,
-              color: Colors.grey,
+              color: mutedText,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -414,7 +436,7 @@ class _QuizAnalyticsScreenState extends State<QuizAnalyticsScreen> {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: plumShadow.withOpacity(0.07),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -501,7 +523,7 @@ class _QuizAnalyticsScreenState extends State<QuizAnalyticsScreen> {
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF333333),
+                      color: midnightPlum,
                       height: 1.4,
                     ),
                   ),
@@ -522,7 +544,7 @@ class _QuizAnalyticsScreenState extends State<QuizAnalyticsScreen> {
                           icon: Icons.check_circle,
                           label: 'Correct',
                           value: correctCount,
-                          color: Colors.green,
+                          color: successGreen,
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -531,7 +553,7 @@ class _QuizAnalyticsScreenState extends State<QuizAnalyticsScreen> {
                           icon: Icons.people,
                           label: 'Attempts',
                           value: attemptCount,
-                          color: Colors.blue,
+                          color: highlightPurple,
                         ),
                       ),
                     ],
@@ -563,7 +585,7 @@ class _QuizAnalyticsScreenState extends State<QuizAnalyticsScreen> {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: plumShadow.withOpacity(0.07),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -586,13 +608,13 @@ class _QuizAnalyticsScreenState extends State<QuizAnalyticsScreen> {
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               color: isCurrentQuiz
-                  ? _purple.withOpacity(0.08)
-                  : const Color(0xFFF8F8F8),
+                  ? primaryColor.withOpacity(0.07)
+                  : const Color(0xFFFAF6EC),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color: isCurrentQuiz
-                    ? _purple.withOpacity(0.22)
-                    : Colors.grey.withOpacity(0.10),
+                    ? primaryColor.withOpacity(0.25)
+                    : softPurple.withOpacity(0.18),
               ),
             ),
             child: Column(
@@ -606,9 +628,7 @@ class _QuizAnalyticsScreenState extends State<QuizAnalyticsScreen> {
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
-                          color: isCurrentQuiz
-                              ? _purple
-                              : const Color(0xFF333333),
+                          color: isCurrentQuiz ? primaryColor : midnightPlum,
                         ),
                       ),
                     ),
@@ -619,13 +639,13 @@ class _QuizAnalyticsScreenState extends State<QuizAnalyticsScreen> {
                           vertical: 5,
                         ),
                         decoration: BoxDecoration(
-                          color: _purple.withOpacity(0.12),
+                          color: primaryColor.withOpacity(0.12),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: const Text(
                           'Current Quiz',
                           style: TextStyle(
-                            color: _purple,
+                            color: primaryColor,
                             fontWeight: FontWeight.w700,
                             fontSize: 11,
                           ),
@@ -641,7 +661,7 @@ class _QuizAnalyticsScreenState extends State<QuizAnalyticsScreen> {
                         icon: Icons.bar_chart,
                         label: 'Average',
                         value: averageScore,
-                        color: _purple,
+                        color: primaryColor,
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -650,7 +670,7 @@ class _QuizAnalyticsScreenState extends State<QuizAnalyticsScreen> {
                         icon: Icons.people,
                         label: 'Attempts',
                         value: attemptCount,
-                        color: Colors.blue,
+                        color: highlightPurple,
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -659,7 +679,7 @@ class _QuizAnalyticsScreenState extends State<QuizAnalyticsScreen> {
                         icon: Icons.check_circle,
                         label: 'Pass Rate',
                         value: '$passRate%',
-                        color: _green,
+                        color: successGreen,
                       ),
                     ),
                   ],
@@ -685,7 +705,7 @@ class _QuizAnalyticsScreenState extends State<QuizAnalyticsScreen> {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: plumShadow.withOpacity(0.07),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -693,14 +713,14 @@ class _QuizAnalyticsScreenState extends State<QuizAnalyticsScreen> {
       ),
       child: Column(
         children: [
-          Icon(icon, size: 34, color: Colors.grey),
+          Icon(icon, size: 34, color: subtleText),
           const SizedBox(height: 10),
           Text(
             title,
             style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF333333),
+              color: midnightPlum,
             ),
           ),
           const SizedBox(height: 6),
@@ -708,7 +728,7 @@ class _QuizAnalyticsScreenState extends State<QuizAnalyticsScreen> {
             subtitle,
             textAlign: TextAlign.center,
             style: const TextStyle(
-              color: Colors.grey,
+              color: mutedText,
               fontSize: 13,
               height: 1.4,
             ),

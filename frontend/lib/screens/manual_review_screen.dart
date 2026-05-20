@@ -3,27 +3,31 @@ import 'package:flutter/services.dart';
 import '../services/auth_service.dart';
 
 class _T {
-  static const Color primary = Color(0xFF2ECC71);
-  static const Color primaryLight = Color(0xFFE8F8F0);
-  static const Color primaryDark = Color(0xFF1BA35A);
-  static const Color accent = Color(0xFF6C63FF);
-  static const Color accentLight = Color(0xFFEEEDFF);
-  static const Color bg = Color(0xFFF4F7F5);
+  static const Color primary = Color(0xFF5B2A9B);
+  static const Color primaryDark = Color(0xFF3A1A6B);
+  static const Color primaryLight = Color(0xFFEDE7F2);
+  static const Color accent = Color(0xFFA14BC9);
+  static const Color accentLight = Color(0xFFF3E8FF);
+  static const Color gold = Color(0xFFF2C94C);
+  static const Color goldDark = Color(0xFFE0A93B);
+  static const Color softPurple = Color(0xFFC9A8F0);
+  static const Color bg = Color(0xFFFAF6EC);
   static const Color surface = Colors.white;
-  static const Color textDark = Color(0xFF1A2E22);
-  static const Color textMid = Color(0xFF6B7580);
-  static const Color textLight = Color(0xFFADB5BD);
+  static const Color textDark = Color(0xFF1F1235);
+  static const Color textMid = Color(0xFF7B6E99);
+  static const Color textLight = Color(0xFFA99BC4);
   static const Color success = Color(0xFF22C55E);
   static const Color warning = Color(0xFFF59E0B);
   static const Color danger = Color(0xFFEF4444);
   static const Color orange = Color(0xFFF97316);
+  static const Color plumShadow = Color(0xFF2A1247);
 
   static BoxDecoration get card => BoxDecoration(
         color: surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: plumShadow.withOpacity(0.08),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -60,14 +64,11 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
   Map<String, dynamic> _student = {};
   List<Map<String, dynamic>> _questions = [];
 
-  // Per-question controllers keyed by student_answer_id
   final Map<int, TextEditingController> _pointsControllers = {};
   final Map<int, TextEditingController> _feedbackControllers = {};
 
-  // Ticket 10.5 — per-question inline error messages (null = no error)
   final Map<int, String?> _pointsErrors = {};
 
-  // Ticket 10.5 — true only when every question has a valid points value
   bool _canFinalize = false;
 
   @override
@@ -84,8 +85,6 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
     super.dispose();
   }
 
-  // ─── Ticket 10.5: validate a single points field ───────────────────────────
-  // Returns an error string if invalid, null if valid.
   String? _validatePoints(String text, double maxPoints) {
     if (text.trim().isEmpty) return 'Required';
     final value = double.tryParse(text.trim());
@@ -97,7 +96,6 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
     return null;
   }
 
-  // ─── Ticket 10.5: recompute _canFinalize across all questions ─────────────
   void _revalidateAll() {
     if (_readOnly) return;
     bool allValid = true;
@@ -122,26 +120,22 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
         final questions =
             List<Map<String, dynamic>>.from(data['questions'] ?? []);
 
-        // Build controllers from existing review data
         for (final q in questions) {
           final id = q['student_answer_id'] as int;
           final review = q['review'] as Map<String, dynamic>?;
           final existingPoints = review?['points_awarded'];
           final existingFeedback = review?['feedback'] ?? '';
 
-          // Points controller
           if (!_pointsControllers.containsKey(id)) {
             _pointsControllers[id] = TextEditingController(
               text: existingPoints != null ? existingPoints.toString() : '',
             );
-            // Ticket 10.5 — attach live validation listener
             _pointsControllers[id]!.addListener(_revalidateAll);
           } else {
             _pointsControllers[id]!.text =
                 existingPoints != null ? existingPoints.toString() : '';
           }
 
-          // Feedback controller
           if (!_feedbackControllers.containsKey(id)) {
             _feedbackControllers[id] =
                 TextEditingController(text: existingFeedback);
@@ -149,7 +143,6 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
             _feedbackControllers[id]!.text = existingFeedback;
           }
 
-          // Initialise error state
           _pointsErrors[id] = null;
         }
 
@@ -159,7 +152,6 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
           _questions = questions;
         });
 
-        // Run initial validation after state is set
         _revalidateAll();
       } else {
         _showSnackbar(response['message'] ?? 'Failed to load', isError: true);
@@ -170,8 +162,6 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
       setState(() => _isLoading = false);
     }
   }
-
-  // ─── Build review payload from controllers ─────────────────────────────────
 
   List<Map<String, dynamic>>? _buildReviewPayload({bool requireAll = false}) {
     final List<Map<String, dynamic>> reviews = [];
@@ -238,35 +228,41 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
   }
 
   Future<void> _finalize() async {
-    // Ticket 10.5 — run full validation before showing dialog
     _revalidateAll();
     if (!_canFinalize) {
-      _showSnackbar(
-          'Fix all points errors before finalizing.',
-          isError: true);
+      _showSnackbar('Fix all points errors before finalizing.', isError: true);
       return;
     }
 
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: _T.surface,
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Finalize Review',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+            style: TextStyle(
+                fontWeight: FontWeight.bold, color: _T.textDark)),
         content: const Text(
-            'This will mark the attempt as reviewed and release results to the student. Continue?'),
+            'This will mark the attempt as reviewed and release results to the student. Continue?',
+            style: TextStyle(color: _T.textMid)),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel')),
+            onPressed: () => Navigator.pop(ctx, false),
+            style: TextButton.styleFrom(foregroundColor: _T.textMid),
+            child: const Text('Cancel'),
+          ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-                backgroundColor: _T.primary,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10))),
+              backgroundColor: _T.gold,
+              foregroundColor: _T.textDark,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
             onPressed: () => Navigator.pop(ctx, true),
-            child:
-                const Text('Finalize', style: TextStyle(color: Colors.white)),
+            child: const Text('Finalize',
+                style: TextStyle(
+                    color: _T.textDark, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -278,7 +274,6 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
 
     setState(() => _isFinalizing = true);
     try {
-      // ── First persist all points via save-draft ──
       final reviews = _buildReviewPayload(requireAll: true);
       if (reviews == null) {
         setState(() => _isFinalizing = false);
@@ -296,7 +291,6 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
         return;
       }
 
-      // ── Then finalize ──
       final response = await AuthService.authPost(
         '/teacher/manual-review/attempts/${widget.attemptId}/finalize',
         {},
@@ -320,22 +314,31 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: _T.surface,
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Reopen Review',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+            style: TextStyle(
+                fontWeight: FontWeight.bold, color: _T.textDark)),
         content: const Text(
-            'This will reopen the attempt for editing. The student\'s results will be hidden until you finalize again.'),
+            'This will reopen the attempt for editing. The student\'s results will be hidden until you finalize again.',
+            style: TextStyle(color: _T.textMid)),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel')),
+            onPressed: () => Navigator.pop(ctx, false),
+            style: TextButton.styleFrom(foregroundColor: _T.textMid),
+            child: const Text('Cancel'),
+          ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-                backgroundColor: _T.orange,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10))),
+              backgroundColor: _T.orange,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Reopen', style: TextStyle(color: Colors.white)),
+            child: const Text('Reopen',
+                style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -370,7 +373,8 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
         content: Text(message),
         backgroundColor: isError ? _T.danger : _T.success,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.all(16),
       ),
     );
@@ -420,10 +424,18 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
     return Scaffold(
       backgroundColor: _T.bg,
       appBar: AppBar(
-        backgroundColor: _T.surface,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF5B2A9B), Color(0xFF3A1A6B)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: _T.textDark),
+          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
         title: Column(
@@ -432,30 +444,34 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
             Text(
               widget.quizTitle,
               style: const TextStyle(
-                  color: _T.textDark,
+                  color: Colors.white,
                   fontWeight: FontWeight.bold,
                   fontSize: 16),
             ),
             Text(
               _readOnly ? 'View Review' : 'Reviewing',
-              style: const TextStyle(color: _T.textMid, fontSize: 12),
+              style: TextStyle(
+                  color: Colors.white.withOpacity(0.75), fontSize: 12),
             ),
           ],
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Divider(color: Colors.grey.shade100, height: 1),
+          child: Divider(
+              color: Colors.white.withOpacity(0.15), height: 1),
         ),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: _T.primary))
+          ? const Center(
+              child: CircularProgressIndicator(color: _T.primary))
           : Stack(
               children: [
                 CustomScrollView(
                   slivers: [
                     SliverToBoxAdapter(child: _buildStudentBanner()),
                     SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 140),
+                      padding:
+                          const EdgeInsets.fromLTRB(20, 0, 20, 140),
                       sliver: SliverList(
                         delegate: SliverChildBuilderDelegate(
                           (context, i) =>
@@ -479,9 +495,10 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
                 if (isBusy)
                   Positioned.fill(
                     child: Container(
-                      color: Colors.black.withOpacity(0.15),
+                      color: _T.plumShadow.withOpacity(0.18),
                       child: const Center(
-                          child: CircularProgressIndicator(color: _T.primary)),
+                          child: CircularProgressIndicator(
+                              color: _T.gold)),
                     ),
                   ),
               ],
@@ -501,11 +518,13 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
         children: [
           CircleAvatar(
             radius: 24,
-            backgroundColor: _T.accent.withOpacity(0.1),
+            backgroundColor: _T.softPurple.withOpacity(0.25),
             child: Text(
               studentName.isNotEmpty ? studentName[0].toUpperCase() : '?',
               style: const TextStyle(
-                  color: _T.accent, fontWeight: FontWeight.bold, fontSize: 18),
+                  color: _T.primary,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18),
             ),
           ),
           const SizedBox(width: 12),
@@ -519,8 +538,8 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
                         fontSize: 15,
                         color: _T.textDark)),
                 Text(_student['email'] ?? '',
-                    style:
-                        const TextStyle(fontSize: 12, color: _T.textMid)),
+                    style: const TextStyle(
+                        fontSize: 12, color: _T.textMid)),
               ],
             ),
           ),
@@ -553,7 +572,6 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
     final options =
         List<Map<String, dynamic>>.from(q['answer_options'] ?? []);
 
-    // Ticket 10.5 — current error for this question
     final pointsError = _pointsErrors[studentAnswerId];
     final hasError = pointsError != null;
 
@@ -572,13 +590,13 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
                   width: 28,
                   height: 28,
                   decoration: BoxDecoration(
-                    color: _T.accent.withOpacity(0.1),
+                    color: _T.primaryLight,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Center(
                     child: Text('$index',
                         style: const TextStyle(
-                            color: _T.accent,
+                            color: _T.primary,
                             fontWeight: FontWeight.bold,
                             fontSize: 13)),
                   ),
@@ -587,8 +605,8 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
                 Expanded(
                   child: Text(
                     _questionTypeLabel(questionType),
-                    style:
-                        const TextStyle(fontSize: 11, color: _T.textLight),
+                    style: const TextStyle(
+                        fontSize: 11, color: _T.textLight),
                   ),
                 ),
                 Text(
@@ -609,13 +627,13 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
                     fontWeight: FontWeight.w600,
                     color: _T.textDark)),
             const SizedBox(height: 14),
-            Divider(color: Colors.grey.shade100, height: 1),
+            Divider(color: _T.primaryLight, height: 1),
             const SizedBox(height: 14),
 
             // ── Answer display ──
             _buildAnswerDisplay(questionType, answerGiven, options),
             const SizedBox(height: 16),
-            Divider(color: Colors.grey.shade100, height: 1),
+            Divider(color: _T.primaryLight, height: 1),
             const SizedBox(height: 14),
 
             // ── Points input ──
@@ -634,7 +652,6 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
                                   color: _T.textMid)),
-                          // Ticket 10.5 — required indicator
                           if (!_readOnly)
                             const Text(' *',
                                 style: TextStyle(
@@ -647,8 +664,9 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
                       TextField(
                         controller: _pointsControllers[studentAnswerId],
                         enabled: !_readOnly,
-                        keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true),
+                        keyboardType:
+                            const TextInputType.numberWithOptions(
+                                decimal: true),
                         inputFormatters: [
                           FilteringTextInputFormatter.allow(
                               RegExp(r'^\d*\.?\d{0,2}')),
@@ -659,35 +677,34 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
                               const TextStyle(color: _T.textLight),
                           contentPadding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 10),
-                          // Ticket 10.5 — red border when invalid
                           border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10),
                               borderSide: BorderSide(
                                   color: hasError
                                       ? _T.danger
-                                      : Colors.grey.shade300)),
+                                      : _T.softPurple.withOpacity(0.5))),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
                             borderSide: BorderSide(
                                 color: hasError
                                     ? _T.danger
-                                    : Colors.grey.shade300),
+                                    : _T.softPurple.withOpacity(0.5)),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
                             borderSide: BorderSide(
-                                color: hasError ? _T.danger : _T.primary,
+                                color:
+                                    hasError ? _T.danger : _T.primary,
                                 width: 2),
                           ),
                           disabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
-                            borderSide:
-                                BorderSide(color: Colors.grey.shade200),
+                            borderSide: BorderSide(
+                                color: _T.primaryLight),
                           ),
                           suffixText: '/ $maxPoints',
                           suffixStyle: const TextStyle(
                               fontSize: 12, color: _T.textLight),
-                          // Ticket 10.5 — inline error text
                           errorText: hasError ? pointsError : null,
                           errorStyle: const TextStyle(
                               fontSize: 11, color: _T.danger),
@@ -695,7 +712,8 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
                         style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
-                            color: hasError ? _T.danger : _T.textDark),
+                            color:
+                                hasError ? _T.danger : _T.textDark),
                       ),
                     ],
                   ),
@@ -720,7 +738,10 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
                 hintStyle: const TextStyle(color: _T.textLight),
                 contentPadding: const EdgeInsets.all(12),
                 border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10)),
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                      color: _T.softPurple.withOpacity(0.5)),
+                ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                   borderSide:
@@ -728,7 +749,7 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
                 ),
                 disabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: Colors.grey.shade200),
+                  borderSide: const BorderSide(color: _T.primaryLight),
                 ),
               ),
             ),
@@ -741,7 +762,9 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
   // ─── Answer display per question type ──────────────────────────────────────
 
   Widget _buildAnswerDisplay(
-      String type, String answerGiven, List<Map<String, dynamic>> options) {
+      String type,
+      String answerGiven,
+      List<Map<String, dynamic>> options) {
     switch (type) {
       case 'multiple_choice':
       case 'true_false':
@@ -772,8 +795,8 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
           final isSelected = opt['id'] == selectedId;
           final isCorrect = opt['is_correct'] == true;
 
-          Color borderColor = Colors.grey.shade200;
-          Color bgColor = Colors.grey.shade50;
+          Color borderColor = _T.primaryLight;
+          Color bgColor = _T.primaryLight.withOpacity(0.3);
           Widget? trailingIcon;
 
           if (isSelected && isCorrect) {
@@ -784,8 +807,8 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
           } else if (isSelected && !isCorrect) {
             borderColor = _T.danger;
             bgColor = _T.danger.withOpacity(0.08);
-            trailingIcon =
-                const Icon(Icons.cancel_rounded, color: _T.danger, size: 18);
+            trailingIcon = const Icon(Icons.cancel_rounded,
+                color: _T.danger, size: 18);
           } else if (!isSelected && isCorrect) {
             borderColor = _T.success.withOpacity(0.4);
             bgColor = _T.success.withOpacity(0.04);
@@ -795,8 +818,8 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
 
           return Container(
             margin: const EdgeInsets.only(bottom: 6),
-            padding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding: const EdgeInsets.symmetric(
+                horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
               color: bgColor,
               borderRadius: BorderRadius.circular(10),
@@ -810,7 +833,7 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
                       color: isCorrect ? _T.success : _T.danger)
                 else
                   Icon(Icons.radio_button_unchecked_rounded,
-                      size: 16, color: Colors.grey.shade400),
+                      size: 16, color: _T.textLight),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(opt['option_text'] ?? '',
@@ -832,8 +855,8 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
 
   Widget _buildIdentificationDisplay(
       String answerGiven, List<Map<String, dynamic>> options) {
-    final correctOption =
-        options.firstWhere((o) => o['is_correct'] == true, orElse: () => {});
+    final correctOption = options
+        .firstWhere((o) => o['is_correct'] == true, orElse: () => {});
     final correctText = correctOption['option_text'] ?? '';
     final isCorrect = answerGiven.toLowerCase().trim() ==
         correctText.toLowerCase().trim();
@@ -872,7 +895,9 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
                 ),
               ),
               Icon(
-                isCorrect ? Icons.check_circle_rounded : Icons.cancel_rounded,
+                isCorrect
+                    ? Icons.check_circle_rounded
+                    : Icons.cancel_rounded,
                 color: isCorrect ? _T.success : _T.danger,
                 size: 18,
               ),
@@ -924,9 +949,9 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
           width: double.infinity,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.grey.shade50,
+            color: _T.primaryLight.withOpacity(0.4),
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.grey.shade200),
+            border: Border.all(color: _T.softPurple.withOpacity(0.4)),
           ),
           child: Text(
             answerGiven.isEmpty ? '(no answer)' : answerGiven,
@@ -948,14 +973,16 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
                 decoration: BoxDecoration(
                   color: _T.success.withOpacity(0.06),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: _T.success.withOpacity(0.3)),
+                  border:
+                      Border.all(color: _T.success.withOpacity(0.3)),
                 ),
                 child: Row(
                   children: [
                     Expanded(
                         child: Text(opt['option_text'] ?? '',
                             style: const TextStyle(
-                                fontSize: 13, color: _T.textDark))),
+                                fontSize: 13,
+                                color: _T.textDark))),
                     const Icon(Icons.arrow_forward_rounded,
                         size: 14, color: _T.textLight),
                     const SizedBox(width: 8),
@@ -987,9 +1014,10 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
           width: double.infinity,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.grey.shade50,
+            color: _T.primaryLight.withOpacity(0.4),
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.grey.shade200),
+            border:
+                Border.all(color: _T.softPurple.withOpacity(0.4)),
           ),
           child: Text(
             answerGiven.isEmpty ? '(no answer)' : answerGiven,
@@ -1010,17 +1038,17 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
         color: _T.surface,
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: _T.plumShadow.withOpacity(0.1),
               blurRadius: 16,
               offset: const Offset(0, -4))
         ],
       ),
-      child: _readOnly ? _buildReadOnlyBar(isBusy) : _buildEditBar(isBusy),
+      child:
+          _readOnly ? _buildReadOnlyBar(isBusy) : _buildEditBar(isBusy),
     );
   }
 
   Widget _buildEditBar(bool isBusy) {
-    // Ticket 10.5 — Finalize disabled when _canFinalize is false or busy
     final finalizeEnabled = !isBusy && _canFinalize;
 
     return Row(
@@ -1033,12 +1061,12 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
                     width: 16,
                     height: 16,
                     child: CircularProgressIndicator(
-                        strokeWidth: 2, color: _T.accent))
+                        strokeWidth: 2, color: _T.primary))
                 : const Icon(Icons.save_outlined, size: 18),
             label: const Text('Save Draft'),
             style: OutlinedButton.styleFrom(
-              foregroundColor: _T.accent,
-              side: const BorderSide(color: _T.accent),
+              foregroundColor: _T.primary,
+              side: const BorderSide(color: _T.softPurple),
               padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
@@ -1048,7 +1076,6 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
         const SizedBox(width: 12),
         Expanded(
           child: Tooltip(
-            // Ticket 10.5 — hint explaining why button is disabled
             message: finalizeEnabled
                 ? ''
                 : 'Enter valid points for all questions to finalize',
@@ -1059,19 +1086,26 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
                       width: 16,
                       height: 16,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white))
-                  : const Icon(Icons.check_circle_outline_rounded,
-                      size: 18, color: Colors.white),
-              label: const Text('Finalize',
-                  style: TextStyle(color: Colors.white)),
+                          strokeWidth: 2, color: _T.textDark))
+                  : Icon(Icons.check_circle_outline_rounded,
+                      size: 18,
+                      color: finalizeEnabled
+                          ? _T.textDark
+                          : Colors.grey.shade500),
+              label: Text('Finalize',
+                  style: TextStyle(
+                      color: finalizeEnabled
+                          ? _T.textDark
+                          : Colors.grey.shade500,
+                      fontWeight: FontWeight.bold)),
               style: ElevatedButton.styleFrom(
-                // Ticket 10.5 — greyed out when disabled
                 backgroundColor:
-                    finalizeEnabled ? _T.primary : Colors.grey.shade300,
+                    finalizeEnabled ? _T.gold : Colors.grey.shade300,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
-                elevation: 0,
+                elevation: finalizeEnabled ? 2 : 0,
+                shadowColor: _T.goldDark.withOpacity(0.4),
                 disabledBackgroundColor: Colors.grey.shade300,
                 disabledForegroundColor: Colors.grey.shade500,
               ),
@@ -1099,8 +1133,8 @@ class _ManualReviewScreenState extends State<ManualReviewScreen> {
           foregroundColor: _T.orange,
           side: const BorderSide(color: _T.orange),
           padding: const EdgeInsets.symmetric(vertical: 14),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12)),
         ),
       ),
     );

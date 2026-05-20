@@ -10,10 +10,26 @@ class ProfileWidget extends StatefulWidget {
   });
 
   @override
-  State<ProfileWidget> createState() => _ProfileWidgetState();
+  State<ProfileWidget> createState() => _ProfileWidgetState();  
 }
 
 class _ProfileWidgetState extends State<ProfileWidget> {
+  // ── Brand palette ──────────────────────────────────────────────
+  static const Color primaryColor    = Color(0xFF5B2A9B);
+  static const Color primaryDark     = Color(0xFF3A1A6B);
+  static const Color primaryLight    = Color(0xFFEDE7F2);
+  static const Color accentGold      = Color(0xFFF2C94C);
+  static const Color softPurple      = Color(0xFFC9A8F0);
+  static const Color highlightPurple = Color(0xFFA14BC9);
+  static const Color background      = Color(0xFFFAF6EC);
+  static const Color textPrimary     = Color(0xFF1F1235);
+  static const Color textMuted       = Color(0xFF7B6E99);
+  static const Color textSubtle      = Color(0xFFA99BC4);
+  static const Color plumShadow      = Color(0xFF2A1247);
+  static const Color danger          = Color(0xFFEF4444);
+  static const Color success         = Color(0xFF22C55E);
+  // ───────────────────────────────────────────────────────────────
+
   bool _isLoading = true;
   Map<String, dynamic>? _user;
 
@@ -37,11 +53,11 @@ class _ProfileWidgetState extends State<ProfileWidget> {
   Color _getRoleColor(String role) {
     switch (role) {
       case 'admin':
-        return Colors.red;
+        return const Color(0xFF3A1A6B); // primaryDark for admin
       case 'teacher':
-        return const Color(0xFF4CAF50);
+        return const Color(0xFF5B2A9B); // primaryColor for teacher
       default:
-        return const Color(0xFF6C63FF);
+        return const Color(0xFFA14BC9); // highlightPurple for student
     }
   }
 
@@ -57,126 +73,172 @@ class _ProfileWidgetState extends State<ProfileWidget> {
   }
 
   Future<void> _editName() async {
-  final firstNameController =
-      TextEditingController(text: _user?['first_name'] ?? '');
-  final middleInitialController =
-      TextEditingController(text: _user?['middle_initial'] ?? '');
-  final surnameController =
-      TextEditingController(text: _user?['surname'] ?? '');
+    final firstNameController =
+        TextEditingController(text: _user?['first_name'] ?? '');
+    final middleInitialController =
+        TextEditingController(text: _user?['middle_initial'] ?? '');
+    final surnameController =
+        TextEditingController(text: _user?['surname'] ?? '');
 
-  final confirm = await showDialog<bool>(
-    context: context,
-    builder: (context) => AlertDialog(
-      shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16)),
-      title: const Text('Edit Name'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            controller: firstNameController,
-            maxLength: 100,
-            decoration: InputDecoration(
-              labelText: 'First Name',
-              border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12)),
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16)),
+        backgroundColor: Colors.white,
+        title: const Text(
+          'Edit Name',
+          style: TextStyle(
+              color: textPrimary, fontWeight: FontWeight.bold),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: firstNameController,
+              maxLength: 100,
+              style: const TextStyle(color: textPrimary),
+              decoration: InputDecoration(
+                labelText: 'First Name',
+                labelStyle: const TextStyle(color: textMuted),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: softPurple)),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: softPurple),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide:
+                      const BorderSide(color: primaryColor, width: 2),
+                ),
+              ),
             ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: middleInitialController,
+              maxLength: 1,
+              style: const TextStyle(color: textPrimary),
+              decoration: InputDecoration(
+                labelText: 'Middle Initial (optional)',
+                labelStyle: const TextStyle(color: textMuted),
+                helperText: 'Single letter',
+                helperStyle: const TextStyle(color: textSubtle),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: softPurple)),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: softPurple),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide:
+                      const BorderSide(color: primaryColor, width: 2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: surnameController,
+              maxLength: 100,
+              style: const TextStyle(color: textPrimary),
+              decoration: InputDecoration(
+                labelText: 'Surname',
+                labelStyle: const TextStyle(color: textMuted),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: softPurple)),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: softPurple),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide:
+                      const BorderSide(color: primaryColor, width: 2),
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            style: TextButton.styleFrom(foregroundColor: textMuted),
+            child: const Text('Cancel'),
           ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: middleInitialController,
-            maxLength: 1,
-            decoration: InputDecoration(
-              labelText: 'Middle Initial (optional)',
-              border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12)),
-              helperText: 'Single letter',
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: accentGold,
+              foregroundColor: textPrimary,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
             ),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: surnameController,
-            maxLength: 100,
-            decoration: InputDecoration(
-              labelText: 'Surname',
-              border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12)),
-            ),
+            child: const Text('Save',
+                style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, false),
-          child: const Text('Cancel'),
+    );
+
+    if (confirm != true) return;
+
+    final firstName = firstNameController.text.trim();
+    final surname = surnameController.text.trim();
+    final emojiRegex = RegExp(r'^[\p{L}\s\-\.]+$', unicode: true);
+
+    if (firstName.isEmpty || surname.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('First name and surname are required!'),
+          backgroundColor: danger,
         ),
-        ElevatedButton(
-          onPressed: () => Navigator.pop(context, true),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF6C63FF),
-          ),
-          child: const Text('Save',
-              style: TextStyle(color: Colors.white)),
+      );
+      return;
+    }
+
+    if (!emojiRegex.hasMatch(firstName) || !emojiRegex.hasMatch(surname)) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Name must not contain emojis or special characters.'),
+          backgroundColor: danger,
         ),
-      ],
-    ),
-  );
+      );
+      return;
+    }
 
-  if (confirm != true) return;
+    final result = await AuthService.authPut('/profile', {
+      'first_name': firstName,
+      'middle_initial': middleInitialController.text.trim().isEmpty
+          ? null
+          : middleInitialController.text.trim()[0],
+      'surname': surname,
+    });
 
-  final firstName = firstNameController.text.trim();
-  final surname = surnameController.text.trim();
-  final emojiRegex = RegExp(r'^[\p{L}\s\-\.]+$', unicode: true);
-
-  if (firstName.isEmpty || surname.isEmpty) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('First name and surname are required!'),
-        backgroundColor: Colors.red,
-      ),
-    );
-    return;
+    if (result['success']) {
+      _loadProfile();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Name updated successfully!'),
+          backgroundColor: success,
+        ),
+      );
+    } else {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message']),
+          backgroundColor: danger,
+        ),
+      );
+    }
   }
-
-  if (!emojiRegex.hasMatch(firstName) || !emojiRegex.hasMatch(surname)) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Name must not contain emojis or special characters.'),
-        backgroundColor: Colors.red,
-      ),
-    );
-    return;
-  }
-
-  final result = await AuthService.authPut('/profile', {
-    'first_name': firstName,
-    'middle_initial': middleInitialController.text.trim().isEmpty
-        ? null
-        : middleInitialController.text.trim()[0],
-    'surname': surname,
-  });
-
-  if (result['success']) {
-    _loadProfile();
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Name updated successfully!'),
-        backgroundColor: Colors.green,
-      ),
-    );
-  } else {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(result['message']),
-        backgroundColor: Colors.red,
-      ),
-    );
-  }
-}
 
   Future<void> _changePassword() async {
     final currentController = TextEditingController();
@@ -192,21 +254,41 @@ class _ProfileWidgetState extends State<ProfileWidget> {
         builder: (context, setDialogState) => AlertDialog(
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16)),
-          title: const Text('Change Password'),
+          backgroundColor: Colors.white,
+          title: const Text(
+            'Change Password',
+            style: TextStyle(
+                color: textPrimary, fontWeight: FontWeight.bold),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: currentController,
                 obscureText: !showCurrent,
+                style: const TextStyle(color: textPrimary),
                 decoration: InputDecoration(
                   labelText: 'Current Password',
+                  labelStyle: const TextStyle(color: textMuted),
                   border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: softPurple)),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: softPurple),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide:
+                        const BorderSide(color: primaryColor, width: 2),
+                  ),
                   suffixIcon: IconButton(
-                    icon: Icon(showCurrent
-                        ? Icons.visibility_off
-                        : Icons.visibility),
+                    icon: Icon(
+                      showCurrent
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                      color: textMuted,
+                    ),
                     onPressed: () => setDialogState(
                         () => showCurrent = !showCurrent),
                   ),
@@ -217,14 +299,27 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                 controller: newController,
                 obscureText: !showNew,
                 maxLength: 50,
+                style: const TextStyle(color: textPrimary),
                 decoration: InputDecoration(
                   labelText: 'New Password',
+                  labelStyle: const TextStyle(color: textMuted),
                   border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: softPurple)),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: softPurple),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide:
+                        const BorderSide(color: primaryColor, width: 2),
+                  ),
                   suffixIcon: IconButton(
-                    icon: Icon(showNew
-                        ? Icons.visibility_off
-                        : Icons.visibility),
+                    icon: Icon(
+                      showNew ? Icons.visibility_off : Icons.visibility,
+                      color: textMuted,
+                    ),
                     onPressed: () =>
                         setDialogState(() => showNew = !showNew),
                   ),
@@ -235,14 +330,29 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                 controller: confirmController,
                 obscureText: !showConfirm,
                 maxLength: 50,
+                style: const TextStyle(color: textPrimary),
                 decoration: InputDecoration(
                   labelText: 'Confirm New Password',
+                  labelStyle: const TextStyle(color: textMuted),
                   border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: softPurple)),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: softPurple),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide:
+                        const BorderSide(color: primaryColor, width: 2),
+                  ),
                   suffixIcon: IconButton(
-                    icon: Icon(showConfirm
-                        ? Icons.visibility_off
-                        : Icons.visibility),
+                    icon: Icon(
+                      showConfirm
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                      color: textMuted,
+                    ),
                     onPressed: () => setDialogState(
                         () => showConfirm = !showConfirm),
                   ),
@@ -251,23 +361,26 @@ class _ProfileWidgetState extends State<ProfileWidget> {
               const SizedBox(height: 8),
               const Text(
                 '8+ chars, uppercase, lowercase, number, special char',
-                style:
-                    TextStyle(fontSize: 11, color: Colors.grey),
+                style: TextStyle(fontSize: 11, color: textSubtle),
               ),
             ],
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
+              style: TextButton.styleFrom(foregroundColor: textMuted),
               child: const Text('Cancel'),
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(context, true),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF6C63FF),
+                backgroundColor: accentGold,
+                foregroundColor: textPrimary,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
               ),
               child: const Text('Change',
-                  style: TextStyle(color: Colors.white)),
+                  style: TextStyle(fontWeight: FontWeight.bold)),
             ),
           ],
         ),
@@ -281,7 +394,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('New passwords do not match!'),
-          backgroundColor: Colors.red,
+          backgroundColor: danger,
         ),
       );
       return;
@@ -291,8 +404,9 @@ class _ProfileWidgetState extends State<ProfileWidget> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('New password must be different from your current password.'),
-          backgroundColor: Colors.red,
+          content: Text(
+              'New password must be different from your current password.'),
+          backgroundColor: danger,
         ),
       );
       return;
@@ -303,7 +417,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Password must not exceed 50 characters.'),
-          backgroundColor: Colors.red,
+          backgroundColor: danger,
         ),
       );
       return;
@@ -319,15 +433,16 @@ class _ProfileWidgetState extends State<ProfileWidget> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Password changed successfully!'),
-          backgroundColor: Colors.green,
+          backgroundColor: success,
         ),
       );
     } else {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(result['message'] ?? 'Failed to change password.'),
-          backgroundColor: Colors.red,
+          content:
+              Text(result['message'] ?? 'Failed to change password.'),
+          backgroundColor: danger,
         ),
       );
     }
@@ -337,8 +452,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Center(
-        child: CircularProgressIndicator(
-            color: Color(0xFF6C63FF)),
+        child: CircularProgressIndicator(color: primaryColor),
       );
     }
 
@@ -347,13 +461,21 @@ class _ProfileWidgetState extends State<ProfileWidget> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline,
-                size: 60, color: Colors.red),
+            const Icon(Icons.error_outline, size: 60, color: danger),
             const SizedBox(height: 16),
-            const Text('Failed to load profile.'),
+            const Text(
+              'Failed to load profile.',
+              style: TextStyle(color: textPrimary),
+            ),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _loadProfile,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: accentGold,
+                foregroundColor: textPrimary,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+              ),
               child: const Text('Retry'),
             ),
           ],
@@ -374,36 +496,61 @@ class _ProfileWidgetState extends State<ProfileWidget> {
             width: double.infinity,
             padding: const EdgeInsets.all(30),
             decoration: BoxDecoration(
-              color: roleColor,
+              gradient: LinearGradient(
+                colors: [roleColor, primaryDark],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
               borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(30),
                 bottomRight: Radius.circular(30),
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: plumShadow.withOpacity(0.3),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                ),
+              ],
             ),
             child: Column(
               children: [
                 // Avatar
                 Stack(
                   children: [
-                    CircleAvatar(
-                      radius: 50,
-                      backgroundColor:
-                          Colors.white.withOpacity(0.2),
-                      backgroundImage:
-                          _user!['profile_picture'] != null
-                              ? NetworkImage(
-                                  _user!['profile_picture'])
-                              : null,
-                      child: _user!['profile_picture'] == null
-                          ? Text(
-                              name[0].toUpperCase(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 36,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            )
-                          : null,
+                    Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                            color: accentGold.withOpacity(0.7),
+                            width: 3),
+                        boxShadow: [
+                          BoxShadow(
+                            color: plumShadow.withOpacity(0.4),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: CircleAvatar(
+                        radius: 50,
+                        backgroundColor:
+                            Colors.white.withOpacity(0.15),
+                        backgroundImage:
+                            _user!['profile_picture'] != null
+                                ? NetworkImage(_user!['profile_picture'])
+                                : null,
+                        child: _user!['profile_picture'] == null
+                            ? Text(
+                                name[0].toUpperCase(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 36,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              )
+                            : null,
+                      ),
                     ),
                   ],
                 ),
@@ -419,8 +566,8 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                 const SizedBox(height: 4),
                 Text(
                   email,
-                  style: const TextStyle(
-                    color: Colors.white70,
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.75),
                     fontSize: 14,
                   ),
                 ),
@@ -430,21 +577,21 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 16, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: accentGold.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                        color: Colors.white.withOpacity(0.4)),
+                        color: accentGold.withOpacity(0.6)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(_getRoleIcon(role),
-                          color: Colors.white, size: 16),
+                          color: accentGold, size: 16),
                       const SizedBox(width: 6),
                       Text(
                         role[0].toUpperCase() + role.substring(1),
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: accentGold,
                           fontWeight: FontWeight.bold,
                           fontSize: 13,
                         ),
@@ -469,7 +616,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF333333),
+                    color: textPrimary,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -496,8 +643,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                 _buildInfoTile(
                   icon: _getRoleIcon(role),
                   label: 'Role',
-                  value:
-                      role[0].toUpperCase() + role.substring(1),
+                  value: role[0].toUpperCase() + role.substring(1),
                   onEdit: null,
                 ),
 
@@ -509,7 +655,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF333333),
+                    color: textPrimary,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -520,25 +666,21 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                   height: 50,
                   child: OutlinedButton.icon(
                     onPressed: _changePassword,
-                    icon: const Icon(Icons.lock,
-                        color: Color(0xFF6C63FF)),
+                    icon: const Icon(Icons.lock, color: primaryColor),
                     label: const Text(
                       'Change Password',
                       style: TextStyle(
-                          color: Color(0xFF6C63FF),
-                          fontSize: 15),
+                          color: primaryColor, fontSize: 15),
                     ),
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(
-                          color: Color(0xFF6C63FF)),
+                      side: const BorderSide(color: primaryColor),
+                      backgroundColor: primaryLight.withOpacity(0.4),
                       shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(12)),
                     ),
                   ),
                 ),
 
-                
                 const SizedBox(height: 12),
 
                 // Student Info button (only for students)
@@ -551,15 +693,15 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                         Navigator.pushNamed(context, '/student-info');
                       },
                       icon: const Icon(Icons.info_outline,
-                          color: Color(0xFF6C63FF)),
+                          color: primaryColor),
                       label: const Text(
                         'Edit Student Info',
-                        style: TextStyle(
-                            color: Color(0xFF6C63FF), fontSize: 15),
+                        style:
+                            TextStyle(color: primaryColor, fontSize: 15),
                       ),
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(
-                            color: Color(0xFF6C63FF)),
+                        side: const BorderSide(color: primaryColor),
+                        backgroundColor: primaryLight.withOpacity(0.4),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12)),
                       ),
@@ -568,26 +710,24 @@ class _ProfileWidgetState extends State<ProfileWidget> {
 
                 const SizedBox(height: 30),
 
-                
-
                 // Logout button
                 SizedBox(
                   width: double.infinity,
                   height: 50,
                   child: ElevatedButton.icon(
                     onPressed: widget.onLogout,
-                    icon: const Icon(Icons.logout,
-                        color: Colors.white),
+                    icon: const Icon(Icons.logout, color: Colors.white),
                     label: const Text(
                       'Logout',
-                      style: TextStyle(
-                          color: Colors.white, fontSize: 16),
+                      style:
+                          TextStyle(color: Colors.white, fontSize: 16),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
+                      backgroundColor: danger,
                       shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(12)),
+                      shadowColor: danger.withOpacity(0.4),
+                      elevation: 3,
                     ),
                   ),
                 ),
@@ -611,17 +751,18 @@ class _ProfileWidgetState extends State<ProfileWidget> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: softPurple.withOpacity(0.4)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
+            color: plumShadow.withOpacity(0.07),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
       child: Row(
         children: [
-          Icon(icon, color: const Color(0xFF6C63FF), size: 20),
+          Icon(icon, color: primaryColor, size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -629,9 +770,9 @@ class _ProfileWidgetState extends State<ProfileWidget> {
               children: [
                 Text(
                   label,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 11,
-                    color: Colors.grey.shade500,
+                    color: textSubtle,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -640,7 +781,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF333333),
+                    color: textPrimary,
                   ),
                 ),
               ],
@@ -649,8 +790,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
           if (onEdit != null)
             IconButton(
               onPressed: onEdit,
-              icon: const Icon(Icons.edit,
-                  color: Color(0xFF6C63FF), size: 20),
+              icon: const Icon(Icons.edit, color: highlightPurple, size: 20),
               tooltip: 'Edit',
             ),
         ],

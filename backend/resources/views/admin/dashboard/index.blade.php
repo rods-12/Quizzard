@@ -249,8 +249,19 @@
                                         </div>
                                     </div>
                                     <div class="mt-6 flex flex-col gap-3 sm:flex-row">
+                                        @php
+                                            $selectedHasProtectedActivity = ($selectedUser->role === 'teacher' && (($selectedUser->quizzes_count ?? 0) > 0 || ($selectedUser->taught_classes_count ?? 0) > 0))
+                                                || ($selectedUser->role === 'student' && (($selectedUser->enrolled_classes_count ?? 0) > 0 || ($selectedUser->quiz_attempts_count ?? 0) > 0));
+                                            $selectedToggleRoute = $selectedUser->status === 'active'
+                                                ? route('admin.activation.deactivate', $selectedUser)
+                                                : route('admin.activation.activate', $selectedUser);
+                                            $selectedToggleLabel = $selectedUser->status === 'active' ? 'Deactivate Account' : 'Activate Account';
+                                            $selectedToggleClass = $selectedUser->status === 'active'
+                                                ? 'bg-red-600 hover:bg-red-700'
+                                                : 'bg-emerald-600 hover:bg-emerald-700';
+                                        @endphp
                                         <button type="button"
-                                                class="btn-edit-user inline-flex items-center justify-center rounded-xl bg-amber-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-600"
+                                                class="btn-edit-user inline-flex h-12 w-full items-center justify-center rounded-xl bg-amber-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-600 sm:w-48"
                                                 data-id="{{ $selectedUser->id }}"
                                                 data-first-name="{{ $selectedUser->first_name }}"
                                                 data-middle-initial="{{ $selectedUser->middle_initial }}"
@@ -261,12 +272,23 @@
                                                 data-update-url="{{ route('admin.users.update', $selectedUser) }}">
                                             Update Account
                                         </button>
-                                        <button type="button"
-                                                class="btn-delete-user inline-flex items-center justify-center rounded-xl bg-red-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-red-700"
-                                                data-name="{{ $selectedUser->name }}"
-                                                data-delete-url="{{ route('admin.users.destroy', $selectedUser) }}">
-                                            Delete Account
-                                        </button>
+                                        @if($selectedHasProtectedActivity)
+                                            <form method="POST" action="{{ $selectedToggleRoute }}" class="w-full sm:w-48">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit"
+                                                        class="btn-toggle-status inline-flex h-12 w-full items-center justify-center rounded-xl px-4 py-3 text-sm font-semibold text-white shadow-sm transition {{ $selectedToggleClass }}">
+                                                    {{ $selectedToggleLabel }}
+                                                </button>
+                                            </form>
+                                        @else
+                                            <button type="button"
+                                                    class="btn-delete-user inline-flex h-12 w-full items-center justify-center rounded-xl bg-red-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-red-700 sm:w-48"
+                                                    data-name="{{ $selectedUser->name }}"
+                                                    data-delete-url="{{ route('admin.users.destroy', $selectedUser) }}">
+                                                Delete Account
+                                            </button>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
@@ -302,71 +324,68 @@
                 <h3 class="text-2xl font-bold text-slate-900" id="createModalTitle">Create Account</h3>
                 <p class="mt-1 text-sm text-slate-500">Fill in the account details below.</p>
             </div>
-            <form method="POST" action="{{ route('admin.users.store') }}" class="space-y-4" id="createForm">
+            <form method="POST" action="{{ route('admin.users.store') }}" class="space-y-4" id="createForm" data-no-loading="true">
                 @csrf
+                <input type="hidden" name="role" id="createRole" value="{{ $type }}">
+                <div id="createFormErrors" class="form-error-summary hidden rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700"></div>
                 <div class="grid gap-4 sm:grid-cols-3">
                     <div>
                         <label class="mb-1.5 block text-sm font-medium text-slate-700">First Name</label>
-                        <input type="text" name="first_name" id="createFirstName" required maxlength="60"
+                        <input type="text" name="first_name" id="createFirstName" required maxlength="50" pattern="^[A-Za-z\s\-.]+$" title="First name must not contain emojis or special characters."
                                class="w-full rounded-xl border border-slate-300 px-4 py-2.5 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                               oninput="checkMaxLength(this, 'createFirstNameError', 60)">
-                        <p id="createFirstNameError" class="mt-1 hidden text-xs font-medium text-red-500">Maximum 60 characters allowed.</p>
+                               oninput="checkMaxLength(this, 'createFirstNameError', 50)">
+                        <p id="createFirstNameError" class="mt-1 hidden text-xs font-medium text-red-500">Maximum 50 characters allowed.</p>
+                        <p data-field-error="first_name" class="mt-1 hidden text-xs font-medium text-red-500"></p>
                     </div>
                     <div>
                         <label class="mb-1.5 block text-sm font-medium text-slate-700">Middle Initial</label>
-                        <input type="text" name="middle_initial" id="createMiddleInitial" maxlength="1" placeholder="Optional"
+                        <input type="text" name="middle_initial" id="createMiddleInitial" maxlength="1" pattern="[A-Za-z]" title="Middle initial must be a single alphabet character." placeholder="Optional"
                                class="w-full rounded-xl border border-slate-300 px-4 py-2.5 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+                        <p data-field-error="middle_initial" class="mt-1 hidden text-xs font-medium text-red-500"></p>
                     </div>
                     <div>
                         <label class="mb-1.5 block text-sm font-medium text-slate-700">Surname</label>
-                        <input type="text" name="surname" id="createSurname" required maxlength="60"
+                        <input type="text" name="surname" id="createSurname" required maxlength="50" pattern="^[A-Za-z\s\-.]+$" title="Last name must not contain emojis or special characters."
                                class="w-full rounded-xl border border-slate-300 px-4 py-2.5 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                               oninput="checkMaxLength(this, 'createSurnameError', 60)">
-                        <p id="createSurnameError" class="mt-1 hidden text-xs font-medium text-red-500">Maximum 60 characters allowed.</p>
+                               oninput="checkMaxLength(this, 'createSurnameError', 50)">
+                        <p id="createSurnameError" class="mt-1 hidden text-xs font-medium text-red-500">Maximum 50 characters allowed.</p>
+                        <p data-field-error="surname" class="mt-1 hidden text-xs font-medium text-red-500"></p>
                     </div>
                 </div>
                 <div>
                     <label class="mb-1.5 block text-sm font-medium text-slate-700">Email</label>
-                    <input type="email" name="email" id="createEmail" required maxlength="60"
+                    <input type="email" name="email" id="createEmail" required maxlength="30"
                            class="w-full rounded-xl border border-slate-300 px-4 py-2.5 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                           oninput="checkMaxLength(this, 'createEmailError', 60)">
-                    <p id="createEmailError" class="mt-1 hidden text-xs font-medium text-red-500">Maximum 60 characters allowed.</p>
+                           oninput="checkMaxLength(this, 'createEmailError', 30)">
+                    <p id="createEmailError" class="mt-1 hidden text-xs font-medium text-red-500">Maximum 30 characters allowed.</p>
+                    <p data-field-error="email" class="mt-1 hidden text-xs font-medium text-red-500"></p>
                 </div>
-                <div class="grid gap-4 sm:grid-cols-2">
-                    <div>
-                        <label class="mb-1.5 block text-sm font-medium text-slate-700">Role</label>
-                        <select name="role" id="createRole" required
-                                class="w-full rounded-xl border border-slate-300 px-4 py-2.5 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
-                            <option value="teacher">Teacher</option>
-                            <option value="student">Student</option>
-                            @if($isSuperAdmin)
-                                <option value="admin">Admin</option>
-                            @endif
-                        </select>
-                    </div>
-                    <div>
-                        <label class="mb-1.5 block text-sm font-medium text-slate-700">Status</label>
-                        <select name="status" required
-                                class="w-full rounded-xl border border-slate-300 px-4 py-2.5 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
-                            <option value="pending">Pending</option>
-                            <option value="active">Active</option>
-                            <option value="deactivated">Deactivated</option>
-                        </select>
-                    </div>
+                <div>
+                    <label class="mb-1.5 block text-sm font-medium text-slate-700">Status</label>
+                    <select name="status" required
+                            class="w-full rounded-xl border border-slate-300 px-4 py-2.5 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+                        <option value="pending">Pending</option>
+                        <option value="active">Active</option>
+                        <option value="deactivated">Deactivated</option>
+                    </select>
+                    <p data-field-error="status" class="mt-1 hidden text-xs font-medium text-red-500"></p>
                 </div>
                 <div>
                     <label class="mb-1.5 block text-sm font-medium text-slate-700">Password</label>
-                    <input type="password" name="password" id="createPassword" required maxlength="60"
+                    <input type="password" name="password" id="createPassword" required maxlength="50" pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&]).{8,50}$" title="Password must have 8+ characters, uppercase, lowercase, number, and special character (@$!%*#?&)."
                            class="w-full rounded-xl border border-slate-300 px-4 py-2.5 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                           oninput="checkMaxLength(this, 'createPasswordError', 60)">
-                    <p id="createPasswordError" class="mt-1 hidden text-xs font-medium text-red-500">Maximum 60 characters allowed.</p>
+                           oninput="checkMaxLength(this, 'createPasswordError', 50)">
+                    <p id="createPasswordError" class="mt-1 hidden text-xs font-medium text-red-500">Maximum 50 characters allowed.</p>
+                    <p data-field-error="password" class="mt-1 hidden text-xs font-medium text-red-500"></p>
+                    <p class="mt-1 text-xs text-slate-500">8+ characters with uppercase, lowercase, number, and special character (@$!%*#?&).</p>
                 </div>
                 <div>
                     <label class="mb-1.5 block text-sm font-medium text-slate-700">Confirm Password</label>
-                    <input type="password" name="password_confirmation" id="createPasswordConfirmation" required maxlength="60"
+                    <input type="password" name="password_confirmation" id="createPasswordConfirmation" required maxlength="50"
                            class="w-full rounded-xl border border-slate-300 px-4 py-2.5 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                           oninput="checkMaxLength(this, 'createPasswordConfirmError', 60)">
-                    <p id="createPasswordConfirmError" class="mt-1 hidden text-xs font-medium text-red-500">Maximum 60 characters allowed.</p>
+                           oninput="checkMaxLength(this, 'createPasswordConfirmError', 50)">
+                    <p id="createPasswordConfirmError" class="mt-1 hidden text-xs font-medium text-red-500">Maximum 50 characters allowed.</p>
+                    <p data-field-error="password_confirmation" class="mt-1 hidden text-xs font-medium text-red-500"></p>
                 </div>
                 <div class="flex justify-end gap-3 pt-2">
                     <button type="button" class="close-modal rounded-xl bg-slate-100 px-5 py-2.5 font-semibold text-slate-700 transition hover:bg-slate-200">
@@ -393,71 +412,67 @@
                 <h3 class="text-2xl font-bold text-slate-900">Update Account</h3>
                 <p class="mt-1 text-sm text-slate-500">Edit user details and save changes.</p>
             </div>
-            <form method="POST" id="editForm" class="space-y-4">
+            <form method="POST" id="editForm" class="space-y-4" data-no-loading="true">
                 @csrf @method('PUT')
+                <div id="editFormErrors" class="form-error-summary hidden rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700"></div>
                 <div class="grid gap-4 sm:grid-cols-3">
                     <div>
                         <label class="mb-1.5 block text-sm font-medium text-slate-700">First Name</label>
-                        <input type="text" name="first_name" id="editFirstName" required maxlength="60"
+                        <input type="text" name="first_name" id="editFirstName" required maxlength="50" pattern="^[A-Za-z\s\-.]+$" title="First name must not contain emojis or special characters."
                                class="w-full rounded-xl border border-slate-300 px-4 py-2.5 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                               oninput="checkMaxLength(this, 'editFirstNameError', 60)">
-                        <p id="editFirstNameError" class="mt-1 hidden text-xs font-medium text-red-500">Maximum 60 characters allowed.</p>
+                               oninput="checkMaxLength(this, 'editFirstNameError', 50)">
+                        <p id="editFirstNameError" class="mt-1 hidden text-xs font-medium text-red-500">Maximum 50 characters allowed.</p>
+                        <p data-field-error="first_name" class="mt-1 hidden text-xs font-medium text-red-500"></p>
                     </div>
                     <div>
                         <label class="mb-1.5 block text-sm font-medium text-slate-700">Middle Initial</label>
-                        <input type="text" name="middle_initial" id="editMiddleInitial" maxlength="1"
+                        <input type="text" name="middle_initial" id="editMiddleInitial" maxlength="1" pattern="[A-Za-z]" title="Middle initial must be a single alphabet character."
                                class="w-full rounded-xl border border-slate-300 px-4 py-2.5 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+                        <p data-field-error="middle_initial" class="mt-1 hidden text-xs font-medium text-red-500"></p>
                     </div>
                     <div>
                         <label class="mb-1.5 block text-sm font-medium text-slate-700">Surname</label>
-                        <input type="text" name="surname" id="editSurname" required maxlength="60"
+                        <input type="text" name="surname" id="editSurname" required maxlength="50" pattern="^[A-Za-z\s\-.]+$" title="Last name must not contain emojis or special characters."
                                class="w-full rounded-xl border border-slate-300 px-4 py-2.5 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                               oninput="checkMaxLength(this, 'editSurnameError', 60)">
-                        <p id="editSurnameError" class="mt-1 hidden text-xs font-medium text-red-500">Maximum 60 characters allowed.</p>
+                               oninput="checkMaxLength(this, 'editSurnameError', 50)">
+                        <p id="editSurnameError" class="mt-1 hidden text-xs font-medium text-red-500">Maximum 50 characters allowed.</p>
+                        <p data-field-error="surname" class="mt-1 hidden text-xs font-medium text-red-500"></p>
                     </div>
                 </div>
                 <div>
                     <label class="mb-1.5 block text-sm font-medium text-slate-700">Email</label>
-                    <input type="email" name="email" id="editEmail" required maxlength="60"
+                    <input type="email" name="email" id="editEmail" required maxlength="30"
                            class="w-full rounded-xl border border-slate-300 px-4 py-2.5 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                           oninput="checkMaxLength(this, 'editEmailError', 60)">
-                    <p id="editEmailError" class="mt-1 hidden text-xs font-medium text-red-500">Maximum 60 characters allowed.</p>
+                           oninput="checkMaxLength(this, 'editEmailError', 30)">
+                    <p id="editEmailError" class="mt-1 hidden text-xs font-medium text-red-500">Maximum 30 characters allowed.</p>
+                    <p data-field-error="email" class="mt-1 hidden text-xs font-medium text-red-500"></p>
                 </div>
-                <div class="grid gap-4 sm:grid-cols-2">
-                    <div>
-                        <label class="mb-1.5 block text-sm font-medium text-slate-700">Role</label>
-                        <select name="role" id="editRole" required
-                                class="w-full rounded-xl border border-slate-300 px-4 py-2.5 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
-                            <option value="teacher">Teacher</option>
-                            <option value="student">Student</option>
-                            @if($isSuperAdmin)
-                                <option value="admin">Admin</option>
-                            @endif
-                        </select>
-                    </div>
-                    <div>
-                        <label class="mb-1.5 block text-sm font-medium text-slate-700">Status</label>
-                        <select name="status" id="editStatus" required
-                                class="w-full rounded-xl border border-slate-300 px-4 py-2.5 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
-                            <option value="pending">Pending</option>
-                            <option value="active">Active</option>
-                            <option value="deactivated">Deactivated</option>
-                        </select>
-                    </div>
+                <div>
+                    <label class="mb-1.5 block text-sm font-medium text-slate-700">Status</label>
+                    <select name="status" id="editStatus" required
+                            class="w-full rounded-xl border border-slate-300 px-4 py-2.5 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+                        <option value="pending">Pending</option>
+                        <option value="active">Active</option>
+                        <option value="deactivated">Deactivated</option>
+                    </select>
+                    <p data-field-error="status" class="mt-1 hidden text-xs font-medium text-red-500"></p>
                 </div>
                 <div>
                     <label class="mb-1.5 block text-sm font-medium text-slate-700">New Password</label>
-                    <input type="password" name="password" id="editPassword" maxlength="60"
+                    <input type="password" name="password" id="editPassword" maxlength="50" pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&]).{8,50}$" title="Password must have 8+ characters, uppercase, lowercase, number, and special character (@$!%*#?&)."
                            class="w-full rounded-xl border border-slate-300 px-4 py-2.5 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                           oninput="checkMaxLength(this, 'editPasswordError', 60)">
-                    <p id="editPasswordError" class="mt-1 hidden text-xs font-medium text-red-500">Maximum 60 characters allowed.</p>
+                           oninput="checkMaxLength(this, 'editPasswordError', 50)">
+                    <p id="editPasswordError" class="mt-1 hidden text-xs font-medium text-red-500">Maximum 50 characters allowed.</p>
+                    <p data-field-error="password" class="mt-1 hidden text-xs font-medium text-red-500"></p>
+                    <p class="mt-1 text-xs text-slate-500">Leave blank to keep current password. New password must include uppercase, lowercase, number, and special character (@$!%*#?&).</p>
                 </div>
                 <div>
                     <label class="mb-1.5 block text-sm font-medium text-slate-700">Confirm New Password</label>
-                    <input type="password" name="password_confirmation" id="editPasswordConfirmation" maxlength="60"
+                    <input type="password" name="password_confirmation" id="editPasswordConfirmation" maxlength="50"
                            class="w-full rounded-xl border border-slate-300 px-4 py-2.5 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                           oninput="checkMaxLength(this, 'editPasswordConfirmError', 60)">
-                    <p id="editPasswordConfirmError" class="mt-1 hidden text-xs font-medium text-red-500">Maximum 60 characters allowed.</p>
+                           oninput="checkMaxLength(this, 'editPasswordConfirmError', 50)">
+                    <p id="editPasswordConfirmError" class="mt-1 hidden text-xs font-medium text-red-500">Maximum 50 characters allowed.</p>
+                    <p data-field-error="password_confirmation" class="mt-1 hidden text-xs font-medium text-red-500"></p>
                 </div>
                 <div class="flex justify-end gap-3 pt-2">
                     <button type="button" class="close-modal rounded-xl bg-slate-100 px-5 py-2.5 font-semibold text-slate-700 transition hover:bg-slate-200">
@@ -534,6 +549,73 @@
     function resetModalErrors(modal) {
         if (!modal) return;
         modal.querySelectorAll('p[id$="Error"]').forEach(el => el.classList.add('hidden'));
+        clearValidationErrors(modal);
+    }
+
+    function clearValidationErrors(modal) {
+        if (!modal) return;
+        const summary = modal.querySelector('.form-error-summary');
+        if (summary) {
+            summary.classList.add('hidden');
+            summary.innerHTML = '';
+        }
+        modal.querySelectorAll('[data-field-error]').forEach(el => {
+            el.textContent = '';
+            el.classList.add('hidden');
+        });
+    }
+
+    function showValidationErrors(modal, errors, fallbackMessage) {
+        if (!modal) return;
+        clearValidationErrors(modal);
+        const summary = modal.querySelector('.form-error-summary');
+        const messages = [];
+        let hasFieldError = false;
+
+        Object.entries(errors || {}).forEach(([field, fieldMessages]) => {
+            const message = Array.isArray(fieldMessages) ? fieldMessages[0] : fieldMessages;
+            if (!message) return;
+            messages.push(message);
+            const target = modal.querySelector(`[data-field-error="${field}"]`);
+            if (target) {
+                target.textContent = message;
+                target.classList.remove('hidden');
+                hasFieldError = true;
+            }
+        });
+
+        if (summary && !hasFieldError) {
+            summary.innerHTML = '';
+            const summaryMessages = messages.length ? messages : [fallbackMessage || 'Please check the highlighted fields.'];
+            summaryMessages.forEach(message => {
+                const item = document.createElement('div');
+                item.textContent = message;
+                summary.appendChild(item);
+            });
+            summary.classList.remove('hidden');
+        }
+    }
+
+    function validatePasswordConfirmation(passwordInput, confirmationInput, optionalPassword = false) {
+        if (!passwordInput || !confirmationInput) return true;
+        passwordInput.setCustomValidity('');
+        confirmationInput.setCustomValidity('');
+
+        if (optionalPassword && passwordInput.value === '' && confirmationInput.value === '') {
+            return true;
+        }
+
+        if (optionalPassword && passwordInput.value === '' && confirmationInput.value !== '') {
+            passwordInput.setCustomValidity('Enter a new password before confirming it.');
+            return false;
+        }
+
+        if (passwordInput.value !== confirmationInput.value) {
+            confirmationInput.setCustomValidity('Passwords do not match.');
+            return false;
+        }
+
+        return true;
     }
 
     // ── Modal helpers ────────────────────────────────────────────────
@@ -606,6 +688,7 @@
         btnCreateTeacher.addEventListener('click', function () {
             document.getElementById('createRole').value = 'teacher';
             document.getElementById('createModalTitle').textContent = 'Create Teacher Account';
+            clearValidationErrors(createModal);
             openModal(createModal);
         });
     }
@@ -613,6 +696,7 @@
         btnCreateStudent.addEventListener('click', function () {
             document.getElementById('createRole').value = 'student';
             document.getElementById('createModalTitle').textContent = 'Create Student Account';
+            clearValidationErrors(createModal);
             openModal(createModal);
         });
     }
@@ -620,16 +704,47 @@
         btnCreateAdmin.addEventListener('click', function () {
             document.getElementById('createRole').value = 'admin';
             document.getElementById('createModalTitle').textContent = 'Create Admin Account';
+            clearValidationErrors(createModal);
             openModal(createModal);
         });
     }
 
     // ── Create form submit ───────────────────────────────────────────
-    const createForm = document.querySelector('#createModal form');
+    const createForm = document.getElementById('createForm');
     if (createForm) {
-        createForm.addEventListener('submit', function () {
+        createForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            validatePasswordConfirmation(
+                document.getElementById('createPassword'),
+                document.getElementById('createPasswordConfirmation')
+            );
+            if (!this.checkValidity()) {
+                this.reportValidity();
+                return;
+            }
             const btn = document.getElementById('createSubmitBtn');
+            clearValidationErrors(createModal);
             setButtonLoading(btn, '.create-spinner', '.create-label', 'Creating...');
+            try {
+                const formData = new FormData(this);
+                const response = await fetch(this.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    window.location.href = data.redirect || `${dashboardUrl}?type=${encodeURIComponent(formData.get('role') || currentType)}`;
+                } else {
+                    showValidationErrors(createModal, data.errors, data.message || 'Error creating user');
+                    resetButtonLoading(btn, '.create-spinner', '.create-label', 'Create');
+                }
+            } catch (error) {
+                console.error(error);
+                showValidationErrors(createModal, {}, 'Error creating user');
+                resetButtonLoading(btn, '.create-spinner', '.create-label', 'Create');
+            }
         });
     }
 
@@ -672,11 +787,11 @@
         const editBtn = e.target.closest('.btn-edit-user');
         if (editBtn) {
             e.stopPropagation();
+            clearValidationErrors(editModal);
             document.getElementById('editFirstName').value            = editBtn.dataset.firstName    ?? '';
             document.getElementById('editMiddleInitial').value        = editBtn.dataset.middleInitial ?? '';
             document.getElementById('editSurname').value              = editBtn.dataset.surname       ?? '';
             document.getElementById('editEmail').value                = editBtn.dataset.email         ?? '';
-            document.getElementById('editRole').value                 = editBtn.dataset.role          ?? '';
             document.getElementById('editStatus').value               = editBtn.dataset.status        ?? '';
             document.getElementById('editPassword').value             = '';
             document.getElementById('editPasswordConfirmation').value = '';
@@ -692,6 +807,12 @@
             document.getElementById('deleteUserName').textContent = deleteBtn.dataset.name      ?? '';
             document.getElementById('deleteForm').action          = deleteBtn.dataset.deleteUrl ?? '';
             openModal(deleteModal);
+            return;
+        }
+
+        const toggleBtn = e.target.closest('.btn-toggle-status');
+        if (toggleBtn) {
+            e.stopPropagation();
             return;
         }
 
@@ -718,7 +839,18 @@
     // ── Edit form submit ─────────────────────────────────────────────
     document.getElementById('editForm').addEventListener('submit', async function (e) {
         e.preventDefault();
+        e.stopPropagation();
+        validatePasswordConfirmation(
+            document.getElementById('editPassword'),
+            document.getElementById('editPasswordConfirmation'),
+            true
+        );
+        if (!this.checkValidity()) {
+            this.reportValidity();
+            return;
+        }
         const submitBtn = document.getElementById('updateUserBtn');
+        clearValidationErrors(editModal);
         setButtonLoading(submitBtn, '.update-spinner', '.update-label', 'Updating...');
         try {
             const formData = new FormData(this);
@@ -732,12 +864,12 @@
                 closeModal(editModal);
                 await loadUsers(dashboardUrl + window.location.search);
             } else {
-                alert(data.message || 'Error updating user');
+                showValidationErrors(editModal, data.errors, data.message || 'Error updating user');
                 resetButtonLoading(submitBtn, '.update-spinner', '.update-label', 'Update');
             }
         } catch (error) {
             console.error(error);
-            alert('Error updating user');
+            showValidationErrors(editModal, {}, 'Error updating user');
             resetButtonLoading(submitBtn, '.update-spinner', '.update-label', 'Update');
         }
     });

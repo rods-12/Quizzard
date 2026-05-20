@@ -15,7 +15,6 @@ class QuizResultScreen extends StatelessWidget {
     // ── Guard: if status is submitted or under_review, redirect to pending review ──
     final status = data['status'] as String?;
     if (status == 'submitted' || status == 'under_review') {
-      // Schedule redirect after build
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final attemptId = data['attempt_id'];
         final quizTitle = data['quiz_title'] as String? ?? 'Quiz';
@@ -29,7 +28,6 @@ class QuizResultScreen extends StatelessWidget {
             },
           );
         } else {
-          // Fallback: show not available message on dashboard
           Navigator.pushNamedAndRemoveUntil(
             context,
             '/student-dashboard',
@@ -38,19 +36,18 @@ class QuizResultScreen extends StatelessWidget {
         }
       });
 
-      // Show a brief loading screen while redirect happens
       return const Scaffold(
-        backgroundColor: Color(0xFFF5F5F5),
+        backgroundColor: Color(0xFFFAF6EC),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              CircularProgressIndicator(color: Color(0xFF6C63FF)),
+              CircularProgressIndicator(color: Color(0xFF5B2A9B)),
               SizedBox(height: 16),
               Text(
                 'Results not yet available.',
                 style: TextStyle(
-                  color: Color(0xFF6B7080),
+                  color: Color(0xFFA99BC4),
                   fontSize: 14,
                 ),
               ),
@@ -71,24 +68,33 @@ class QuizResultScreen extends StatelessWidget {
     String scoreLabel;
     IconData scoreIcon;
     if (percentage >= 80) {
-      scoreColor = Colors.green;
+      scoreColor = const Color(0xFF22C55E);
       scoreLabel = 'Excellent!';
       scoreIcon = Icons.emoji_events;
     } else if (percentage >= 60) {
-      scoreColor = Colors.orange;
+      scoreColor = const Color(0xFFF59E0B);
       scoreLabel = 'Good Job!';
       scoreIcon = Icons.thumb_up;
     } else {
-      scoreColor = Colors.red;
+      scoreColor = const Color(0xFFEF4444);
       scoreLabel = 'Keep Practicing!';
       scoreIcon = Icons.refresh;
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: const Color(0xFFFAF6EC),
       appBar: AppBar(
         title: const Text('Quiz Results'),
-        backgroundColor: const Color(0xFF6C63FF),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF5B2A9B), Color(0xFF3A1A6B)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
       ),
@@ -100,7 +106,11 @@ class QuizResultScreen extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(30),
               decoration: const BoxDecoration(
-                color: Color(0xFF6C63FF),
+                gradient: LinearGradient(
+                  colors: [Color(0xFF5B2A9B), Color(0xFF3A1A6B)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
                 borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(30),
                   bottomRight: Radius.circular(30),
@@ -108,7 +118,7 @@ class QuizResultScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  Icon(scoreIcon, color: Colors.white, size: 60),
+                  Icon(scoreIcon, color: const Color(0xFFF2C94C), size: 60),
                   const SizedBox(height: 12),
                   Text(
                     scoreLabel,
@@ -122,7 +132,7 @@ class QuizResultScreen extends StatelessWidget {
                   Text(
                     quizTitle,
                     style: const TextStyle(
-                      color: Colors.white70,
+                      color: Color(0xFFC9A8F0),
                       fontSize: 14,
                     ),
                   ),
@@ -137,7 +147,7 @@ class QuizResultScreen extends StatelessWidget {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: const Color(0xFF2A1247).withOpacity(0.25),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
@@ -158,7 +168,7 @@ class QuizResultScreen extends StatelessWidget {
                           '$score / $totalPoints pts',
                           style: const TextStyle(
                             fontSize: 13,
-                            color: Colors.grey,
+                            color: Color(0xFFA99BC4),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -177,7 +187,7 @@ class QuizResultScreen extends StatelessWidget {
                             .where((q) => q['is_correct'] == true)
                             .length
                             .toString(),
-                        color: Colors.green,
+                        color: const Color(0xFF22C55E),
                       ),
                       _buildStat(
                         label: 'Wrong',
@@ -185,7 +195,7 @@ class QuizResultScreen extends StatelessWidget {
                             .where((q) => q['is_correct'] == false)
                             .length
                             .toString(),
-                        color: Colors.red,
+                        color: const Color(0xFFEF4444),
                       ),
                       _buildStat(
                         label: 'Total',
@@ -209,7 +219,7 @@ class QuizResultScreen extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF333333),
+                      color: Color(0xFF1F1235),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -226,8 +236,8 @@ class QuizResultScreen extends StatelessWidget {
                               height: 28,
                               decoration: BoxDecoration(
                                 color: q['is_correct'] == true
-                                    ? Colors.green
-                                    : Colors.red,
+                                    ? const Color(0xFF22C55E)
+                                    : const Color(0xFFEF4444),
                                 shape: BoxShape.circle,
                               ),
                               child: Center(
@@ -246,8 +256,8 @@ class QuizResultScreen extends StatelessWidget {
                               '${q['points_earned']}/${q['points']} pts',
                               style: TextStyle(
                                 color: q['is_correct'] == true
-                                    ? Colors.green
-                                    : Colors.red,
+                                    ? const Color(0xFF22C55E)
+                                    : const Color(0xFFEF4444),
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -257,7 +267,10 @@ class QuizResultScreen extends StatelessWidget {
                         _buildResultWidget(q),
                         const SizedBox(height: 20),
                         if (index < questionResults.length - 1)
-                          const Divider(height: 20),
+                          const Divider(
+                            height: 20,
+                            color: Color(0xFFEDE7F2),
+                          ),
                       ],
                     );
                   }),
@@ -274,20 +287,21 @@ class QuizResultScreen extends StatelessWidget {
                         '/student-dashboard',
                         (route) => false,
                       ),
-                      icon: const Icon(Icons.home, color: Colors.white),
+                      icon: const Icon(Icons.home, color: Color(0xFF1F1235)),
                       label: const Text(
                         'Back to Dashboard',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: Color(0xFF1F1235),
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF6C63FF),
+                        backgroundColor: const Color(0xFFF2C94C),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
+                        elevation: 0,
                       ),
                     ),
                   ),
@@ -319,7 +333,7 @@ class QuizResultScreen extends StatelessWidget {
         Text(
           label,
           style: const TextStyle(
-            color: Colors.white70,
+            color: Color(0xFFC9A8F0),
             fontSize: 13,
           ),
         ),

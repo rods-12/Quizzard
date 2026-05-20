@@ -4,25 +4,29 @@ import '../services/auth_service.dart';
 
 // ─── THEME ────────────────────────────────────────────────────────────────────
 class _T {
-  static const Color primary = Color(0xFF2ECC71);
-  static const Color primaryDark = Color(0xFF1BA35A);
-  static const Color primaryLight = Color(0xFFE8F8F0);
-  static const Color accent = Color(0xFF6C63FF);
-  static const Color bg = Color(0xFFF4F7F5);
-  static const Color surface = Colors.white;
-  static const Color textDark = Color(0xFF1A2E22);
-  static const Color textMid = Color(0xFF6B7580);
-  static const Color textLight = Color(0xFFADB5BD);
-  static const Color success = Color(0xFF22C55E);
-  static const Color danger = Color(0xFFEF4444);
-  static const Color warning = Color(0xFFF59E0B);
+  static const Color primary      = Color(0xFF5B2A9B);
+  static const Color primaryDark  = Color(0xFF3A1A6B);
+  static const Color primaryLight = Color(0xFFEDE7F2);
+  static const Color accent       = Color(0xFFF2C94C);
+  static const Color accentDark   = Color(0xFFE0A93B);
+  static const Color softPurple   = Color(0xFFC9A8F0);
+  static const Color highlight    = Color(0xFFA14BC9);
+  static const Color bg           = Color(0xFFFAF6EC);
+  static const Color surface      = Colors.white;
+  static const Color textDark     = Color(0xFF1F1235);
+  static const Color textMid      = Color(0xFF7A6E8A);
+  static const Color textLight    = Color(0xFFA99BC4);
+  static const Color plumShadow   = Color(0xFF2A1247);
+  static const Color success      = Color(0xFF22C55E);
+  static const Color danger       = Color(0xFFEF4444);
+  static const Color warning      = Color(0xFFF59E0B);
 
   static BoxDecoration get card => BoxDecoration(
         color: surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: plumShadow.withOpacity(0.10),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -30,7 +34,7 @@ class _T {
       );
 
   static LinearGradient get headerGradient => const LinearGradient(
-        colors: [Color(0xFF2ECC71), Color(0xFF1BA35A)],
+        colors: [Color(0xFF5B2A9B), Color(0xFF3A1A6B)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       );
@@ -118,7 +122,7 @@ class _TeacherClassListTabState extends State<TeacherClassListTab> {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Create New Class', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Create New Class', style: TextStyle(fontWeight: FontWeight.bold, color: _T.textDark)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -158,15 +162,17 @@ class _TeacherClassListTabState extends State<TeacherClassListTab> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
+            style: TextButton.styleFrom(foregroundColor: _T.primary),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: _T.primary,
+              backgroundColor: _T.accent,
+              foregroundColor: _T.textDark,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            child: const Text('Create', style: TextStyle(color: Colors.white)),
+            child: const Text('Create', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -202,7 +208,7 @@ class _TeacherClassListTabState extends State<TeacherClassListTab> {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Edit Class', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Edit Class', style: TextStyle(fontWeight: FontWeight.bold, color: _T.textDark)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -240,15 +246,17 @@ class _TeacherClassListTabState extends State<TeacherClassListTab> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
+            style: TextButton.styleFrom(foregroundColor: _T.primary),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: _T.primary,
+              backgroundColor: _T.accent,
+              foregroundColor: _T.textDark,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            child: const Text('Save', style: TextStyle(color: Colors.white)),
+            child: const Text('Save', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -278,11 +286,12 @@ class _TeacherClassListTabState extends State<TeacherClassListTab> {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Delete Class', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Delete Class', style: TextStyle(fontWeight: FontWeight.bold, color: _T.textDark)),
         content: Text('Are you sure you want to delete "${cls['name']}"? This cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
+            style: TextButton.styleFrom(foregroundColor: _T.primary),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
@@ -316,9 +325,9 @@ class _TeacherClassListTabState extends State<TeacherClassListTab> {
       backgroundColor: _T.bg,
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _createClass,
-        backgroundColor: _T.primary,
-        icon: const Icon(Icons.add_rounded, color: Colors.white),
-        label: const Text('New Class', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        backgroundColor: _T.accent,
+        icon: const Icon(Icons.add_rounded, color: _T.textDark),
+        label: const Text('New Class', style: TextStyle(color: _T.textDark, fontWeight: FontWeight.bold)),
         elevation: 4,
       ),
       body: Stack(
@@ -329,16 +338,16 @@ class _TeacherClassListTabState extends State<TeacherClassListTab> {
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
                 child: Container(
-                  color: Colors.black.withOpacity(0.25),
+                  color: _T.plumShadow.withOpacity(0.30),
                   child: Center(
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 22),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.92),
+                        color: Colors.white.withOpacity(0.95),
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.12),
+                            color: _T.plumShadow.withOpacity(0.18),
                             blurRadius: 24,
                             offset: const Offset(0, 8),
                           ),
@@ -420,8 +429,11 @@ class _TeacherClassListTabState extends State<TeacherClassListTab> {
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _loadClasses,
-                style: ElevatedButton.styleFrom(backgroundColor: _T.primary),
-                child: const Text('Retry', style: TextStyle(color: Colors.white)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _T.accent,
+                  foregroundColor: _T.textDark,
+                ),
+                child: const Text('Retry', style: TextStyle(fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -456,7 +468,7 @@ class _TeacherClassListTabState extends State<TeacherClassListTab> {
                   const SizedBox(height: 4),
                   Text(
                     '${_classes.length} class${_classes.length == 1 ? '' : 'es'}',
-                    style: const TextStyle(color: Colors.white70, fontSize: 13),
+                    style: TextStyle(color: Colors.white.withOpacity(0.75), fontSize: 13),
                   ),
                   const SizedBox(height: 20),
                   TextField(
@@ -557,8 +569,12 @@ class _TeacherClassListTabState extends State<TeacherClassListTab> {
 
   Widget _buildClassCard(Map<String, dynamic> cls) {
     final colors = [
-      const Color(0xFF2ECC71), const Color(0xFF6C63FF), const Color(0xFF3B82F6),
-      const Color(0xFFF59E0B), const Color(0xFFEF4444), const Color(0xFF8B5CF6),
+      const Color(0xFF5B2A9B), // Royal Purple
+      const Color(0xFFA14BC9), // Mystic Magenta
+      const Color(0xFF3A1A6B), // Deep Violet
+      const Color(0xFFC9A8F0), // Light Lilac
+      const Color(0xFF7C3FC0), // mid purple
+      const Color(0xFF6B21A8), // grape purple
     ];
     final classColor = colors[(cls['name'] as String).codeUnitAt(0) % colors.length];
 
@@ -581,7 +597,7 @@ class _TeacherClassListTabState extends State<TeacherClassListTab> {
             Container(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
               decoration: BoxDecoration(
-                color: classColor.withOpacity(0.1),
+                color: classColor.withOpacity(0.10),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(16),
                   topRight: Radius.circular(16),
@@ -631,7 +647,7 @@ class _TeacherClassListTabState extends State<TeacherClassListTab> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(
-                          color: classColor.withOpacity(0.1),
+                          color: classColor.withOpacity(0.08),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(color: classColor.withOpacity(0.3)),
                         ),
@@ -654,7 +670,7 @@ class _TeacherClassListTabState extends State<TeacherClassListTab> {
                     ],
                   ),
                   const SizedBox(height: 10),
-                  Divider(color: Colors.grey.shade100, height: 1),
+                  Divider(color: _T.primaryLight, height: 1),
                   const SizedBox(height: 10),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -683,14 +699,14 @@ class _TeacherClassListTabState extends State<TeacherClassListTab> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                               decoration: BoxDecoration(
-                                border: Border.all(color: _T.accent.withOpacity(0.3)),
+                                border: Border.all(color: _T.softPurple.withOpacity(0.6)),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: const Row(
                                 children: [
-                                  Icon(Icons.edit_rounded, size: 13, color: _T.accent),
+                                  Icon(Icons.edit_rounded, size: 13, color: _T.primary),
                                   SizedBox(width: 4),
-                                  Text('Edit', style: TextStyle(color: _T.accent, fontSize: 12, fontWeight: FontWeight.w600)),
+                                  Text('Edit', style: TextStyle(color: _T.primary, fontSize: 12, fontWeight: FontWeight.w600)),
                                 ],
                               ),
                             ),
@@ -708,14 +724,14 @@ class _TeacherClassListTabState extends State<TeacherClassListTab> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                               decoration: BoxDecoration(
-                                color: classColor,
+                                color: _T.accent,
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: const Row(
                                 children: [
-                                  Text('Manage', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                                  Text('Manage', style: TextStyle(color: _T.textDark, fontSize: 12, fontWeight: FontWeight.bold)),
                                   SizedBox(width: 4),
-                                  Icon(Icons.arrow_forward_rounded, size: 13, color: Colors.white),
+                                  Icon(Icons.arrow_forward_rounded, size: 13, color: _T.textDark),
                                 ],
                               ),
                             ),

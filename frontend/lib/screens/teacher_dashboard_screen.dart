@@ -7,27 +7,30 @@ import 'teacher_quizzes_tab.dart';
 
 // ─── THEME ────────────────────────────────────────────────────────────────────
 class _T {
-  static const Color primary = Color(0xFF2ECC71);
-  static const Color primaryDark = Color(0xFF1BA35A);
-  static const Color primaryLight = Color(0xFFE8F8F0);
-  static const Color accent = Color(0xFF6C63FF);
-  static const Color accentLight = Color(0xFFEEEDFF);
-  static const Color bg = Color(0xFFF4F7F5);
+  static const Color primary = Color(0xFF5B2A9B);
+  static const Color primaryDark = Color(0xFF3A1A6B);
+  static const Color primaryLight = Color(0xFFEDE7F2);
+  static const Color accent = Color(0xFFF2C94C);
+  static const Color accentDark = Color(0xFFE0A93B);
+  static const Color softPurple = Color(0xFFC9A8F0);
+  static const Color highlightPurple = Color(0xFFA14BC9);
+  static const Color bg = Color(0xFFFAF6EC);
   static const Color surface = Colors.white;
-  static const Color textDark = Color(0xFF1A2E22);
-  static const Color textMid = Color(0xFF6B7580);
-  static const Color textLight = Color(0xFFADB5BD);
+  static const Color textDark = Color(0xFF1F1235);
+  static const Color textMid = Color(0xFF7A6E8A);
+  static const Color textLight = Color(0xFFA99BC4);
   static const Color success = Color(0xFF22C55E);
   static const Color warning = Color(0xFFF59E0B);
   static const Color danger = Color(0xFFEF4444);
   static const Color orange = Color(0xFFF97316);
+  static const Color plumShadow = Color(0xFF2A1247);
 
   static BoxDecoration get card => BoxDecoration(
         color: surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: plumShadow.withOpacity(0.08),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -35,7 +38,7 @@ class _T {
       );
 
   static LinearGradient get headerGradient => const LinearGradient(
-        colors: [Color(0xFF2ECC71), Color(0xFF1BA35A)],
+        colors: [Color(0xFF5B2A9B), Color(0xFF3A1A6B)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       );
@@ -94,7 +97,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Log Out', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Log Out', style: TextStyle(fontWeight: FontWeight.bold, color: _T.textDark)),
         content: const Text('Are you sure you want to log out?'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('Cancel', style: TextStyle(color: _T.textMid))),
@@ -123,7 +126,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Create New Class', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Create New Class', style: TextStyle(fontWeight: FontWeight.bold, color: _T.textDark)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -163,15 +166,15 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: const Text('Cancel', style: TextStyle(color: _T.textMid)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: _T.primary,
+              backgroundColor: _T.accent,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            child: const Text('Create', style: TextStyle(color: Colors.white)),
+            child: const Text('Create', style: TextStyle(color: _T.textDark, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -206,7 +209,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Edit Class', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Edit Class', style: TextStyle(fontWeight: FontWeight.bold, color: _T.textDark)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -244,15 +247,15 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: const Text('Cancel', style: TextStyle(color: _T.textMid)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: _T.primary,
+              backgroundColor: _T.accent,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            child: const Text('Save', style: TextStyle(color: Colors.white)),
+            child: const Text('Save', style: TextStyle(color: _T.textDark, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -283,10 +286,10 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Delete Class', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Delete Class', style: TextStyle(fontWeight: FontWeight.bold, color: _T.textDark)),
         content: Text('Are you sure you want to delete "${cls['name']}"? All student enrollments and quiz assignments will be lost.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel', style: TextStyle(color: _T.textMid))),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: _T.danger, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
             onPressed: () => Navigator.pop(ctx, true),
@@ -354,14 +357,14 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
                 child: Container(
-                  color: Colors.black.withOpacity(0.25),
+                  color: _T.plumShadow.withOpacity(0.30),
                   child: Center(
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 22),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.92),
+                        color: Colors.white.withOpacity(0.95),
                         borderRadius: BorderRadius.circular(20),
-                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 24, offset: const Offset(0, 8))],
+                        boxShadow: [BoxShadow(color: _T.plumShadow.withOpacity(0.18), blurRadius: 24, offset: const Offset(0, 8))],
                       ),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
@@ -395,17 +398,17 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
         },
         backgroundColor: _T.accent,
         elevation: 4,
-        icon: const Icon(Icons.add_rounded, color: Colors.white),
-        label: const Text('New Quiz', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        icon: const Icon(Icons.add_rounded, color: _T.textDark),
+        label: const Text('New Quiz', style: TextStyle(color: _T.textDark, fontWeight: FontWeight.bold)),
       );
     }
     if (_selectedIndex == 0 && !_isLoading) {
       return FloatingActionButton.extended(
         onPressed: _createClass,
-        backgroundColor: _T.primary,
+        backgroundColor: _T.accent,
         elevation: 4,
-        icon: const Icon(Icons.add_rounded, color: Colors.white),
-        label: const Text('New Class', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        icon: const Icon(Icons.add_rounded, color: _T.textDark),
+        label: const Text('New Class', style: TextStyle(color: _T.textDark, fontWeight: FontWeight.bold)),
       );
     }
     return null;
@@ -416,14 +419,14 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
         child: Container(
-          color: Colors.black.withOpacity(0.25),
+          color: _T.plumShadow.withOpacity(0.30),
           child: Center(
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 22),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.92),
+                color: Colors.white.withOpacity(0.95),
                 borderRadius: BorderRadius.circular(20),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 24, offset: const Offset(0, 8))],
+                boxShadow: [BoxShadow(color: _T.plumShadow.withOpacity(0.18), blurRadius: 24, offset: const Offset(0, 8))],
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -444,7 +447,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 20, offset: const Offset(0, -4))],
+        boxShadow: [BoxShadow(color: _T.plumShadow.withOpacity(0.10), blurRadius: 20, offset: const Offset(0, -4))],
       ),
       child: SafeArea(
         child: SizedBox(
@@ -560,7 +563,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
 
     return RefreshIndicator(
       onRefresh: () async => _loadDashboard(),
-      color: _T.primary,
+      color: _T.accent,
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
@@ -796,8 +799,12 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     final String? code = cls['code'];
 
     final colors = [
-      const Color(0xFF2ECC71), const Color(0xFF6C63FF), const Color(0xFF3B82F6),
-      const Color(0xFFF59E0B), const Color(0xFFEF4444), const Color(0xFF8B5CF6),
+      const Color(0xFF5B2A9B),
+      const Color(0xFFA14BC9),
+      const Color(0xFF3A1A6B),
+      const Color(0xFFC9A8F0),
+      const Color(0xFF7C3ABD),
+      const Color(0xFF8B5CF6),
     ];
     final classColor = colors[name.codeUnitAt(0) % colors.length];
 
@@ -820,7 +827,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
             Container(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
               decoration: BoxDecoration(
-                color: classColor.withOpacity(0.1),
+                color: classColor.withOpacity(0.10),
                 borderRadius: const BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
               ),
               child: Row(
@@ -867,7 +874,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                           decoration: BoxDecoration(
-                            color: classColor.withOpacity(0.1),
+                            color: classColor.withOpacity(0.10),
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(color: classColor.withOpacity(0.3)),
                           ),
@@ -890,7 +897,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  Divider(color: Colors.grey.shade100, height: 1),
+                  Divider(color: _T.primaryLight, height: 1),
                   const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -919,14 +926,14 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                               decoration: BoxDecoration(
-                                border: Border.all(color: _T.accent.withOpacity(0.3)),
+                                border: Border.all(color: _T.softPurple.withOpacity(0.5)),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: const Row(
                                 children: [
-                                  Icon(Icons.edit_rounded, size: 13, color: _T.accent),
+                                  Icon(Icons.edit_rounded, size: 13, color: _T.primary),
                                   SizedBox(width: 4),
-                                  Text('Edit', style: TextStyle(color: _T.accent, fontSize: 12, fontWeight: FontWeight.w600)),
+                                  Text('Edit', style: TextStyle(color: _T.primary, fontSize: 12, fontWeight: FontWeight.w600)),
                                 ],
                               ),
                             ),
@@ -944,14 +951,14 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                               decoration: BoxDecoration(
-                                color: classColor,
+                                color: _T.accent,
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: const Row(
                                 children: [
-                                  Text('Manage', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                                  Text('Manage', style: TextStyle(color: _T.textDark, fontSize: 12, fontWeight: FontWeight.bold)),
                                   SizedBox(width: 4),
-                                  Icon(Icons.arrow_forward_rounded, size: 13, color: Colors.white),
+                                  Icon(Icons.arrow_forward_rounded, size: 13, color: _T.textDark),
                                 ],
                               ),
                             ),

@@ -3,6 +3,7 @@
         ? $isSuperAdmin
         : (auth()->check() && auth()->user()->role === 'superadmin');
 @endphp
+//users._table.blade.php//
 <div class="overflow-x-auto p-2">
     <table class="min-w-full table-fixed border-separate border-spacing-y-3 text-sm text-slate-700">
         <thead class="text-left text-xs font-bold uppercase tracking-wide text-slate-600">
@@ -114,10 +115,20 @@
                     <td class="rounded-r-2xl border-y border-r border-slate-200 bg-white px-4 py-4 shadow-sm transition-all duration-200 ease-out
                                group-hover:scale-[1.01] group-hover:border-blue-500 group-hover:bg-blue-50
                                group-hover:shadow-[0_0_0_3px_rgba(59,130,246,0.18),0_16px_30px_-12px_rgba(15,23,42,0.25)]">
+                        @php
+                            $hasProtectedActivity = ($user->role === 'teacher' && (($user->quizzes_count ?? 0) > 0 || ($user->taught_classes_count ?? 0) > 0))
+                                || ($user->role === 'student' && (($user->enrolled_classes_count ?? 0) > 0 || ($user->quiz_attempts_count ?? 0) > 0));
+                            $toggleRoute = $user->status === 'active'
+                                ? route('admin.activation.deactivate', $user)
+                                : route('admin.activation.activate', $user);
+                            $toggleLabel = $user->status === 'active' ? 'Deactivate' : 'Activate';
+                            $toggleClass = $user->status === 'active'
+                                ? 'bg-red-600 hover:bg-red-700'
+                                : 'bg-emerald-600 hover:bg-emerald-700';
+                        @endphp
                         <div class="flex flex-wrap gap-2">
-                            {{-- inline onclick removed — delegated listener on document in index.blade.php handles this --}}
                             <button type="button"
-                                    class="btn-edit-user inline-flex items-center rounded-xl bg-amber-500 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-amber-600"
+                                    class="btn-edit-user inline-flex h-9 w-28 items-center justify-center rounded-xl bg-amber-500 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-amber-600"
                                     data-id="{{ $user->id }}"
                                     data-first-name="{{ $user->first_name ?? '' }}"
                                     data-middle-initial="{{ $user->middle_initial ?? '' }}"
@@ -128,12 +139,23 @@
                                     data-update-url="{{ route('admin.users.update', $user) }}">
                                 Update
                             </button>
-                            <button type="button"
-                                    class="btn-delete-user inline-flex items-center rounded-xl bg-red-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-red-700"
-                                    data-name="{{ $user->name }}"
-                                    data-delete-url="{{ route('admin.users.destroy', $user) }}">
-                                Delete
-                            </button>
+                            @if($hasProtectedActivity)
+                                <form method="POST" action="{{ $toggleRoute }}" class="inline-flex w-28">
+                                    @csrf
+                                    @method('PATCH')
+                                    <button type="submit"
+                                            class="btn-toggle-status inline-flex h-9 w-28 items-center justify-center rounded-xl px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition {{ $toggleClass }}">
+                                        {{ $toggleLabel }}
+                                    </button>
+                                </form>
+                            @else
+                                <button type="button"
+                                        class="btn-delete-user inline-flex h-9 w-28 items-center justify-center rounded-xl bg-red-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-red-700"
+                                        data-name="{{ $user->name }}"
+                                        data-delete-url="{{ route('admin.users.destroy', $user) }}">
+                                    Delete
+                                </button>
+                            @endif
                         </div>
                     </td>
                 </tr>

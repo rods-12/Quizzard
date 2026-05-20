@@ -20,7 +20,6 @@ class _PendingReviewScreenState extends State<PendingReviewScreen> {
   String? _errorMessage;
   Map<String, dynamic>? _attemptData;
 
-  // Status constants
   static const String _statusSubmitted = 'submitted';
   static const String _statusUnderReview = 'under_review';
   static const String _statusReviewed = 'reviewed';
@@ -46,7 +45,6 @@ class _PendingReviewScreenState extends State<PendingReviewScreen> {
       if (result['success']) {
         _attemptData = result['data'] as Map<String, dynamic>;
 
-        // If it has been reviewed since we last checked, redirect to result
         final status = _attemptData?['attempt']?['status'] as String?;
         if (status == _statusReviewed && mounted) {
           _redirectToResult();
@@ -58,7 +56,6 @@ class _PendingReviewScreenState extends State<PendingReviewScreen> {
   }
 
   void _redirectToResult() {
-    // The attempt is now reviewed — navigate to result screen
     if (!mounted) return;
     Navigator.pushReplacementNamed(
       context,
@@ -83,9 +80,9 @@ class _PendingReviewScreenState extends State<PendingReviewScreen> {
       case _statusSubmitted:
         return const Color(0xFFF59E0B);
       case _statusUnderReview:
-        return const Color(0xFF3B82F6);
+        return const Color(0xFFC9A8F0);
       default:
-        return const Color(0xFF6B7080);
+        return const Color(0xFFA99BC4);
     }
   }
 
@@ -103,14 +100,23 @@ class _PendingReviewScreenState extends State<PendingReviewScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F6FB),
+      backgroundColor: const Color(0xFFFAF6EC),
       appBar: AppBar(
         title: Text(
           widget.quizTitle,
           style: const TextStyle(fontSize: 16),
           overflow: TextOverflow.ellipsis,
         ),
-        backgroundColor: const Color(0xFF6C63FF),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF5B2A9B), Color(0xFF3A1A6B)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
       ),
@@ -121,7 +127,7 @@ class _PendingReviewScreenState extends State<PendingReviewScreen> {
   Widget _buildBody() {
     if (_isLoading) {
       return const Center(
-        child: CircularProgressIndicator(color: Color(0xFF6C63FF)),
+        child: CircularProgressIndicator(color: Color(0xFF5B2A9B)),
       );
     }
 
@@ -145,16 +151,23 @@ class _PendingReviewScreenState extends State<PendingReviewScreen> {
               Text(
                 _errorMessage!,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Color(0xFF6B7080)),
+                style: const TextStyle(color: Color(0xFFA99BC4)),
               ),
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _loadAttempt,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF6C63FF),
+                  backgroundColor: const Color(0xFFF2C94C),
+                  foregroundColor: const Color(0xFF1F1235),
+                  elevation: 0,
                 ),
-                child: const Text('Retry',
-                    style: TextStyle(color: Colors.white)),
+                child: const Text(
+                  'Retry',
+                  style: TextStyle(
+                    color: Color(0xFF1F1235),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ],
           ),
@@ -162,14 +175,15 @@ class _PendingReviewScreenState extends State<PendingReviewScreen> {
       );
     }
 
-    
-    final attempt = _attemptData!['attempt'] != null? Map<String, dynamic>.from(_attemptData!['attempt']): <String, dynamic>{};
+    final attempt = _attemptData!['attempt'] != null
+        ? Map<String, dynamic>.from(_attemptData!['attempt'])
+        : <String, dynamic>{};
     final answers = _attemptData!['answers'] as List? ?? [];
     final status = attempt['status'] as String? ?? 'submitted';
 
     return RefreshIndicator(
       onRefresh: _loadAttempt,
-      color: const Color(0xFF6C63FF),
+      color: const Color(0xFF5B2A9B),
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         child: Column(
@@ -180,7 +194,7 @@ class _PendingReviewScreenState extends State<PendingReviewScreen> {
               padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Color(0xFF6C63FF), Color(0xFF4B44CC)],
+                  colors: [Color(0xFF5B2A9B), Color(0xFF3A1A6B)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -200,7 +214,7 @@ class _PendingReviewScreenState extends State<PendingReviewScreen> {
                     child: Icon(
                       _statusIcon(status),
                       size: 52,
-                      color: Colors.white,
+                      color: const Color(0xFFF2C94C),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -258,7 +272,7 @@ class _PendingReviewScreenState extends State<PendingReviewScreen> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: const Color(0xFF2A1247).withOpacity(0.08),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -271,18 +285,18 @@ class _PendingReviewScreenState extends State<PendingReviewScreen> {
                       'Quiz',
                       widget.quizTitle,
                     ),
-                    const Divider(height: 20),
+                    const Divider(height: 20, color: Color(0xFFEDE7F2)),
                     _buildInfoRow(
                       Icons.help_outline_rounded,
                       'Questions Answered',
                       '${answers.length} question${answers.length == 1 ? '' : 's'}',
                     ),
-                    const Divider(height: 20),
+                    const Divider(height: 20, color: Color(0xFFEDE7F2)),
                     _buildInfoRow(
                       Icons.lock_clock_rounded,
                       'Score',
                       'Hidden until reviewed',
-                      valueColor: const Color(0xFF6B7080),
+                      valueColor: const Color(0xFFA99BC4),
                     ),
                   ],
                 ),
@@ -291,7 +305,7 @@ class _PendingReviewScreenState extends State<PendingReviewScreen> {
 
             const SizedBox(height: 20),
 
-            // ── Submitted Answers (read-only, no correct/incorrect) ──
+            // ── Submitted Answers ──
             if (answers.isNotEmpty) ...[
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -300,11 +314,11 @@ class _PendingReviewScreenState extends State<PendingReviewScreen> {
                     Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFEEEDFF),
+                        color: const Color(0xFFEDE7F2),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Icon(Icons.list_alt_rounded,
-                          color: Color(0xFF6C63FF), size: 16),
+                          color: Color(0xFF5B2A9B), size: 16),
                     ),
                     const SizedBox(width: 10),
                     const Text(
@@ -312,7 +326,7 @@ class _PendingReviewScreenState extends State<PendingReviewScreen> {
                       style: TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF1A1D2E),
+                        color: Color(0xFF1F1235),
                         letterSpacing: -0.3,
                       ),
                     ),
@@ -356,7 +370,7 @@ class _PendingReviewScreenState extends State<PendingReviewScreen> {
                       child: Text(
                         'Scores, correct answers, and feedback are hidden until your teacher completes the review. Pull down to refresh and check if your results are ready.',
                         style: TextStyle(
-                          color: const Color(0xFFF59E0B).withOpacity(0.9),
+                          color: const Color(0xFFE0A93B).withOpacity(0.9),
                           fontSize: 12,
                           height: 1.5,
                         ),
@@ -382,17 +396,18 @@ class _PendingReviewScreenState extends State<PendingReviewScreen> {
                     (route) => false,
                   ),
                   icon: const Icon(Icons.home_rounded,
-                      color: Colors.white),
+                      color: Color(0xFF1F1235)),
                   label: const Text(
                     'Back to Dashboard',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: Color(0xFF1F1235),
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF6C63FF),
+                    backgroundColor: const Color(0xFFF2C94C),
+                    elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
@@ -418,10 +433,10 @@ class _PendingReviewScreenState extends State<PendingReviewScreen> {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: const Color(0xFFEEEDFF),
+            color: const Color(0xFFEDE7F2),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon, color: const Color(0xFF6C63FF), size: 18),
+          child: Icon(icon, color: const Color(0xFF5B2A9B), size: 18),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -432,7 +447,7 @@ class _PendingReviewScreenState extends State<PendingReviewScreen> {
                 label,
                 style: const TextStyle(
                   fontSize: 11,
-                  color: Color(0xFFADB5BD),
+                  color: Color(0xFFA99BC4),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -442,7 +457,7 @@ class _PendingReviewScreenState extends State<PendingReviewScreen> {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: valueColor ?? const Color(0xFF1A1D2E),
+                  color: valueColor ?? const Color(0xFF1F1235),
                 ),
               ),
             ],
@@ -466,7 +481,7 @@ class _PendingReviewScreenState extends State<PendingReviewScreen> {
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: const Color(0xFF2A1247).withOpacity(0.06),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -477,21 +492,20 @@ class _PendingReviewScreenState extends State<PendingReviewScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Question number + type badge
             Row(
               children: [
                 Container(
                   width: 28,
                   height: 28,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEEEDFF),
+                    color: const Color(0xFFEDE7F2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Center(
                     child: Text(
                       '$number',
                       style: const TextStyle(
-                        color: Color(0xFF6C63FF),
+                        color: Color(0xFF5B2A9B),
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
                       ),
@@ -503,38 +517,37 @@ class _PendingReviewScreenState extends State<PendingReviewScreen> {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF4F6FB),
+                    color: const Color(0xFFFAF6EC),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
                     _formatQuestionType(questionType),
                     style: const TextStyle(
                       fontSize: 10,
-                      color: Color(0xFF6B7080),
+                      color: Color(0xFFA99BC4),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),
                 const Spacer(),
-                // Neutral submitted indicator (no correct/wrong)
                 Container(
                   padding: const EdgeInsets.symmetric(
                       horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEEEDFF),
+                    color: const Color(0xFFEDE7F2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.send_rounded,
-                          size: 10, color: Color(0xFF6C63FF)),
+                          size: 10, color: Color(0xFF5B2A9B)),
                       SizedBox(width: 4),
                       Text(
                         'Submitted',
                         style: TextStyle(
                           fontSize: 10,
-                          color: Color(0xFF6C63FF),
+                          color: Color(0xFF5B2A9B),
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -545,21 +558,19 @@ class _PendingReviewScreenState extends State<PendingReviewScreen> {
             ),
             const SizedBox(height: 12),
 
-            // Question text
             Text(
               questionText,
               style: const TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 14,
-                color: Color(0xFF1A1D2E),
+                color: Color(0xFF1F1235),
                 height: 1.4,
               ),
             ),
             const SizedBox(height: 10),
-            const Divider(height: 1, color: Color(0xFFF4F6FB)),
+            const Divider(height: 1, color: Color(0xFFEDE7F2)),
             const SizedBox(height: 10),
 
-            // Answer given (formatted per type)
             _buildAnswerDisplay(questionType, answerGiven, answer),
           ],
         ),
@@ -576,13 +587,10 @@ class _PendingReviewScreenState extends State<PendingReviewScreen> {
       case 'multiple_choice':
       case 'true_false':
         return _buildOptionAnswerDisplay(answerGiven, answer);
-
       case 'identification':
         return _buildTextAnswerDisplay(answerGiven);
-
       case 'matching':
         return _buildMatchingAnswerDisplay(answerGiven, answer);
-
       default:
         return _buildTextAnswerDisplay(answerGiven);
     }
@@ -590,9 +598,7 @@ class _PendingReviewScreenState extends State<PendingReviewScreen> {
 
   Widget _buildOptionAnswerDisplay(
       String answerGiven, Map<String, dynamic> answer) {
-    // answerGiven is the selected option ID; show the option text if available
-    final options =
-        answer['answer_options'] as List? ?? [];
+    final options = answer['answer_options'] as List? ?? [];
     String displayText = answerGiven;
 
     if (answerGiven.isNotEmpty) {
@@ -625,7 +631,6 @@ class _PendingReviewScreenState extends State<PendingReviewScreen> {
       return _buildAnswerChip('No answer given', isEmpty: true);
     }
 
-    // Parse the JSON-ish map
     Map<String, String> matches = {};
     try {
       final clean = answerGiven
@@ -656,7 +661,7 @@ class _PendingReviewScreenState extends State<PendingReviewScreen> {
           'Your matches:',
           style: TextStyle(
             fontSize: 11,
-            color: Color(0xFFADB5BD),
+            color: Color(0xFFA99BC4),
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -671,14 +676,14 @@ class _PendingReviewScreenState extends State<PendingReviewScreen> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEEEDFF),
+                      color: const Color(0xFFEDE7F2),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       e.key,
                       style: const TextStyle(
                         fontSize: 12,
-                        color: Color(0xFF1A1D2E),
+                        color: Color(0xFF1F1235),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -687,21 +692,21 @@ class _PendingReviewScreenState extends State<PendingReviewScreen> {
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 8),
                   child: Icon(Icons.arrow_forward_rounded,
-                      size: 14, color: Color(0xFF6C63FF)),
+                      size: 14, color: Color(0xFF5B2A9B)),
                 ),
                 Expanded(
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF4F6FB),
+                      color: const Color(0xFFFAF6EC),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       e.value,
                       style: const TextStyle(
                         fontSize: 12,
-                        color: Color(0xFF1A1D2E),
+                        color: Color(0xFF1F1235),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -721,13 +726,13 @@ class _PendingReviewScreenState extends State<PendingReviewScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: isEmpty
-            ? const Color(0xFFF4F6FB)
-            : const Color(0xFFEEEDFF),
+            ? const Color(0xFFFAF6EC)
+            : const Color(0xFFEDE7F2),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
           color: isEmpty
-              ? const Color(0xFFADB5BD).withOpacity(0.3)
-              : const Color(0xFF6C63FF).withOpacity(0.2),
+              ? const Color(0xFFA99BC4).withOpacity(0.3)
+              : const Color(0xFF5B2A9B).withOpacity(0.2),
         ),
       ),
       child: Row(
@@ -738,8 +743,8 @@ class _PendingReviewScreenState extends State<PendingReviewScreen> {
                 : Icons.check_box_outline_blank_rounded,
             size: 14,
             color: isEmpty
-                ? const Color(0xFFADB5BD)
-                : const Color(0xFF6C63FF),
+                ? const Color(0xFFA99BC4)
+                : const Color(0xFF5B2A9B),
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -748,8 +753,8 @@ class _PendingReviewScreenState extends State<PendingReviewScreen> {
               style: TextStyle(
                 fontSize: 13,
                 color: isEmpty
-                    ? const Color(0xFFADB5BD)
-                    : const Color(0xFF1A1D2E),
+                    ? const Color(0xFFA99BC4)
+                    : const Color(0xFF1F1235),
                 fontStyle:
                     isEmpty ? FontStyle.italic : FontStyle.normal,
                 fontWeight: FontWeight.w500,

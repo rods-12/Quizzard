@@ -75,10 +75,22 @@ class User extends Authenticatable
     {
         return $this->hasMany(\App\Models\QuizAttempt::class, 'student_id');
     }
- 
+
+    public function taughtClasses()
+    {
+        return $this->hasMany(\App\Models\ClassRoom::class, 'teacher_id');
+    }
+
+    public function enrolledClasses()
+    {
+        return $this->belongsToMany(\App\Models\ClassRoom::class, 'class_students', 'student_id', 'class_id')
+            ->withPivot('joined_at')
+            ->withTimestamps();
+    }
+
     public function quizzes()
     {
         return $this->hasMany(\App\Models\Quiz::class, 'teacher_id');
     }
- 
+
 }

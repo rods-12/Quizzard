@@ -5,6 +5,27 @@ import '../widgets/true_false_widget.dart';
 import '../widgets/identification_widget.dart';
 import '../widgets/matching_widget.dart';
 
+// ── Quizzard Brand Palette ──────────────────────────────────────────────────
+class _Q {
+  static const primary        = Color(0xFF5B2A9B); // Royal Purple
+  static const primaryDark    = Color(0xFF3A1A6B); // Deep Violet
+  static const primaryLight   = Color(0xFFEDE7F2); // Wizard Beard White
+  static const gold           = Color(0xFFF2C94C); // Enchanted Gold
+  static const goldDark       = Color(0xFFE0A93B); // Warm Amber
+  static const softPurple     = Color(0xFFC9A8F0); // Light Lilac
+  static const magenta        = Color(0xFFA14BC9); // Mystic Magenta
+  static const background     = Color(0xFFFAF6EC); // Parchment Cream
+  static const surface        = Color(0xFFFFFFFF); // Card / Surface
+  static const textPrimary    = Color(0xFF1F1235); // Midnight Plum
+  static const textMuted      = Color(0xFF7B6F96); // Muted Purple-Gray
+  static const textSubtle     = Color(0xFFA99BC4); // Muted Lavender
+  static const plumShadow     = Color(0xFF2A1247); // Deep dark shadow
+  static const success        = Color(0xFF22C55E);
+  static const warning        = Color(0xFFF59E0B);
+  static const danger         = Color(0xFFEF4444);
+}
+// ───────────────────────────────────────────────────────────────────────────
+
 class QuizTakingScreen extends StatefulWidget {
   final int quizId;
   final String quizTitle;
@@ -130,36 +151,61 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Submit Quiz?'),
+        backgroundColor: _Q.surface,
+        title: const Text(
+          'Submit Quiz?',
+          style: TextStyle(
+            color: _Q.textPrimary,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-                'You have answered ${_questions.length - unanswered} out of ${_questions.length} questions.'),
+              'You have answered ${_questions.length - unanswered} out of ${_questions.length} questions.',
+              style: const TextStyle(color: _Q.textMuted),
+            ),
             if (unanswered > 0) ...[
               const SizedBox(height: 8),
               Text(
                 '$unanswered question(s) unanswered.',
                 style: const TextStyle(
-                    color: Colors.orange, fontWeight: FontWeight.bold),
+                  color: _Q.warning,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
             const SizedBox(height: 8),
-            const Text('Are you sure you want to submit?'),
+            const Text(
+              'Are you sure you want to submit?',
+              style: TextStyle(color: _Q.textMuted),
+            ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
+            style: TextButton.styleFrom(
+              foregroundColor: _Q.textMuted,
+            ),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF6C63FF),
+              backgroundColor: _Q.gold,
+              foregroundColor: _Q.textPrimary,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
-            child: const Text('Submit', style: TextStyle(color: Colors.white)),
+            child: const Text(
+              'Submit',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -215,10 +261,12 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
     if (!mounted) return;
 
     final isManualPending = result['success'] == false &&
-    (result['message'] as String? ?? '').toLowerCase().contains('pending');
+        (result['message'] as String? ?? '').toLowerCase().contains('pending');
 
     if (result['success'] == true || isManualPending) {
-      final data = result['data'] != null ? Map<String, dynamic>.from(result['data']) : null;
+      final data = result['data'] != null
+          ? Map<String, dynamic>.from(result['data'])
+          : null;
       final status = data?['status'] as String? ?? '';
 
       if (isManualPending || status == 'submitted' || status == 'under_review') {
@@ -241,7 +289,7 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(result['message']),
-          backgroundColor: Colors.red,
+          backgroundColor: _Q.danger,
         ),
       );
     }
@@ -250,24 +298,49 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: _Q.background,
       appBar: AppBar(
         title: Text(
           widget.quizTitle,
-          style: const TextStyle(fontSize: 16),
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
-        backgroundColor: const Color(0xFF6C63FF),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [_Q.primary, _Q.primaryDark],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
+        elevation: 0,
+        shadowColor: _Q.plumShadow.withOpacity(0.4),
         actions: [
           if (!_isLoading && _questions.isNotEmpty)
-            TextButton(
-              onPressed: _isSubmitting ? null : _confirmSubmit,
-              child: const Text(
-                'Submit',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+              child: TextButton(
+                onPressed: _isSubmitting ? null : _confirmSubmit,
+                style: TextButton.styleFrom(
+                  backgroundColor: _Q.gold,
+                  foregroundColor: _Q.textPrimary,
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text(
+                  'Submit',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
                 ),
               ),
             ),
@@ -280,7 +353,7 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
   Widget _buildBody() {
     if (_isLoading) {
       return const Center(
-        child: CircularProgressIndicator(color: Color(0xFF6C63FF)),
+        child: CircularProgressIndicator(color: _Q.primary),
       );
     }
 
@@ -291,16 +364,23 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 60, color: Colors.red),
+              const Icon(Icons.error_outline, size: 60, color: _Q.danger),
               const SizedBox(height: 16),
               Text(
                 _errorMessage!,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.red),
+                style: const TextStyle(color: _Q.danger),
               ),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _Q.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
                 child: const Text('Go Back'),
               ),
             ],
@@ -311,7 +391,10 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
 
     if (_questions.isEmpty) {
       return const Center(
-        child: Text('This quiz has no questions yet.'),
+        child: Text(
+          'This quiz has no questions yet.',
+          style: TextStyle(color: _Q.textMuted),
+        ),
       );
     }
 
@@ -323,7 +406,7 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
       children: [
         // Progress bar
         Container(
-          color: Colors.white,
+          color: _Q.surface,
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
@@ -334,12 +417,12 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
                     'Question ${_currentIndex + 1} of $totalQuestions',
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF333333),
+                      color: _Q.textPrimary,
                     ),
                   ),
                   Text(
                     '${_questions.where((q) => _isAnswered(q['id'])).length} answered',
-                    style: const TextStyle(color: Colors.grey, fontSize: 13),
+                    style: const TextStyle(color: _Q.textSubtle, fontSize: 13),
                   ),
                 ],
               ),
@@ -348,9 +431,8 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
                 borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(
                   value: (_currentIndex + 1) / totalQuestions,
-                  backgroundColor: Colors.grey.shade200,
-                  valueColor:
-                      const AlwaysStoppedAnimation<Color>(Color(0xFF6C63FF)),
+                  backgroundColor: _Q.primaryLight,
+                  valueColor: const AlwaysStoppedAnimation<Color>(_Q.primary),
                   minHeight: 8,
                 ),
               ),
@@ -377,11 +459,20 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
                         height: 32,
                         decoration: BoxDecoration(
                           color: isCurrent
-                              ? const Color(0xFF6C63FF)
+                              ? _Q.primary
                               : isAnswered
-                                  ? Colors.green
-                                  : Colors.grey.shade300,
+                                  ? _Q.magenta
+                                  : _Q.primaryLight,
                           borderRadius: BorderRadius.circular(8),
+                          boxShadow: isCurrent
+                              ? [
+                                  BoxShadow(
+                                    color: _Q.primary.withOpacity(0.35),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ]
+                              : null,
                         ),
                         child: Center(
                           child: Text(
@@ -389,7 +480,7 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
                             style: TextStyle(
                               color: isCurrent || isAnswered
                                   ? Colors.white
-                                  : Colors.grey.shade700,
+                                  : _Q.textMuted,
                               fontWeight: isCurrent
                                   ? FontWeight.bold
                                   : FontWeight.w500,
@@ -416,7 +507,7 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
 
         // Navigation buttons
         Container(
-          color: Colors.white,
+          color: _Q.surface,
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
@@ -427,11 +518,13 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
                     icon: const Icon(Icons.arrow_back),
                     label: const Text('Previous'),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFF6C63FF),
-                      side: const BorderSide(color: Color(0xFF6C63FF)),
+                      foregroundColor: _Q.primary,
+                      side: const BorderSide(color: _Q.softPurple, width: 1.5),
+                      backgroundColor: _Q.primaryLight,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                   ),
                 ),
@@ -456,12 +549,17 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: (_currentIndex < totalQuestions - 1)
-                        ? const Color(0xFF6C63FF)
-                        : Colors.green,
-                    foregroundColor: Colors.white,
+                        ? _Q.primary
+                        : _Q.gold,
+                    foregroundColor: (_currentIndex < totalQuestions - 1)
+                        ? Colors.white
+                        : _Q.textPrimary,
+                    elevation: 2,
+                    shadowColor: _Q.plumShadow.withOpacity(0.3),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
               ),

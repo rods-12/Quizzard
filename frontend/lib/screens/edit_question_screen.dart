@@ -21,7 +21,15 @@ class EditQuestionScreen extends StatefulWidget {
 }
 
 class _EditQuestionScreenState extends State<EditQuestionScreen> {
-  static const Color primaryColor = Color(0xFF6C63FF);
+  static const Color primaryColor    = Color(0xFF5B2A9B);
+  static const Color primaryDark     = Color(0xFF3A1A6B);
+  static const Color primaryLight    = Color(0xFFEDE7F2);
+  static const Color accentGold      = Color(0xFFF2C94C);
+  static const Color textDark        = Color(0xFF1F1235);
+  static const Color textMid         = Color(0xFF7B6F96);
+  static const Color textLight       = Color(0xFFA99BC4);
+  static const Color plumShadow      = Color(0xFF2A1247);
+  static const Color bgColor         = Color(0xFFFAF6EC);
 
   late String _questionType;
   bool _loading = false;
@@ -70,21 +78,18 @@ class _EditQuestionScreenState extends State<EditQuestionScreen> {
       text: '${widget.question['points'] ?? 1}',
     );
 
-    // Load existing question image
     final existingImagePath = widget.question['image_path'];
     if (existingImagePath != null && existingImagePath.toString().isNotEmpty) {
       _questionImageUrl = AuthService.fixImageUrl(existingImagePath);
       _questionImagePath = existingImagePath;
     }
 
-    // Load existing question video
     final existingVideoPath = widget.question['video_path'];
     if (existingVideoPath != null && existingVideoPath.toString().isNotEmpty) {
       _questionVideoUrl = AuthService.fixImageUrl(existingVideoPath);
       _questionVideoPath = existingVideoPath;
     }
 
-    // Load existing question audio
     final existingAudioPath = widget.question['audio_path'];
     if (existingAudioPath != null && existingAudioPath.toString().isNotEmpty) {
       _questionAudioUrl = AuthService.fixImageUrl(existingAudioPath);
@@ -95,7 +100,6 @@ class _EditQuestionScreenState extends State<EditQuestionScreen> {
       widget.question['answer_options'] ?? [],
     );
 
-    // Multiple choice
     _mcOptions = List.generate(4, (i) {
       return TextEditingController(
         text: i < options.length ? (options[i]['option_text'] ?? '') : '',
@@ -105,19 +109,16 @@ class _EditQuestionScreenState extends State<EditQuestionScreen> {
       if (options[i]['is_correct'] == true || options[i]['is_correct'] == 1) {
         _mcCorrectIndex = i;
       }
-      // Load existing option images
       final optionImage = options[i]['image_path'];
       if (optionImage != null && optionImage.toString().isNotEmpty) {
         _mcOptionImageUrls[i] = AuthService.fixImageUrl(optionImage);
         _mcOptionImagePaths[i] = optionImage;
       }
-      // Load existing option videos
       final optionVideo = options[i]['video_path'];
       if (optionVideo != null && optionVideo.toString().isNotEmpty) {
         _mcOptionVideoUrls[i] = AuthService.fixImageUrl(optionVideo);
         _mcOptionVideoPaths[i] = optionVideo;
       }
-      // Load existing option audios
       final optionAudio = options[i]['audio_path'];
       if (optionAudio != null && optionAudio.toString().isNotEmpty) {
         _mcOptionAudioUrls[i] = AuthService.fixImageUrl(optionAudio);
@@ -125,7 +126,6 @@ class _EditQuestionScreenState extends State<EditQuestionScreen> {
       }
     }
 
-    // True/False
     if (_questionType == 'true_false') {
       final trueOption = options.firstWhere(
         (o) => (o['option_text'] ?? '').toString().toLowerCase() == 'true',
@@ -135,12 +135,10 @@ class _EditQuestionScreenState extends State<EditQuestionScreen> {
           trueOption['is_correct'] == true || trueOption['is_correct'] == 1;
     }
 
-    // Identification
     _identAnswerController = TextEditingController(
       text: options.isNotEmpty ? (options[0]['option_text'] ?? '') : '',
     );
 
-    // Matching
     _matchLeft = List.generate(4, (i) => TextEditingController(
           text: i < options.length ? (options[i]['option_text'] ?? '') : '',
         ));
@@ -165,7 +163,7 @@ class _EditQuestionScreenState extends State<EditQuestionScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
             content: Text('Question text is required.'),
-            backgroundColor: Colors.red),
+            backgroundColor: Color(0xFFEF4444)),
       );
       return;
     }
@@ -188,7 +186,7 @@ class _EditQuestionScreenState extends State<EditQuestionScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
                 content: Text('Fill in all 4 options.'),
-                backgroundColor: Colors.red),
+                backgroundColor: Color(0xFFEF4444)),
           );
           return;
         }
@@ -211,7 +209,7 @@ class _EditQuestionScreenState extends State<EditQuestionScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
                 content: Text('Answer is required.'),
-                backgroundColor: Colors.red),
+                backgroundColor: Color(0xFFEF4444)),
           );
           return;
         }
@@ -226,7 +224,7 @@ class _EditQuestionScreenState extends State<EditQuestionScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
                 content: Text('Fill in all 4 matching pairs.'),
-                backgroundColor: Colors.red),
+                backgroundColor: Color(0xFFEF4444)),
           );
           return;
         }
@@ -250,7 +248,7 @@ class _EditQuestionScreenState extends State<EditQuestionScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
               content: Text('Question updated!'),
-              backgroundColor: Colors.green),
+              backgroundColor: Color(0xFF22C55E)),
         );
         Navigator.pop(context, true);
       }
@@ -259,7 +257,7 @@ class _EditQuestionScreenState extends State<EditQuestionScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
               content: Text(result['message']),
-              backgroundColor: Colors.red),
+              backgroundColor: const Color(0xFFEF4444)),
         );
       }
     }
@@ -278,9 +276,18 @@ class _EditQuestionScreenState extends State<EditQuestionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: bgColor,
       appBar: AppBar(
-        backgroundColor: primaryColor,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [primaryColor, primaryDark],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         title: Text('Edit ${_questionTypeLabel(_questionType)}'),
       ),
@@ -293,13 +300,14 @@ class _EditQuestionScreenState extends State<EditQuestionScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: primaryColor.withOpacity(0.1),
+                color: primaryLight,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: primaryColor.withOpacity(0.3)),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.info_outline, size: 16, color: primaryColor),
+                  const Icon(Icons.info_outline,
+                      size: 16, color: primaryColor),
                   const SizedBox(width: 8),
                   Text(
                     'Type: ${_questionTypeLabel(_questionType)}',
@@ -315,13 +323,19 @@ class _EditQuestionScreenState extends State<EditQuestionScreen> {
             TextField(
               controller: _questionTextController,
               maxLines: 3,
+              style: const TextStyle(color: textDark),
               decoration: InputDecoration(
                 labelText: 'Question Text *',
+                labelStyle: const TextStyle(color: textMid),
+                filled: true,
+                fillColor: primaryLight,
                 border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: primaryColor, width: 2),
+                  borderSide:
+                      const BorderSide(color: primaryColor, width: 2),
                 ),
               ),
             ),
@@ -333,7 +347,14 @@ class _EditQuestionScreenState extends State<EditQuestionScreen> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.shade200),
+                border: Border.all(color: primaryLight),
+                boxShadow: [
+                  BoxShadow(
+                    color: plumShadow.withOpacity(0.06),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -350,7 +371,7 @@ class _EditQuestionScreenState extends State<EditQuestionScreen> {
                       style: TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 13,
-                          color: Colors.grey)),
+                          color: textLight)),
                   const SizedBox(height: 4),
                   ImagePickerWidget(
                     currentImageUrl: _questionImageUrl,
@@ -367,7 +388,7 @@ class _EditQuestionScreenState extends State<EditQuestionScreen> {
                       style: TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 13,
-                          color: Colors.grey)),
+                          color: textLight)),
                   const SizedBox(height: 4),
                   VideoPickerWidget(
                     initialVideoUrl: _questionVideoUrl,
@@ -391,7 +412,7 @@ class _EditQuestionScreenState extends State<EditQuestionScreen> {
                       style: TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 13,
-                          color: Colors.grey)),
+                          color: textLight)),
                   const SizedBox(height: 4),
                   AudioPickerWidget(
                     initialAudioUrl: _questionAudioUrl,
@@ -417,14 +438,21 @@ class _EditQuestionScreenState extends State<EditQuestionScreen> {
             TextField(
               controller: _pointsController,
               keyboardType: TextInputType.number,
+              style: const TextStyle(color: textDark),
               decoration: InputDecoration(
                 labelText: 'Points',
-                prefixIcon: const Icon(Icons.star, color: primaryColor),
+                labelStyle: const TextStyle(color: textMid),
+                prefixIcon:
+                    const Icon(Icons.star, color: accentGold),
+                filled: true,
+                fillColor: primaryLight,
                 border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: primaryColor, width: 2),
+                  borderSide:
+                      const BorderSide(color: primaryColor, width: 2),
                 ),
               ),
             ),
@@ -437,18 +465,21 @@ class _EditQuestionScreenState extends State<EditQuestionScreen> {
             ElevatedButton(
               onPressed: _loading ? null : _submit,
               style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                foregroundColor: Colors.white,
+                backgroundColor: accentGold,
+                disabledBackgroundColor: accentGold.withOpacity(0.5),
+                foregroundColor: textDark,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
+                elevation: 3,
+                shadowColor: plumShadow.withOpacity(0.3),
               ),
               child: _loading
                   ? const SizedBox(
                       height: 20,
                       width: 20,
                       child: CircularProgressIndicator(
-                          color: Colors.white, strokeWidth: 2))
+                          color: textDark, strokeWidth: 2))
                   : const Text('Save Changes',
                       style: TextStyle(
                           fontSize: 16, fontWeight: FontWeight.bold)),
@@ -474,9 +505,10 @@ class _EditQuestionScreenState extends State<EditQuestionScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text('Answer Options',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+            style: TextStyle(
+                fontWeight: FontWeight.bold, color: textDark)),
         const Text('Tap the circle to mark the correct answer',
-            style: TextStyle(fontSize: 12, color: Colors.grey)),
+            style: TextStyle(fontSize: 12, color: textLight)),
         const SizedBox(height: 12),
         ...List.generate(
             4,
@@ -497,10 +529,22 @@ class _EditQuestionScreenState extends State<EditQuestionScreen> {
                           Expanded(
                             child: TextField(
                               controller: _mcOptions[i],
+                              style: const TextStyle(color: textDark),
                               decoration: InputDecoration(
                                 labelText: 'Option ${i + 1}',
+                                labelStyle:
+                                    const TextStyle(color: textMid),
+                                filled: true,
+                                fillColor: primaryLight,
                                 border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10)),
+                                    borderRadius:
+                                        BorderRadius.circular(10),
+                                    borderSide: BorderSide.none),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: const BorderSide(
+                                      color: primaryColor, width: 2),
+                                ),
                               ),
                             ),
                           ),
@@ -514,8 +558,14 @@ class _EditQuestionScreenState extends State<EditQuestionScreen> {
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(10),
-                            border:
-                                Border.all(color: Colors.grey.shade200),
+                            border: Border.all(color: primaryLight),
+                            boxShadow: [
+                              BoxShadow(
+                                color: plumShadow.withOpacity(0.05),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -524,7 +574,7 @@ class _EditQuestionScreenState extends State<EditQuestionScreen> {
                                   style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
-                                      color: Colors.grey)),
+                                      color: textLight)),
                               const SizedBox(height: 6),
                               ImagePickerWidget(
                                 currentImageUrl: _mcOptionImageUrls[i],
@@ -589,7 +639,8 @@ class _EditQuestionScreenState extends State<EditQuestionScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text('Correct Answer',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+            style: TextStyle(
+                fontWeight: FontWeight.bold, color: textDark)),
         const SizedBox(height: 12),
         Row(
           children: [
@@ -602,6 +653,15 @@ class _EditQuestionScreenState extends State<EditQuestionScreen> {
                     color: _tfCorrectAnswer ? primaryColor : Colors.white,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: primaryColor),
+                    boxShadow: _tfCorrectAnswer
+                        ? [
+                            BoxShadow(
+                              color: plumShadow.withOpacity(0.2),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            )
+                          ]
+                        : [],
                   ),
                   child: Center(
                     child: Text('TRUE',
@@ -625,6 +685,15 @@ class _EditQuestionScreenState extends State<EditQuestionScreen> {
                     color: !_tfCorrectAnswer ? primaryColor : Colors.white,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: primaryColor),
+                    boxShadow: !_tfCorrectAnswer
+                        ? [
+                            BoxShadow(
+                              color: plumShadow.withOpacity(0.2),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            )
+                          ]
+                        : [],
                   ),
                   child: Center(
                     child: Text('FALSE',
@@ -649,14 +718,20 @@ class _EditQuestionScreenState extends State<EditQuestionScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text('Correct Answer',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+            style: TextStyle(
+                fontWeight: FontWeight.bold, color: textDark)),
         const SizedBox(height: 12),
         TextField(
           controller: _identAnswerController,
+          style: const TextStyle(color: textDark),
           decoration: InputDecoration(
             labelText: 'Answer *',
+            labelStyle: const TextStyle(color: textMid),
+            filled: true,
+            fillColor: primaryLight,
             border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12)),
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: primaryColor, width: 2),
@@ -672,9 +747,10 @@ class _EditQuestionScreenState extends State<EditQuestionScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text('Matching Pairs',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+            style: TextStyle(
+                fontWeight: FontWeight.bold, color: textDark)),
         const Text('Left column → Right column',
-            style: TextStyle(fontSize: 12, color: Colors.grey)),
+            style: TextStyle(fontSize: 12, color: textLight)),
         const SizedBox(height: 12),
         ...List.generate(
             4,
@@ -685,25 +761,47 @@ class _EditQuestionScreenState extends State<EditQuestionScreen> {
                       Expanded(
                         child: TextField(
                           controller: _matchLeft[i],
+                          style: const TextStyle(color: textDark),
                           decoration: InputDecoration(
                             labelText: 'Left ${i + 1}',
+                            labelStyle:
+                                const TextStyle(color: textMid),
+                            filled: true,
+                            fillColor: primaryLight,
                             border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10)),
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide.none),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: const BorderSide(
+                                  color: primaryColor, width: 2),
+                            ),
                           ),
                         ),
                       ),
                       const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 8),
-                        child:
-                            Icon(Icons.arrow_forward, color: Colors.grey),
+                        child: Icon(Icons.arrow_forward,
+                            color: textLight),
                       ),
                       Expanded(
                         child: TextField(
                           controller: _matchRight[i],
+                          style: const TextStyle(color: textDark),
                           decoration: InputDecoration(
                             labelText: 'Right ${i + 1}',
+                            labelStyle:
+                                const TextStyle(color: textMid),
+                            filled: true,
+                            fillColor: primaryLight,
                             border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10)),
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide.none),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: const BorderSide(
+                                  color: primaryColor, width: 2),
+                            ),
                           ),
                         ),
                       ),
